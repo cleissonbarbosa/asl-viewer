@@ -1,8 +1,3 @@
-/*!
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { validateASLDefinition, parseASLDefinition } from '../validation';
 import { ASLDefinition, StateDefinition, ValidationError } from '../../types';
 
@@ -25,6 +20,7 @@ describe('validateASLDefinition', () => {
     });
 
     it('should require StartAt field', () => {
+      // @ts-ignore
       const definition = {
         States: {
           HelloWorld: {

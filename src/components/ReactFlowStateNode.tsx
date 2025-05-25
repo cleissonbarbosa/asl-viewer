@@ -1,19 +1,10 @@
 import React, { useCallback } from "react";
 import { Handle, Position } from "reactflow";
-// AWS Icons
-import LambdaFunction from "react-aws-icons/dist/aws/compute/LambdaFunction";
-import CloudWatch from "react-aws-icons/dist/aws/compute/CloudWatch";
-import Task from "react-aws-icons/dist/aws/general/Task";
-import Server from "react-aws-icons/dist/aws/general/Server";
-import DB from "react-aws-icons/dist/aws/general/DB";
-import Instance from "react-aws-icons/dist/aws/compute/Instance";
-import StepFunctions from "react-aws-icons/dist/aws/logo/StepFunctions";
 
 import { StateNode, ViewerTheme } from "../types";
 import {
   IconCheck,
   IconPlayerPlay,
-  IconPlaylist,
   IconX,
   IconLambda,
   IconListDetails,
@@ -21,6 +12,7 @@ import {
   IconStopwatch,
   IconRosetteDiscountCheckFilled,
   IconVectorBezier,
+  IconSitemap,
 } from "@tabler/icons-react";
 
 interface ReactFlowStateNodeProps {
@@ -72,9 +64,9 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
       case "Parallel":
         return <IconVectorBezier color={iconColor} size={iconSize} />;
       case "Map":
-        return <DB color={iconColor} size={iconSize} />;
+        return <IconSitemap color={iconColor} size={iconSize} />;
       default:
-        return <Task color={iconColor} size={iconSize} />;
+        return <IconLambda color={iconColor} size={iconSize} />;
     }
   };
 

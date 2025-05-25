@@ -244,6 +244,11 @@ function findReachableStates(definition: ASLDefinition): Set<string> {
   const reachable = new Set<string>();
   const toVisit = [definition.StartAt];
 
+  // Early return if States is not defined
+  if (!definition.States) {
+    return reachable;
+  }
+
   while (toVisit.length > 0) {
     const current = toVisit.pop()!;
     if (reachable.has(current) || !definition.States[current]) {

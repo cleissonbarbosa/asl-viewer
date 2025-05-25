@@ -1,8 +1,3 @@
-/*!
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { ASLDefinition, StateDefinition, ValidationError } from '../types';
 
 /**
@@ -11,7 +6,7 @@ import { ASLDefinition, StateDefinition, ValidationError } from '../types';
 export function validateASLDefinition(definition: ASLDefinition): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  // Check required fields
+  // Early validation for required fields
   if (!definition.StartAt) {
     errors.push({
       message: 'StartAt field is required',
@@ -20,16 +15,24 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
     });
   }
 
-  if (!definition.States || Object.keys(definition.States).length === 0) {
+  // Check States existence and cache state names for performance
+  const hasStates = definition.States && typeof definition.States === 'object';
+  const stateNames = hasStates ? Object.keys(definition.States!) : [];
+  
+  if (!hasStates || stateNames.length === 0) {
     errors.push({
       message: 'States field is required and must contain at least one state',
       path: 'States',
       severity: 'error'
     });
+    return errors; // Early return if no states
   }
 
+  // Create state name lookup set for O(1) existence checks
+  const stateNameSet = new Set(stateNames);
+
   // Validate StartAt references an existing state
-  if (definition.StartAt && definition.States && !definition.States[definition.StartAt]) {
+  if (definition.StartAt && !stateNameSet.has(definition.StartAt)) {
     errors.push({
       message: `StartAt references non-existent state: ${definition.StartAt}`,
       path: 'StartAt',
@@ -37,17 +40,16 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
     });
   }
 
-  // Validate each state
-  if (definition.States) {
-    Object.entries(definition.States).forEach(([stateName, state]) => {
-      errors.push(...validateState(stateName, state, definition.States!));
-    });
+  // Validate each state with pre-computed state name set
+  for (const [stateName, state] of Object.entries(definition.States!)) {
+    const stateErrors = validateState(stateName, state, stateNameSet);
+    errors.push(...stateErrors);
   }
 
-  // Check for unreachable states
-  const reachableStates = findReachableStates(definition);
-  if (definition.States) {
-    Object.keys(definition.States).forEach(stateName => {
+  // Check for unreachable states only if basic validation passes
+  if (definition.StartAt && stateNameSet.has(definition.StartAt)) {
+    const reachableStates = findReachableStates(definition);
+    for (const stateName of stateNames) {
       if (!reachableStates.has(stateName)) {
         errors.push({
           message: `State "${stateName}" is unreachable`,
@@ -55,7 +57,7 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
           severity: 'warning'
         });
       }
-    });
+    }
   }
 
   return errors;
@@ -64,7 +66,7 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
 function validateState(
   stateName: string, 
   state: StateDefinition, 
-  allStates: Record<string, StateDefinition>
+  stateNameSet: Set<string>
 ): ValidationError[] {
   const errors: ValidationError[] = [];
   const basePath = `States.${stateName}`;
@@ -79,11 +81,17 @@ function validateState(
     return errors;
   }
 
+  // Pre-compute validation conditions to avoid repeated checks
+  const hasResource = 'Resource' in state && state.Resource;
+  const hasChoices = state.Choices && Array.isArray(state.Choices);
+  const hasNext = 'Next' in state && state.Next;
+  const hasEnd = 'End' in state && state.End;
+
   // Validate state type-specific requirements
   switch (state.Type) {
     case 'Pass':
       // Pass states can have Result but not Resource
-      if (state.Resource) {
+      if (hasResource) {
         errors.push({
           message: 'Pass states cannot have Resource field',
           path: `${basePath}.Resource`,
@@ -94,7 +102,7 @@ function validateState(
 
     case 'Task':
       // Task states must have Resource
-      if (!state.Resource) {
+      if (!hasResource) {
         errors.push({
           message: 'Task states must have Resource field',
           path: `${basePath}.Resource`,
@@ -105,21 +113,21 @@ function validateState(
 
     case 'Choice':
       // Choice states must have Choices array and cannot have End or Next
-      if (!state.Choices || !Array.isArray(state.Choices) || state.Choices.length === 0) {
+      if (!hasChoices || state.Choices!.length === 0) {
         errors.push({
           message: 'Choice states must have non-empty Choices array',
           path: `${basePath}.Choices`,
           severity: 'error'
         });
       }
-      if (state.End) {
+      if (hasEnd) {
         errors.push({
           message: 'Choice states cannot have End field',
           path: `${basePath}.End`,
           severity: 'error'
         });
       }
-      if (state.Next) {
+      if (hasNext) {
         errors.push({
           message: 'Choice states cannot have Next field',
           path: `${basePath}.Next`,
@@ -130,8 +138,8 @@ function validateState(
 
     case 'Wait':
       // Wait states must have exactly one time specification
-      const timeFields = ['Seconds', 'Timestamp', 'SecondsPath', 'TimestampPath'];
-      const presentTimeFields = timeFields.filter(field => state[field as keyof StateDefinition] !== undefined);
+      const timeFields = ['Seconds', 'Timestamp', 'SecondsPath', 'TimestampPath'] as const;
+      const presentTimeFields = timeFields.filter(field => field in state && state[field] !== undefined);
       
       if (presentTimeFields.length === 0) {
         errors.push({
@@ -172,7 +180,7 @@ function validateState(
 
     case 'Fail':
       // Fail states cannot have Next and automatically end
-      if (state.Next) {
+      if (hasNext) {
         errors.push({
           message: 'Fail states cannot have Next field',
           path: `${basePath}.Next`,
@@ -183,7 +191,7 @@ function validateState(
 
     case 'Succeed':
       // Succeed states cannot have Next and automatically end
-      if (state.Next) {
+      if (hasNext) {
         errors.push({
           message: 'Succeed states cannot have Next field',
           path: `${basePath}.Next`,
@@ -193,8 +201,8 @@ function validateState(
       break;
   }
 
-  // Validate Next references
-  if (state.Next && !allStates[state.Next]) {
+  // Validate Next references with O(1) lookup
+  if (hasNext && !stateNameSet.has(state.Next!)) {
     errors.push({
       message: `Next references non-existent state: ${state.Next}`,
       path: `${basePath}.Next`,
@@ -202,21 +210,22 @@ function validateState(
     });
   }
 
-  // Validate Choice references
-  if (state.Choices) {
-    state.Choices.forEach((choice, index) => {
-      if (choice.Next && !allStates[choice.Next]) {
+  // Validate Choice references with batch processing
+  if (hasChoices) {
+    for (let i = 0; i < state.Choices!.length; i++) {
+      const choice = state.Choices![i];
+      if (choice.Next && !stateNameSet.has(choice.Next)) {
         errors.push({
           message: `Choice rule references non-existent state: ${choice.Next}`,
-          path: `${basePath}.Choices[${index}].Next`,
+          path: `${basePath}.Choices[${i}].Next`,
           severity: 'error'
         });
       }
-    });
+    }
   }
 
   // Validate Default reference for Choice states
-  if (state.Default && !allStates[state.Default]) {
+  if (state.Default && !stateNameSet.has(state.Default)) {
     errors.push({
       message: `Default references non-existent state: ${state.Default}`,
       path: `${basePath}.Default`,
@@ -224,17 +233,18 @@ function validateState(
     });
   }
 
-  // Validate Catch references
-  if (state.Catch) {
-    state.Catch.forEach((catchDef, index) => {
-      if (!allStates[catchDef.Next]) {
+  // Validate Catch references with batch processing
+  if (state.Catch && Array.isArray(state.Catch)) {
+    for (let i = 0; i < state.Catch.length; i++) {
+      const catchDef = state.Catch[i];
+      if (!stateNameSet.has(catchDef.Next)) {
         errors.push({
           message: `Catch references non-existent state: ${catchDef.Next}`,
-          path: `${basePath}.Catch[${index}].Next`,
+          path: `${basePath}.Catch[${i}].Next`,
           severity: 'error'
         });
       }
-    });
+    }
   }
 
   return errors;
@@ -242,55 +252,75 @@ function validateState(
 
 function findReachableStates(definition: ASLDefinition): Set<string> {
   const reachable = new Set<string>();
-  const toVisit = [definition.StartAt];
-
-  // Early return if States is not defined
-  if (!definition.States) {
+  
+  // Early return if States is not defined or StartAt is missing
+  if (!definition.States || !definition.StartAt) {
     return reachable;
   }
 
+  // Use iterative approach with stack for better performance
+  const toVisit: string[] = [definition.StartAt];
+  const states = definition.States;
+
   while (toVisit.length > 0) {
     const current = toVisit.pop()!;
-    if (reachable.has(current) || !definition.States[current]) {
+    
+    // Skip if already visited or state doesn't exist
+    if (reachable.has(current) || !states[current]) {
       continue;
     }
 
     reachable.add(current);
-    const state = definition.States[current];
+    const state = states[current];
 
-    // Add next states to visit
+    // Batch collect next states to minimize array operations
+    const nextStates: string[] = [];
+
+    // Add direct next state
     if (state.Next) {
-      toVisit.push(state.Next);
+      nextStates.push(state.Next);
     }
 
+    // Add choice targets
     if (state.Choices) {
-      state.Choices.forEach(choice => {
-        toVisit.push(choice.Next);
-      });
+      for (const choice of state.Choices) {
+        if (choice.Next) {
+          nextStates.push(choice.Next);
+        }
+      }
     }
 
+    // Add default choice target
     if (state.Default) {
-      toVisit.push(state.Default);
+      nextStates.push(state.Default);
     }
 
+    // Add catch targets
     if (state.Catch) {
-      state.Catch.forEach(catchDef => {
-        toVisit.push(catchDef.Next);
-      });
+      for (const catchDef of state.Catch) {
+        nextStates.push(catchDef.Next);
+      }
     }
 
-    // Handle parallel branches
+    // Add all collected states at once
+    toVisit.push(...nextStates);
+
+    // Handle parallel branches recursively (less common, kept separate)
     if (state.Branches) {
-      state.Branches.forEach(branch => {
+      for (const branch of state.Branches) {
         const branchReachable = findReachableStates(branch);
-        branchReachable.forEach(stateName => reachable.add(stateName));
-      });
+        for (const stateName of branchReachable) {
+          reachable.add(stateName);
+        }
+      }
     }
 
-    // Handle map iterator
+    // Handle map iterator recursively (less common, kept separate)
     if (state.Iterator) {
       const iteratorReachable = findReachableStates(state.Iterator);
-      iteratorReachable.forEach(stateName => reachable.add(stateName));
+      for (const stateName of iteratorReachable) {
+        reachable.add(stateName);
+      }
     }
   }
 

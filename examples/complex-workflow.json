@@ -1,0 +1,66 @@
+{
+  "Comment": "A complex workflow with different state types",
+  "StartAt": "CheckInput",
+  "States": {
+    "CheckInput": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.type",
+          "StringEquals": "user",
+          "Next": "ProcessUser"
+        },
+        {
+          "Variable": "$.type",
+          "StringEquals": "admin",
+          "Next": "ProcessAdmin"
+        }
+      ],
+      "Default": "InvalidInput"
+    },
+    "ProcessUser": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessUser",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "Next": "HandleUserError"
+        }
+      ],
+      "Next": "NotifyUser"
+    },
+    "ProcessAdmin": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessAdmin",
+      "Next": "NotifyAdmin"
+    },
+    "HandleUserError": {
+      "Type": "Pass",
+      "Result": "User processing failed",
+      "Next": "NotifyUser"
+    },
+    "NotifyUser": {
+      "Type": "Task",
+      "Resource": "arn:aws:sns:us-east-1:123456789012:user-notifications",
+      "End": true
+    },
+    "NotifyAdmin": {
+      "Type": "Task",
+      "Resource": "arn:aws:sns:us-east-1:123456789012:admin-notifications",
+      "End": true
+    },
+    "InvalidInput": {
+      "Type": "Fail",
+      "Cause": "Invalid input type",
+      "Error": "InvalidInputError"
+    }
+  }
+}

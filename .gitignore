@@ -1,0 +1,12 @@
+aws*/
+dist
+node_modules
+package-lock.json
+yarn-error.log
+*.log
+*.tsbuildinfo
+*.tgz
+*.zip
+*.tar.gz
+*.tar
+*.gz

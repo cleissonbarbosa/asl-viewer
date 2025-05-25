@@ -43,15 +43,15 @@ export interface StateDefinition {
   Error?: string;
 }
 
-export type StateType = 
-  | 'Pass'
-  | 'Task'
-  | 'Choice'
-  | 'Wait'
-  | 'Succeed'
-  | 'Fail'
-  | 'Parallel'
-  | 'Map';
+export type StateType =
+  | "Pass"
+  | "Task"
+  | "Choice"
+  | "Wait"
+  | "Succeed"
+  | "Fail"
+  | "Parallel"
+  | "Map";
 
 export interface ChoiceRule {
   Variable?: string;
@@ -110,17 +110,12 @@ export interface Connection {
   condition?: string;
 }
 
-export type ConnectionType = 
-  | 'next'
-  | 'choice'
-  | 'error'
-  | 'retry'
-  | 'default';
+export type ConnectionType = "next" | "choice" | "error" | "retry" | "default";
 
 export interface ValidationError {
   message: string;
   path: string;
-  severity: 'error' | 'warning';
+  severity: "error" | "warning";
   line?: number;
   column?: number;
 }
@@ -129,7 +124,7 @@ export interface WorkflowViewerProps {
   definition: ASLDefinition | string;
   width?: number;
   height?: number;
-  theme?: 'light' | 'dark';
+  theme?: "light" | "dark";
   readonly?: boolean;
   onStateClick?: (state: StateNode) => void;
   onValidationError?: (error: ValidationError) => void;

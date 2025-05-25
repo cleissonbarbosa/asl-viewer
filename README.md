@@ -24,8 +24,8 @@ yarn add asl-viewer
 ## Quick Start
 
 ```tsx
-import React from 'react';
-import { WorkflowViewer } from 'asl-viewer';
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
 
 const workflow = {
   Comment: "A simple minimal example",
@@ -34,9 +34,9 @@ const workflow = {
     Hello: {
       Type: "Task",
       Resource: "arn:aws:lambda:us-east-1:123456789012:function:HelloWorld",
-      End: true
-    }
-  }
+      End: true,
+    },
+  },
 };
 
 function App() {
@@ -55,16 +55,16 @@ function App() {
 
 ### WorkflowViewer Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `definition` | `ASLDefinition` | **required** | The ASL workflow definition |
-| `theme` | `'light' \| 'dark'` | `'light'` | Visual theme |
-| `width` | `number` | `800` | Viewer width in pixels |
-| `height` | `number` | `600` | Viewer height in pixels |
-| `readonly` | `boolean` | `true` | Whether the viewer is read-only |
-| `onStateClick` | `(stateName: string) => void` | - | Callback when a state is clicked |
-| `onConnectionClick` | `(from: string, to: string) => void` | - | Callback when a connection is clicked |
-| `onError` | `(error: ValidationError[]) => void` | - | Callback for validation errors |
+| Prop                | Type                                 | Default      | Description                           |
+| ------------------- | ------------------------------------ | ------------ | ------------------------------------- |
+| `definition`        | `ASLDefinition`                      | **required** | The ASL workflow definition           |
+| `theme`             | `'light' \| 'dark'`                  | `'light'`    | Visual theme                          |
+| `width`             | `number`                             | `800`        | Viewer width in pixels                |
+| `height`            | `number`                             | `600`        | Viewer height in pixels               |
+| `readonly`          | `boolean`                            | `true`       | Whether the viewer is read-only       |
+| `onStateClick`      | `(stateName: string) => void`        | -            | Callback when a state is clicked      |
+| `onConnectionClick` | `(from: string, to: string) => void` | -            | Callback when a connection is clicked |
+| `onError`           | `(error: ValidationError[]) => void` | -            | Callback for validation errors        |
 
 ### Types
 
@@ -74,8 +74,8 @@ import type {
   StateDefinition,
   StateType,
   ValidationError,
-  WorkflowViewerProps
-} from 'asl-viewer';
+  WorkflowViewerProps,
+} from "asl-viewer";
 ```
 
 ### Utilities
@@ -84,8 +84,8 @@ import type {
 import {
   validateASLDefinition,
   parseASLDefinition,
-  createGraphLayout
-} from 'asl-viewer';
+  createGraphLayout,
+} from "asl-viewer";
 
 // Validate an ASL definition
 const errors = validateASLDefinition(workflow);
@@ -150,21 +150,18 @@ yarn test
 ### Custom Themes
 
 ```tsx
-import { WorkflowViewer, getTheme } from 'asl-viewer';
+import { WorkflowViewer, getTheme } from "asl-viewer";
 
 const customTheme = {
-  ...getTheme('light'),
+  ...getTheme("light"),
   colors: {
-    ...getTheme('light').colors,
-    taskState: '#ff6b6b',
-    choiceState: '#4ecdc4',
-  }
+    ...getTheme("light").colors,
+    taskState: "#ff6b6b",
+    choiceState: "#4ecdc4",
+  },
 };
 
-<WorkflowViewer
-  definition={workflow}
-  theme={customTheme}
-/>
+<WorkflowViewer definition={workflow} theme={customTheme} />;
 ```
 
 ### Custom State Rendering
@@ -172,7 +169,7 @@ const customTheme = {
 The library provides granular components for custom implementations:
 
 ```tsx
-import { GraphRenderer, StateComponent, ConnectionComponent } from 'asl-viewer';
+import { GraphRenderer, StateComponent, ConnectionComponent } from "asl-viewer";
 
 // Use individual components for custom layouts
 ```

@@ -1,29 +1,31 @@
-import { ASLDefinition, StateDefinition, ValidationError } from '../types';
+import { ASLDefinition, StateDefinition, ValidationError } from "../types";
 
 /**
  * Validates an ASL definition for syntax and semantic errors
  */
-export function validateASLDefinition(definition: ASLDefinition): ValidationError[] {
+export function validateASLDefinition(
+  definition: ASLDefinition
+): ValidationError[] {
   const errors: ValidationError[] = [];
 
   // Early validation for required fields
   if (!definition.StartAt) {
     errors.push({
-      message: 'StartAt field is required',
-      path: 'StartAt',
-      severity: 'error'
+      message: "StartAt field is required",
+      path: "StartAt",
+      severity: "error",
     });
   }
 
   // Check States existence and cache state names for performance
-  const hasStates = definition.States && typeof definition.States === 'object';
+  const hasStates = definition.States && typeof definition.States === "object";
   const stateNames = hasStates ? Object.keys(definition.States!) : [];
-  
+
   if (!hasStates || stateNames.length === 0) {
     errors.push({
-      message: 'States field is required and must contain at least one state',
-      path: 'States',
-      severity: 'error'
+      message: "States field is required and must contain at least one state",
+      path: "States",
+      severity: "error",
     });
     return errors; // Early return if no states
   }
@@ -35,8 +37,8 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
   if (definition.StartAt && !stateNameSet.has(definition.StartAt)) {
     errors.push({
       message: `StartAt references non-existent state: ${definition.StartAt}`,
-      path: 'StartAt',
-      severity: 'error'
+      path: "StartAt",
+      severity: "error",
     });
   }
 
@@ -54,7 +56,7 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
         errors.push({
           message: `State "${stateName}" is unreachable`,
           path: `States.${stateName}`,
-          severity: 'warning'
+          severity: "warning",
         });
       }
     }
@@ -64,8 +66,8 @@ export function validateASLDefinition(definition: ASLDefinition): ValidationErro
 }
 
 function validateState(
-  stateName: string, 
-  state: StateDefinition, 
+  stateName: string,
+  state: StateDefinition,
   stateNameSet: Set<string>
 ): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -74,128 +76,140 @@ function validateState(
   // Check required Type field
   if (!state.Type) {
     errors.push({
-      message: 'Type field is required for all states',
+      message: "Type field is required for all states",
       path: `${basePath}.Type`,
-      severity: 'error'
+      severity: "error",
     });
     return errors;
   }
 
   // Pre-compute validation conditions to avoid repeated checks
-  const hasResource = 'Resource' in state && state.Resource;
+  const hasResource = "Resource" in state && state.Resource;
   const hasChoices = state.Choices && Array.isArray(state.Choices);
-  const hasNext = 'Next' in state && state.Next;
-  const hasEnd = 'End' in state && state.End;
+  const hasNext = "Next" in state && state.Next;
+  const hasEnd = "End" in state && state.End;
 
   // Validate state type-specific requirements
   switch (state.Type) {
-    case 'Pass':
+    case "Pass":
       // Pass states can have Result but not Resource
       if (hasResource) {
         errors.push({
-          message: 'Pass states cannot have Resource field',
+          message: "Pass states cannot have Resource field",
           path: `${basePath}.Resource`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Task':
+    case "Task":
       // Task states must have Resource
       if (!hasResource) {
         errors.push({
-          message: 'Task states must have Resource field',
+          message: "Task states must have Resource field",
           path: `${basePath}.Resource`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Choice':
+    case "Choice":
       // Choice states must have Choices array and cannot have End or Next
       if (!hasChoices || state.Choices!.length === 0) {
         errors.push({
-          message: 'Choice states must have non-empty Choices array',
+          message: "Choice states must have non-empty Choices array",
           path: `${basePath}.Choices`,
-          severity: 'error'
+          severity: "error",
         });
       }
       if (hasEnd) {
         errors.push({
-          message: 'Choice states cannot have End field',
+          message: "Choice states cannot have End field",
           path: `${basePath}.End`,
-          severity: 'error'
+          severity: "error",
         });
       }
       if (hasNext) {
         errors.push({
-          message: 'Choice states cannot have Next field',
+          message: "Choice states cannot have Next field",
           path: `${basePath}.Next`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Wait':
+    case "Wait":
       // Wait states must have exactly one time specification
-      const timeFields = ['Seconds', 'Timestamp', 'SecondsPath', 'TimestampPath'] as const;
-      const presentTimeFields = timeFields.filter(field => field in state && state[field] !== undefined);
-      
+      const timeFields = [
+        "Seconds",
+        "Timestamp",
+        "SecondsPath",
+        "TimestampPath",
+      ] as const;
+      const presentTimeFields = timeFields.filter(
+        (field) => field in state && state[field] !== undefined
+      );
+
       if (presentTimeFields.length === 0) {
         errors.push({
-          message: 'Wait states must have one of: Seconds, Timestamp, SecondsPath, or TimestampPath',
+          message:
+            "Wait states must have one of: Seconds, Timestamp, SecondsPath, or TimestampPath",
           path: basePath,
-          severity: 'error'
+          severity: "error",
         });
       } else if (presentTimeFields.length > 1) {
         errors.push({
-          message: 'Wait states can only have one time specification field',
+          message: "Wait states can only have one time specification field",
           path: basePath,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Parallel':
+    case "Parallel":
       // Parallel states must have Branches
-      if (!state.Branches || !Array.isArray(state.Branches) || state.Branches.length === 0) {
+      if (
+        !state.Branches ||
+        !Array.isArray(state.Branches) ||
+        state.Branches.length === 0
+      ) {
         errors.push({
-          message: 'Parallel states must have non-empty Branches array',
+          message: "Parallel states must have non-empty Branches array",
           path: `${basePath}.Branches`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Map':
+    case "Map":
       // Map states must have Iterator
       if (!state.Iterator) {
         errors.push({
-          message: 'Map states must have Iterator field',
+          message: "Map states must have Iterator field",
           path: `${basePath}.Iterator`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Fail':
+    case "Fail":
       // Fail states cannot have Next and automatically end
       if (hasNext) {
         errors.push({
-          message: 'Fail states cannot have Next field',
+          message: "Fail states cannot have Next field",
           path: `${basePath}.Next`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
 
-    case 'Succeed':
+    case "Succeed":
       // Succeed states cannot have Next and automatically end
       if (hasNext) {
         errors.push({
-          message: 'Succeed states cannot have Next field',
+          message: "Succeed states cannot have Next field",
           path: `${basePath}.Next`,
-          severity: 'error'
+          severity: "error",
         });
       }
       break;
@@ -206,7 +220,7 @@ function validateState(
     errors.push({
       message: `Next references non-existent state: ${state.Next}`,
       path: `${basePath}.Next`,
-      severity: 'error'
+      severity: "error",
     });
   }
 
@@ -218,7 +232,7 @@ function validateState(
         errors.push({
           message: `Choice rule references non-existent state: ${choice.Next}`,
           path: `${basePath}.Choices[${i}].Next`,
-          severity: 'error'
+          severity: "error",
         });
       }
     }
@@ -229,7 +243,7 @@ function validateState(
     errors.push({
       message: `Default references non-existent state: ${state.Default}`,
       path: `${basePath}.Default`,
-      severity: 'error'
+      severity: "error",
     });
   }
 
@@ -241,7 +255,7 @@ function validateState(
         errors.push({
           message: `Catch references non-existent state: ${catchDef.Next}`,
           path: `${basePath}.Catch[${i}].Next`,
-          severity: 'error'
+          severity: "error",
         });
       }
     }
@@ -252,7 +266,7 @@ function validateState(
 
 function findReachableStates(definition: ASLDefinition): Set<string> {
   const reachable = new Set<string>();
-  
+
   // Early return if States is not defined or StartAt is missing
   if (!definition.States || !definition.StartAt) {
     return reachable;
@@ -264,7 +278,7 @@ function findReachableStates(definition: ASLDefinition): Set<string> {
 
   while (toVisit.length > 0) {
     const current = toVisit.pop()!;
-    
+
     // Skip if already visited or state doesn't exist
     if (reachable.has(current) || !states[current]) {
       continue;
@@ -330,8 +344,10 @@ function findReachableStates(definition: ASLDefinition): Set<string> {
 /**
  * Parses ASL definition from string to object
  */
-export function parseASLDefinition(definition: string | ASLDefinition): ASLDefinition {
-  if (typeof definition === 'string') {
+export function parseASLDefinition(
+  definition: string | ASLDefinition
+): ASLDefinition {
+  if (typeof definition === "string") {
     try {
       return JSON.parse(definition);
     } catch (error) {

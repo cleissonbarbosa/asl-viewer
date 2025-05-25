@@ -114,12 +114,15 @@ function calculateHierarchicalLayout(
   });
 
   // Check if there are edges with labels between levels
-  const hasLabeledEdgesBetweenLevels = (fromLevel: number, toLevel: number): boolean => {
+  const hasLabeledEdgesBetweenLevels = (
+    fromLevel: number,
+    toLevel: number
+  ): boolean => {
     if (fromLevel >= levels.length || toLevel >= levels.length) return false;
-    
+
     for (const fromNode of levels[fromLevel]) {
       for (const toNode of levels[toLevel]) {
-        const edge = edges.find(e => e.from === fromNode && e.to === toNode);
+        const edge = edges.find((e) => e.from === fromNode && e.to === toNode);
         if (edge && edge.label && edge.label.trim().length > 0) {
           return true;
         }
@@ -176,22 +179,24 @@ function calculateHierarchicalLayout(
     const startXForLevel = startX + (maxWidth - levelWidth) / 2;
 
     level.forEach((nodeId, nodeIndex) => {
-      const node = nodeMap.get(nodeId)!;
-      node.position = {
-        x: startXForLevel + nodeIndex * nodeSpacing,
-        y: currentY,
-      };
+      const node = nodeMap.get(nodeId);
+      if (node) {
+        node.position = {
+          x: startXForLevel + nodeIndex * nodeSpacing,
+          y: currentY,
+        };
+      }
     });
 
     // Calculate spacing for next level
     if (levelIndex < levels.length - 1) {
       let spacingToNext = baseLevelSpacing;
-      
+
       // Check if there are labeled edges between this level and the next
       if (hasLabeledEdgesBetweenLevels(levelIndex, levelIndex + 1)) {
         spacingToNext += labeledEdgeSpacing;
       }
-      
+
       currentY += spacingToNext;
     }
   });
@@ -215,8 +220,6 @@ function createStateNode(
   const isEndState =
     state.End === true || state.Type === "Succeed" || state.Type === "Fail";
   const size = getStateSize(state.Type, isStartState, isEndState);
-
-  console.log("State Node Size", stateName, startAt, stateName === startAt);
 
   return {
     id: stateName,
@@ -311,17 +314,20 @@ function formatChoiceCondition(choice: any): string {
   if (choice.Variable) {
     const variable = choice.Variable;
 
-    if (choice.StringEquals) return `${variable} == "${choice.StringEquals}"`;
-    if (choice.StringLessThan)
+    if (choice.StringEquals !== undefined)
+      return `${variable} == "${choice.StringEquals}"`;
+    if (choice.StringLessThan !== undefined)
       return `${variable} < "${choice.StringLessThan}"`;
-    if (choice.StringGreaterThan)
+    if (choice.StringGreaterThan !== undefined)
       return `${variable} > "${choice.StringGreaterThan}"`;
-    if (choice.NumericEquals) return `${variable} == ${choice.NumericEquals}`;
-    if (choice.NumericLessThan)
+    if (choice.NumericEquals !== undefined)
+      return `${variable} == ${choice.NumericEquals}`;
+    if (choice.NumericLessThan !== undefined)
       return `${variable} < ${choice.NumericLessThan}`;
-    if (choice.NumericGreaterThan)
+    if (choice.NumericGreaterThan !== undefined)
       return `${variable} > ${choice.NumericGreaterThan}`;
-    if (choice.BooleanEquals) return `${variable} == ${choice.BooleanEquals}`;
+    if (choice.BooleanEquals !== undefined)
+      return `${variable} == ${choice.BooleanEquals}`;
   }
 
   return "condition";
@@ -389,7 +395,10 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
 
   // Helper function to check if there are labeled edges from a specific node
   const hasLabeledEdgesFrom = (nodeId: string): boolean => {
-    return edges.some(edge => edge.from === nodeId && edge.label && edge.label.trim().length > 0);
+    return edges.some(
+      (edge) =>
+        edge.from === nodeId && edge.label && edge.label.trim().length > 0
+    );
   };
 
   // Position start node
@@ -404,7 +413,7 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
     const node = createStateNode(stateName, state, definition.StartAt);
     node.position = { x: centerX - node.size.width / 2, y: currentY };
     nodes.push(node);
-    
+
     // Calculate spacing for next node
     if (index < stateEntries.length - 1) {
       let spacingToNext = baseSpacing;

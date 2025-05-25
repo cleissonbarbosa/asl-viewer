@@ -1,9 +1,5 @@
 import React, { useMemo, useCallback, useState } from "react";
-import {
-  WorkflowViewerProps,
-  StateNode,
-  ValidationError,
-} from "../types";
+import { WorkflowViewerProps, StateNode, ValidationError } from "../types";
 import { parseASLDefinition, validateASLDefinition } from "../utils/validation";
 import { createGraphLayout, createSimpleLayout } from "../utils/layout";
 import { getTheme } from "../utils/theme";

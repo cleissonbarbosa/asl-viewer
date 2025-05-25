@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from "react";
 
 import ReactFlow, {
   Node,
@@ -10,11 +10,11 @@ import ReactFlow, {
   ConnectionMode,
   BackgroundVariant,
   MiniMap,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import "reactflow/dist/style.css";
 
-import { StateNode, Connection, ViewerTheme } from '../types';
-import { ReactFlowStateNode } from './ReactFlowStateNode';
+import { StateNode, Connection, ViewerTheme } from "../types";
+import { ReactFlowStateNode } from "./ReactFlowStateNode";
 
 interface ReactFlowRendererProps {
   nodes: StateNode[];
@@ -35,13 +35,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   width,
   height,
   theme,
-  onStateClick
+  onStateClick,
 }) => {
   // Convert StateNode[] to ReactFlow Node[]
   const reactFlowNodes: Node[] = useMemo(() => {
     return stateNodes.map((stateNode) => ({
       id: stateNode.id,
-      type: 'stateNode',
+      type: "stateNode",
       position: stateNode.position,
       data: {
         stateNode,
@@ -59,19 +59,19 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   const reactFlowEdges: Edge[] = useMemo(() => {
     return connections.map((connection, index) => {
       const edgeStyle = getEdgeStyle(connection, theme);
-      
+
       return {
         id: `${connection.from}-${connection.to}-${index}`,
         source: connection.from,
         target: connection.to,
-        type: 'smoothstep',
+        type: "smoothstep",
         style: edgeStyle.style,
         label: connection.label,
         labelStyle: edgeStyle.labelStyle,
         markerEnd: {
-          type: 'arrowclosed' as any,
+          type: "arrowclosed" as any,
         },
-        animated: connection.type === 'error' || connection.type === 'retry',
+        animated: connection.type === "error" || connection.type === "retry",
       };
     });
   }, [connections, theme]);
@@ -94,13 +94,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   }, []);
 
   return (
-    <div 
-      style={{ 
-        width, 
+    <div
+      style={{
+        width,
         height,
         border: `1px solid ${theme.borderColor}`,
-        borderRadius: '4px',
-        overflow: 'hidden',
+        borderRadius: "4px",
+        overflow: "hidden",
         background: theme.background,
       }}
     >
@@ -122,14 +122,14 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         style={{ background: theme.background }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background 
-          variant={BackgroundVariant.Dots} 
-          gap={20} 
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
           size={1}
           color={theme.borderColor}
         />
         <Controls />
-        <MiniMap 
+        <MiniMap
           nodeColor={theme.nodeColors.task}
           nodeStrokeColor={theme.borderColor}
           maskColor={`${theme.background}90`}
@@ -146,25 +146,25 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
 function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
   let strokeColor = theme.connectionColor;
   let strokeWidth = 2;
-  let strokeDasharray = 'none';
+  let strokeDasharray = "none";
 
   switch (connection.type) {
-    case 'error':
+    case "error":
       strokeColor = theme.errorColor;
-      strokeDasharray = '5,5';
+      strokeDasharray = "5,5";
       break;
-    case 'retry':
-      strokeColor = '#ff9800';
-      strokeDasharray = '5,5';
+    case "retry":
+      strokeColor = "#ff9800";
+      strokeDasharray = "5,5";
       break;
-    case 'choice':
-      strokeColor = '#2196f3';
+    case "choice":
+      strokeColor = "#2196f3";
       break;
-    case 'default':
-      strokeColor = '#9e9e9e';
+    case "default":
+      strokeColor = "#9e9e9e";
       strokeWidth = 1;
       break;
-    case 'next':
+    case "next":
     default:
       strokeColor = theme.connectionColor;
       break;
@@ -178,10 +178,10 @@ function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
     },
     labelStyle: {
       fill: theme.textColor,
-      fontSize: '14px',
-      fontWeight: 'bold',
+      fontSize: "14px",
+      fontWeight: "bold",
       background: theme.background,
-      padding: '4px 8px',
+      padding: "4px 8px",
     },
   };
 }

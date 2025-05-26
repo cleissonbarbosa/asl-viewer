@@ -1,0 +1,32 @@
+# AWS Step Functions State Machine Definition in YAML
+Comment: "A workflow example with choice logic in YAML format"
+StartAt: "CheckInput"
+States:
+  CheckInput:
+    Type: "Choice"
+    Choices:
+      - Variable: "$.inputType"
+        StringEquals: "process"
+        Next: "ProcessData"
+      - Variable: "$.inputType"
+        StringEquals: "validate"
+        Next: "ValidateData"
+    Default: "DefaultAction"
+
+  ProcessData:
+    Type: "Task"
+    Resource: "arn:aws:lambda:us-east-1:123456789012:function:ProcessData"
+    Next: "Success"
+
+  ValidateData:
+    Type: "Task"
+    Resource: "arn:aws:lambda:us-east-1:123456789012:function:ValidateData"
+    Next: "Success"
+
+  DefaultAction:
+    Type: "Pass"
+    Result: "No action taken"
+    Next: "Success"
+
+  Success:
+    Type: "Succeed"

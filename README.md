@@ -18,6 +18,8 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer-stories/)
 - 🔄 **Auto Layout** - Automatic graph layout using Dagre algorithm
 - 📱 **Responsive** - Works on different screen sizes
 - 🖱️ **Interactive** - Click handlers for states and connections
+- 🌐 **Multiple Input Sources** - Load from definition objects, URLs, or files
+- 📄 **YAML Support** - Support for both JSON and YAML formats
 - 🔧 **Extensible** - Easy to customize and extend
 - 📚 **TypeScript** - Full TypeScript support with comprehensive types
 
@@ -30,6 +32,8 @@ yarn add asl-viewer
 ```
 
 ## Quick Start
+
+### Basic Usage with Definition Object
 
 ```tsx
 import React from "react";
@@ -59,20 +63,180 @@ function App() {
 }
 ```
 
+### Loading from URL
+
+```tsx
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
+
+function App() {
+  return (
+    <WorkflowViewer
+      url="https://example.com/workflow.json"
+      theme="light"
+      width={800}
+      height={600}
+      onLoadStart={() => console.log("Loading...")}
+      onLoadEnd={() => console.log("Loaded!")}
+      onLoadError={(error) => console.error("Error:", error)}
+    />
+  );
+}
+```
+
+### Loading from File Upload
+
+```tsx
+import React, { useState } from "react";
+import { WorkflowViewer, FileUploader } from "asl-viewer";
+
+function App() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  return (
+    <div>
+      <FileUploader
+        onFileSelect={setSelectedFile}
+        theme={{
+          background: "white",
+          borderColor: "#ddd",
+          textColor: "#333",
+          infoColor: "#007acc",
+        }}
+      />
+      {selectedFile && (
+        <WorkflowViewer
+          file={selectedFile}
+          theme="light"
+          width={800}
+          height={600}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+### YAML Support
+
+```tsx
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
+
+const yamlWorkflow = `
+Comment: "A workflow in YAML format"
+StartAt: "HelloWorld"
+States:
+  HelloWorld:
+    Type: "Pass"
+    Result: "Hello from YAML!"
+    End: true
+`;
+
+function App() {
+function App() {
+  return (
+    <WorkflowViewer
+      definition={yamlWorkflow}
+      theme="light"
+      width={800}
+      height={600}
+    />
+  );
+}
+```
+
+## Supported Formats
+
+ASL Viewer supports multiple input formats and sources:
+
+### Input Sources
+
+- **Definition Object**: Pass ASL definition directly as JavaScript object
+- **URL**: Load from any accessible URL (supports CORS)
+- **File Upload**: Upload local JSON or YAML files via file picker or drag & drop
+
+### File Formats
+
+- **JSON**: Standard ASL format as used by AWS Step Functions
+- **YAML**: Human-readable YAML format with same structure as JSON
+
+### Content Types
+
+The library automatically detects format based on:
+
+- File extension (`.json`, `.yaml`, `.yml`)
+- MIME type (`application/json`, `application/yaml`, `text/yaml`)
+- Content analysis (fallback parsing)
+
+### Example Files
+
+```bash
+# JSON format
+{
+  "Comment": "A simple workflow",
+  "StartAt": "FirstState",
+  "States": {
+    "FirstState": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
+
+# YAML format
+Comment: "A simple workflow"
+StartAt: "FirstState"
+States:
+  FirstState:
+    Type: "Pass"
+    End: true
+```
+
 ## API Reference
 
 ### WorkflowViewer Props
 
-| Prop                | Type                                 | Default      | Description                           |
-| ------------------- | ------------------------------------ | ------------ | ------------------------------------- |
-| `definition`        | `ASLDefinition`                      | **required** | The ASL workflow definition           |
-| `theme`             | `'light' \| 'dark'`                  | `'light'`    | Visual theme                          |
-| `width`             | `number`                             | `800`        | Viewer width in pixels                |
-| `height`            | `number`                             | `600`        | Viewer height in pixels               |
-| `readonly`          | `boolean`                            | `true`       | Whether the viewer is read-only       |
-| `onStateClick`      | `(stateName: string) => void`        | -            | Callback when a state is clicked      |
-| `onConnectionClick` | `(from: string, to: string) => void` | -            | Callback when a connection is clicked |
-| `onError`           | `(error: ValidationError[]) => void` | -            | Callback for validation errors        |
+| Prop                | Type                               | Default   | Description                                |
+| ------------------- | ---------------------------------- | --------- | ------------------------------------------ |
+| `definition`        | `ASLDefinition \| string`          | -         | The ASL workflow definition (JSON or YAML) |
+| `url`               | `string`                           | -         | URL to load the ASL definition from        |
+| `file`              | `File`                             | -         | File object containing the ASL definition  |
+| `theme`             | `'light' \| 'dark'`                | `'light'` | Visual theme                               |
+| `width`             | `number`                           | `800`     | Viewer width in pixels                     |
+| `height`            | `number`                           | `600`     | Viewer height in pixels                    |
+| `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only            |
+| `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked           |
+| `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors             |
+| `onLoadStart`       | `() => void`                       | -         | Callback when loading starts               |
+| `onLoadEnd`         | `() => void`                       | -         | Callback when loading completes            |
+| `onLoadError`       | `(error: Error) => void`           | -         | Callback when loading fails                |
+| `className`         | `string`                           | -         | Additional CSS class names                 |
+| `style`             | `React.CSSProperties`              | -         | Inline styles for the root container       |
+
+**Note:** You must provide exactly one of `definition`, `url`, or `file`.
+
+### FileUploader Props
+
+| Prop           | Type                   | Default              | Description                      |
+| -------------- | ---------------------- | -------------------- | -------------------------------- |
+| `onFileSelect` | `(file: File) => void` | **required**         | Callback when a file is selected |
+| `theme`        | `ViewerTheme`          | **required**         | Theme object for styling         |
+| `accept`       | `string`               | `".json,.yaml,.yml"` | File types to accept             |
+| `disabled`     | `boolean`              | `false`              | Whether the uploader is disabled |
+| `className`    | `string`               | -                    | Additional CSS class names       |
+| `style`        | `React.CSSProperties`  | -                    | Inline styles                    |
+
+### URLInput Props
+
+| Prop          | Type                    | Default                            | Description                    |
+| ------------- | ----------------------- | ---------------------------------- | ------------------------------ |
+| `onUrlSubmit` | `(url: string) => void` | **required**                       | Callback when URL is submitted |
+| `theme`       | `ViewerTheme`           | **required**                       | Theme object for styling       |
+| `disabled`    | `boolean`               | `false`                            | Whether the input is disabled  |
+| `placeholder` | `string`                | `"Enter URL to ASL definition..."` | Placeholder text               |
+| `className`   | `string`                | -                                  | Additional CSS class names     |
+| `style`       | `React.CSSProperties`   | -                                  | Inline styles                  |
 
 ### Types
 
@@ -83,6 +247,8 @@ import type {
   StateType,
   ValidationError,
   WorkflowViewerProps,
+  ViewerTheme,
+  StateNode,
 } from "asl-viewer";
 ```
 
@@ -93,10 +259,22 @@ import {
   validateASLDefinition,
   parseASLDefinition,
   createGraphLayout,
+  loadFromURL,
+  loadFromFile,
+  parseDefinitionString,
 } from "asl-viewer";
 
 // Validate an ASL definition
 const errors = validateASLDefinition(workflow);
+
+// Load from URL
+const workflowFromUrl = await loadFromURL("https://example.com/workflow.json");
+
+// Load from file
+const workflowFromFile = await loadFromFile(file);
+
+// Parse string (JSON or YAML)
+const workflowFromString = parseDefinitionString(yamlOrJsonString);
 
 // Parse and get structured data
 const parsed = parseASLDefinition(workflow);

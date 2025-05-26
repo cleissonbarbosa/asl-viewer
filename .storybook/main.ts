@@ -22,8 +22,8 @@ const config: StorybookConfig = {
   },
   viteFinal: async (config) => {
     // Configure base path for GitHub Pages
-    if (process.env.NODE_ENV === 'production') {
-      config.base = '/asl-viewer/';
+    if (process.env.NODE_ENV === "production") {
+      config.base = "/asl-viewer/";
     }
     return config;
   },

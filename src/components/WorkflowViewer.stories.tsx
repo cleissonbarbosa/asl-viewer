@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { WorkflowViewer } from "../components/WorkflowViewer";
+import { FileUploader, URLInput } from "../components/FileUploader";
 import { ASLDefinition } from "../types";
+import React from "react";
 
 const meta: Meta<typeof WorkflowViewer> = {
   title: "WorkflowViewer",
@@ -194,5 +196,107 @@ export const Interactive: Story = {
     onValidationError: (error) => {
       console.log("Validation error:", error);
     },
+  },
+};
+
+// URL Loading Story
+export const LoadFromURL: Story = {
+  render: (args) => {
+    const [currentUrl, setCurrentUrl] = React.useState<string>("");
+
+    return (
+      <div
+        style={{ width: args.width || 800, height: (args.height || 600) + 100 }}
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <URLInput
+            onUrlSubmit={setCurrentUrl}
+            theme={{
+              background: "white",
+              borderColor: "#ddd",
+              textColor: "#333",
+              infoColor: "#007acc",
+            }}
+            placeholder="Try: https://raw.githubusercontent.com/aws/aws-toolkit-vscode/main/examples/simple-workflow.json"
+          />
+        </div>
+        <WorkflowViewer
+          {...args}
+          url={currentUrl}
+          onLoadStart={() => console.log("Loading started")}
+          onLoadEnd={() => console.log("Loading finished")}
+          onLoadError={(error) => console.error("Loading error:", error)}
+        />
+      </div>
+    );
+  },
+  args: {
+    width: 800,
+    height: 500,
+    theme: "light",
+    readonly: true,
+  },
+};
+
+// File Upload Story
+export const LoadFromFile: Story = {
+  render: (args) => {
+    const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+
+    return (
+      <div
+        style={{ width: args.width || 800, height: (args.height || 600) + 200 }}
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <FileUploader
+            onFileSelect={setSelectedFile}
+            theme={{
+              background: "white",
+              borderColor: "#ddd",
+              textColor: "#333",
+              infoColor: "#007acc",
+            }}
+            style={{ marginBottom: "8px" }}
+          />
+          {selectedFile && (
+            <div style={{ fontSize: "12px", color: "#666" }}>
+              Selected: {selectedFile.name} (
+              {(selectedFile.size / 1024).toFixed(1)} KB)
+            </div>
+          )}
+        </div>
+        <WorkflowViewer
+          {...args}
+          file={selectedFile || undefined}
+          onLoadStart={() => console.log("Loading started")}
+          onLoadEnd={() => console.log("Loading finished")}
+          onLoadError={(error) => console.error("Loading error:", error)}
+        />
+      </div>
+    );
+  },
+  args: {
+    width: 800,
+    height: 400,
+    theme: "light",
+    readonly: true,
+  },
+};
+
+// YAML Support Story
+export const YAMLSupport: Story = {
+  args: {
+    definition: `# YAML ASL Definition
+Comment: "A Hello World example in YAML"
+StartAt: "HelloWorld"
+States:
+  HelloWorld:
+    Type: "Pass"
+    Result: "Hello World from YAML!"
+    End: true`,
+    width: 400,
+    height: 300,
+    theme: "light",
+    readonly: true,
   },
 };

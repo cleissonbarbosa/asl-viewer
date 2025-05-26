@@ -146,6 +146,79 @@ function App() {
 }
 ```
 
+### Interactive Mode with Draggable Nodes
+
+```tsx
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
+
+function App() {
+  return (
+    <WorkflowViewer
+      definition={workflow}
+      theme="light"
+      width={900}
+      height={700}
+      readonly={false}
+      isDraggable={true}
+      isSelectable={true}
+      isMultiSelect={true}
+      useMiniMap={true}
+      useControls={true}
+      onStateClick={(state) => {
+        console.log("State clicked:", state);
+      }}
+    />
+  );
+}
+```
+
+### Presentation Mode (Read-Only)
+
+```tsx
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
+
+function App() {
+  return (
+    <WorkflowViewer
+      definition={workflow}
+      theme="light"
+      width={800}
+      height={600}
+      readonly={true}
+      useControls={false}
+      useMiniMap={false}
+      isDraggable={false}
+      isSelectable={false}
+      useZoom={false}
+    />
+  );
+}
+```
+
+### Enhanced Navigation with MiniMap
+
+```tsx
+import React from "react";
+import { WorkflowViewer } from "asl-viewer";
+
+function App() {
+  return (
+    <WorkflowViewer
+      definition={complexWorkflow}
+      theme="dark"
+      width={1000}
+      height={800}
+      useMiniMap={true}
+      useControls={true}
+      useFitView={true}
+      useZoom={true}
+    />
+  );
+}
+```
+
 ## Supported Formats
 
 ASL Viewer supports multiple input formats and sources:
@@ -206,6 +279,14 @@ States:
 | `width`             | `number`                           | `800`     | Viewer width in pixels                     |
 | `height`            | `number`                           | `600`     | Viewer height in pixels                    |
 | `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only            |
+| `isConnectable`     | `boolean`                          | `true`    | Whether nodes can be connected             |
+| `isDraggable`       | `boolean`                          | `false`   | Whether nodes can be dragged               |
+| `isSelectable`      | `boolean`                          | `true`    | Whether nodes can be selected              |
+| `isMultiSelect`     | `boolean`                          | `false`   | Whether multiple nodes can be selected     |
+| `useMiniMap`        | `boolean`                          | `false`   | Whether to show navigation minimap         |
+| `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls          |
+| `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                 |
+| `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes |
 | `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked           |
 | `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors             |
 | `onLoadStart`       | `() => void`                       | -         | Callback when loading starts               |
@@ -215,6 +296,72 @@ States:
 | `style`             | `React.CSSProperties`              | -         | Inline styles for the root container       |
 
 **Note:** You must provide exactly one of `definition`, `url`, or `file`.
+
+## Usage Modes
+
+### Interactive Mode
+
+Enable full interactivity with draggable nodes, multi-selection, and comprehensive controls:
+
+```tsx
+<WorkflowViewer
+  definition={workflow}
+  readonly={false}
+  isDraggable={true}
+  isSelectable={true}
+  isMultiSelect={true}
+  useMiniMap={true}
+  useControls={true}
+  onStateClick={(state) => console.log("Clicked:", state)}
+/>
+```
+
+### Presentation Mode
+
+Perfect for presentations or documentation with minimal UI:
+
+```tsx
+<WorkflowViewer
+  definition={workflow}
+  readonly={true}
+  useControls={false}
+  useMiniMap={false}
+  isDraggable={false}
+  isSelectable={false}
+  useZoom={false}
+/>
+```
+
+### Navigation Mode
+
+Ideal for complex workflows with enhanced navigation features:
+
+```tsx
+<WorkflowViewer
+  definition={largeWorkflow}
+  useMiniMap={true}
+  useControls={true}
+  useFitView={true}
+  useZoom={true}
+  width={1000}
+  height={800}
+/>
+```
+
+### Embedded Mode
+
+Compact view for embedding in dashboards or smaller spaces:
+
+```tsx
+<WorkflowViewer
+  definition={simpleWorkflow}
+  width={400}
+  height={300}
+  useControls={false}
+  useMiniMap={false}
+  useFitView={true}
+/>
+```
 
 ### FileUploader Props
 
@@ -294,6 +441,87 @@ const layout = createGraphLayout(parsed.nodes, parsed.connections);
 - ✅ **Map States** - Iteration over arrays (basic support)
 - ✅ **Retry/Catch** - Error handling configuration
 - ✅ **Input/Output Processing** - Path expressions and filters
+
+## Feature Configuration
+
+### Interactive Features
+
+Control user interactions with the workflow:
+
+```tsx
+// Enable all interactive features
+<WorkflowViewer
+  definition={workflow}
+  readonly={false}
+  isDraggable={true}        // Drag nodes around
+  isSelectable={true}       // Click to select nodes
+  isMultiSelect={true}      // Select multiple nodes
+  isConnectable={true}      // Connect nodes (if applicable)
+/>
+
+// Read-only with selection only
+<WorkflowViewer
+  definition={workflow}
+  readonly={true}
+  isSelectable={true}
+  isDraggable={false}
+  isMultiSelect={false}
+/>
+```
+
+### Navigation Controls
+
+Configure zoom, pan, and navigation features:
+
+```tsx
+// Full navigation controls
+<WorkflowViewer
+  definition={workflow}
+  useControls={true}        // Show zoom/pan buttons
+  useZoom={true}           // Enable zoom functionality
+  useFitView={true}        // Auto-fit content to view
+  useMiniMap={true}        // Show minimap for navigation
+/>
+
+// Minimal navigation
+<WorkflowViewer
+  definition={workflow}
+  useControls={false}
+  useZoom={false}
+  useFitView={true}
+  useMiniMap={false}
+/>
+```
+
+### Event Handling
+
+Handle user interactions and loading events:
+
+```tsx
+<WorkflowViewer
+  definition={workflow}
+  onStateClick={(state) => {
+    console.log('State clicked:', state.name, state.type);
+    // Handle state selection, show details, etc.
+  }}
+  onValidationError={(error) => {
+    console.error('Validation error:', error.message);
+    // Handle validation errors
+  }}
+  onLoadStart={() => {
+    console.log('Loading workflow...');
+    // Show loading indicator
+  }}
+  onLoadEnd={() => {
+    console.log('Workflow loaded successfully');
+    // Hide loading indicator
+  }}
+  onLoadError={(error) => {
+    console.error('Failed to load workflow:', error);
+    // Show error message
+  }}
+/>
+```
 
 ## Examples
 

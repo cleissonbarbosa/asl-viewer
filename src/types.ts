@@ -127,6 +127,15 @@ export interface WorkflowViewerProps {
   width?: number;
   height?: number;
   theme?: "light" | "dark";
+  hideComment?: boolean;
+  useMiniMap?: boolean;
+  useControls?: boolean;
+  useZoom?: boolean;
+  useFitView?: boolean;
+  isDraggable?: boolean;
+  isSelectable?: boolean;
+  isConnectable?: boolean;
+  isMultiSelect?: boolean;
   readonly?: boolean;
   onStateClick?: (state: StateNode) => void;
   onValidationError?: (error: ValidationError) => void;

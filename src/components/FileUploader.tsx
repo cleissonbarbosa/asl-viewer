@@ -98,6 +98,7 @@ interface URLInputProps {
   onUrlSubmit: (url: string) => void;
   theme: ViewerTheme;
   disabled?: boolean;
+  defaultValue?: string;
   placeholder?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -110,11 +111,12 @@ export const URLInput: React.FC<URLInputProps> = ({
   onUrlSubmit,
   theme,
   disabled = false,
+  defaultValue = "",
   placeholder = "Enter URL to ASL definition (JSON or YAML)",
   className,
   style,
 }) => {
-  const [url, setUrl] = React.useState("");
+  const [url, setUrl] = React.useState(defaultValue);
 
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {

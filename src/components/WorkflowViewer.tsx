@@ -15,6 +15,7 @@ import {
 } from "../utils/loader";
 import { ReactFlowRenderer } from "./ReactFlowRenderer";
 import { ErrorDisplay } from "./ErrorDisplay";
+import { IconLoader } from "@tabler/icons-react";
 
 /**
  * A React component for visualizing AWS Step Functions workflows.
@@ -32,6 +33,14 @@ import { ErrorDisplay } from "./ErrorDisplay";
  * @param {number} [props.height=600] - The height of the viewer in pixels.
  * @param {string} [props.theme='light'] - The theme of the viewer, either 'light' or 'dark'.
  * @param {boolean} [props.readonly=true] - Whether the viewer is in read-only mode.
+ * @param {boolean} [props.isConnectable=true] - Whether nodes can be connected to each other.
+ * @param {boolean} [props.isDraggable=false] - Whether nodes can be dragged around.
+ * @param {boolean} [props.isSelectable=true] - Whether nodes can be selected.
+ * @param {boolean} [props.isMultiSelect=false] - Whether multiple nodes can be selected at once.
+ * @param {boolean} [props.useMiniMap=false] - Whether to show a minimap for navigation.
+ * @param {boolean} [props.useControls=true] - Whether to show zoom and pan controls.
+ * @param {boolean} [props.useZoom=true] - Whether zooming is enabled.
+ * @param {boolean} [props.useFitView=true] - Whether to automatically fit the view to show all nodes.
  * @param {(state: StateNode) => void} [props.onStateClick] - Callback invoked when a state is clicked.
  * @param {(error: ValidationError) => void} [props.onValidationError] - Callback invoked when validation errors occur.
  * @param {() => void} [props.onLoadStart] - Callback invoked when loading starts.
@@ -44,7 +53,7 @@ import { ErrorDisplay } from "./ErrorDisplay";
  *
  * @example
  * ```tsx
- * // With definition object
+ * // Basic usage with definition object
  * <WorkflowViewer
  *   definition={aslDefinition}
  *   width={1000}
@@ -53,14 +62,33 @@ import { ErrorDisplay } from "./ErrorDisplay";
  *   onStateClick={(state) => console.log('State clicked:', state)}
  * />
  *
- * // With URL
+ * // Interactive mode with minimap and controls
+ * <WorkflowViewer
+ *   definition={workflow}
+ *   useMiniMap={true}
+ *   useControls={true}
+ *   isDraggable={true}
+ *   isMultiSelect={true}
+ *   readonly={false}
+ * />
+ *
+ * // Minimal view without controls
+ * <WorkflowViewer
+ *   definition={workflow}
+ *   useControls={false}
+ *   useFitView={false}
+ *   useZoom={false}
+ *   isSelectable={false}
+ * />
+ *
+ * // Load from URL
  * <WorkflowViewer
  *   url="https://example.com/workflow.json"
  *   onLoadStart={() => console.log('Loading...')}
  *   onLoadEnd={() => console.log('Loaded!')}
  * />
  *
- * // With file upload
+ * // Load from file upload
  * <WorkflowViewer
  *   file={selectedFile}
  *   onLoadError={(error) => console.error('Load error:', error)}
@@ -74,7 +102,16 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   width = 800,
   height = 600,
   theme = "light",
+  hideComment = false,
   readonly = true,
+  isConnectable = true,
+  isDraggable = false,
+  isSelectable = true,
+  isMultiSelect = false,
+  useMiniMap = false,
+  useControls = true,
+  useZoom = true,
+  useFitView = true,
   onStateClick,
   onValidationError,
   onLoadStart,
@@ -193,7 +230,7 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
       setSelectedState(state);
       onStateClick?.(state);
     },
-    [onStateClick],
+    [onStateClick]
   );
 
   const hasErrors =
@@ -216,7 +253,16 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <div style={{ marginBottom: "8px", fontSize: "16px" }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              fontSize: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <IconLoader />
             Loading...
           </div>
           <div style={{ fontSize: "12px", opacity: 0.7 }}>
@@ -277,25 +323,27 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
       }}
     >
       {/* Header with workflow info */}
-      <div
-        style={{
-          padding: "8px 12px",
-          background: viewerTheme.background,
-          borderBottom: `1px solid ${viewerTheme.borderColor}`,
-          fontSize: "14px",
-          fontWeight: "bold",
-          color: viewerTheme.textColor,
-        }}
-      >
-        Step Functions Workflow
-        {parsedDefinition.Comment && (
-          <span
-            style={{ fontWeight: "normal", marginLeft: "8px", opacity: 0.7 }}
-          >
-            - {parsedDefinition.Comment}
-          </span>
-        )}
-      </div>
+      {!hideComment && (
+        <div
+          style={{
+            padding: "8px 12px",
+            background: viewerTheme.background,
+            borderBottom: `1px solid ${viewerTheme.borderColor}`,
+            fontSize: "14px",
+            fontWeight: "bold",
+            color: viewerTheme.textColor,
+          }}
+        >
+          Step Functions Workflow
+          {parsedDefinition.Comment && (
+            <span
+              style={{ fontWeight: "normal", marginLeft: "8px", opacity: 0.7 }}
+            >
+              - {parsedDefinition.Comment}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Main graph area */}
       <div style={{ flex: 1, position: "relative" }}>
@@ -306,6 +354,14 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
           height={height - 40} // Account for header
           theme={viewerTheme}
           onStateClick={handleStateClick}
+          isConnectable={isConnectable || readonly}
+          isDraggable={isDraggable}
+          isSelectable={isSelectable}
+          isMultiSelect={isMultiSelect}
+          useMiniMap={useMiniMap}
+          useControls={useControls}
+          useZoom={useZoom}
+          useFitView={useFitView}
         />
       </div>
 

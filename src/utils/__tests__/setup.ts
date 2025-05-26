@@ -1,15 +1,17 @@
 // Jest setup file to polyfill browser APIs for Node.js environment
 
 // Polyfill for File constructor
+// eslint-disable-next-line
 global.File = class File {
   public name: string;
   public type: string;
   private content: string;
 
+  // eslint-disable-next-line
   constructor(chunks: BlobPart[], filename: string, options?: FilePropertyBag) {
     this.name = filename;
-    this.type = options?.type || '';
-    this.content = chunks.join('');
+    this.type = options?.type || "";
+    this.content = chunks.join("");
   }
 
   text(): Promise<string> {
@@ -26,7 +28,7 @@ global.File = class File {
       start(controller) {
         controller.enqueue(this.content);
         controller.close();
-      }
+      },
     });
   }
 

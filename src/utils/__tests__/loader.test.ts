@@ -46,6 +46,7 @@ States:
   }
 }
 
+// eslint-disable-next-line
 (global as any).FileReader = MockFileReader;
 
 describe("Loader utilities", () => {

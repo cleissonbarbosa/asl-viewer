@@ -6,115 +6,115 @@ import { ASLDefinition } from "../types";
  */
 const CloudFormationSchema = yaml.DEFAULT_SCHEMA.extend([
   // Handle !Ref
-  new yaml.Type('!Ref', {
-    kind: 'scalar',
+  new yaml.Type("!Ref", {
+    kind: "scalar",
     construct: function (data) {
       return { Ref: data };
-    }
+    },
   }),
-  
+
   // Handle !GetAtt - both formats
-  new yaml.Type('!GetAtt', {
-    kind: 'sequence',
+  new yaml.Type("!GetAtt", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::GetAtt': data };
-    }
+      return { "Fn::GetAtt": data };
+    },
   }),
-  new yaml.Type('!GetAtt', {
-    kind: 'scalar',
+  new yaml.Type("!GetAtt", {
+    kind: "scalar",
     construct: function (data) {
-      return { 'Fn::GetAtt': data.split('.') };
-    }
+      return { "Fn::GetAtt": data.split(".") };
+    },
   }),
-  
+
   // Handle !Join
-  new yaml.Type('!Join', {
-    kind: 'sequence',
+  new yaml.Type("!Join", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Join': data };
-    }
+      return { "Fn::Join": data };
+    },
   }),
-  
+
   // Handle !Sub
-  new yaml.Type('!Sub', {
-    kind: 'scalar',
+  new yaml.Type("!Sub", {
+    kind: "scalar",
     construct: function (data) {
-      return { 'Fn::Sub': data };
-    }
+      return { "Fn::Sub": data };
+    },
   }),
-  new yaml.Type('!Sub', {
-    kind: 'sequence',
+  new yaml.Type("!Sub", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Sub': data };
-    }
+      return { "Fn::Sub": data };
+    },
   }),
-  
+
   // Handle other CloudFormation functions
-  new yaml.Type('!Base64', {
-    kind: 'scalar',
+  new yaml.Type("!Base64", {
+    kind: "scalar",
     construct: function (data) {
-      return { 'Fn::Base64': data };
-    }
+      return { "Fn::Base64": data };
+    },
   }),
-  new yaml.Type('!If', {
-    kind: 'sequence',
+  new yaml.Type("!If", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::If': data };
-    }
+      return { "Fn::If": data };
+    },
   }),
-  new yaml.Type('!Not', {
-    kind: 'sequence',
+  new yaml.Type("!Not", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Not': data };
-    }
+      return { "Fn::Not": data };
+    },
   }),
-  new yaml.Type('!Equals', {
-    kind: 'sequence',
+  new yaml.Type("!Equals", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Equals': data };
-    }
+      return { "Fn::Equals": data };
+    },
   }),
-  new yaml.Type('!And', {
-    kind: 'sequence',
+  new yaml.Type("!And", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::And': data };
-    }
+      return { "Fn::And": data };
+    },
   }),
-  new yaml.Type('!Or', {
-    kind: 'sequence',
+  new yaml.Type("!Or", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Or': data };
-    }
+      return { "Fn::Or": data };
+    },
   }),
-  new yaml.Type('!FindInMap', {
-    kind: 'sequence',
+  new yaml.Type("!FindInMap", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::FindInMap': data };
-    }
+      return { "Fn::FindInMap": data };
+    },
   }),
-  new yaml.Type('!Select', {
-    kind: 'sequence',
+  new yaml.Type("!Select", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Select': data };
-    }
+      return { "Fn::Select": data };
+    },
   }),
-  new yaml.Type('!Split', {
-    kind: 'sequence',
+  new yaml.Type("!Split", {
+    kind: "sequence",
     construct: function (data) {
-      return { 'Fn::Split': data };
-    }
+      return { "Fn::Split": data };
+    },
   }),
-  new yaml.Type('!ImportValue', {
-    kind: 'scalar',
+  new yaml.Type("!ImportValue", {
+    kind: "scalar",
     construct: function (data) {
-      return { 'Fn::ImportValue': data };
-    }
+      return { "Fn::ImportValue": data };
+    },
   }),
-  new yaml.Type('!Condition', {
-    kind: 'scalar',
+  new yaml.Type("!Condition", {
+    kind: "scalar",
     construct: function (data) {
       return { Condition: data };
-    }
+    },
   }),
 ]);
 
@@ -132,27 +132,27 @@ function parseYAML(yamlContent: string): any {
     try {
       // Create a custom schema that ignores unknown tags
       const PermissiveSchema = yaml.DEFAULT_SCHEMA.extend([
-        new yaml.Type('tag:yaml.org,2002:js/undefined', {
-          kind: 'scalar',
+        new yaml.Type("tag:yaml.org,2002:js/undefined", {
+          kind: "scalar",
           resolve: () => true,
-          construct: () => undefined
-        })
+          construct: () => undefined,
+        }),
       ]);
 
       return yaml.load(yamlContent, {
         schema: PermissiveSchema,
         onWarning: (warning) => {
-          console.warn('YAML parsing warning:', warning);
-        }
+          console.warn("YAML parsing warning:", warning);
+        },
       });
     } catch (fallbackError) {
       // Last resort: try to handle unknown tags by replacing them
       try {
         // Replace CloudFormation intrinsic functions with placeholders
         const sanitizedYaml = yamlContent
-          .replace(/!\w+/g, 'CF_FUNCTION')
-          .replace(/!<[^>]+>/g, 'CF_FUNCTION');
-        
+          .replace(/!\w+/g, "CF_FUNCTION")
+          .replace(/!<[^>]+>/g, "CF_FUNCTION");
+
         return yaml.load(sanitizedYaml, {
           schema: yaml.DEFAULT_SCHEMA,
         });
@@ -170,11 +170,11 @@ function parseYAML(yamlContent: string): any {
  */
 function isCloudFormationTemplate(content: any): boolean {
   return (
-    typeof content === 'object' &&
+    typeof content === "object" &&
     content !== null &&
-    (content.AWSTemplateFormatVersion || 
-     content.Transform === 'AWS::Serverless-2016-10-31' ||
-     (content.Resources && typeof content.Resources === 'object'))
+    (content.AWSTemplateFormatVersion ||
+      content.Transform === "AWS::Serverless-2016-10-31" ||
+      (content.Resources && typeof content.Resources === "object"))
   );
 }
 
@@ -183,26 +183,30 @@ function isCloudFormationTemplate(content: any): boolean {
  */
 function extractASLFromCloudFormation(template: any): ASLDefinition {
   if (!isCloudFormationTemplate(template)) {
-    throw new Error('Not a CloudFormation template');
+    throw new Error("Not a CloudFormation template");
   }
 
   const resources = template.Resources;
   if (!resources) {
-    throw new Error('No Resources section found in CloudFormation template');
+    throw new Error("No Resources section found in CloudFormation template");
   }
 
   // Look for AWS::StepFunctions::StateMachine or AWS::Serverless::StateMachine
   for (const [resourceName, resource] of Object.entries(resources)) {
     const res = resource as any;
     if (
-      res.Type === 'AWS::StepFunctions::StateMachine' ||
-      res.Type === 'AWS::Serverless::StateMachine'
+      res.Type === "AWS::StepFunctions::StateMachine" ||
+      res.Type === "AWS::Serverless::StateMachine"
     ) {
       if (res.Properties && res.Properties.Definition) {
         const definition = res.Properties.Definition;
-        
+
         // Check if it's a valid ASL definition
-        if (typeof definition === 'object' && definition.StartAt && definition.States) {
+        if (
+          typeof definition === "object" &&
+          definition.StartAt &&
+          definition.States
+        ) {
           return definition as ASLDefinition;
         }
       }
@@ -210,8 +214,8 @@ function extractASLFromCloudFormation(template: any): ASLDefinition {
   }
 
   throw new Error(
-    'No Step Functions state machine definition found in CloudFormation template. ' +
-    'Please provide a direct ASL definition or a CloudFormation template with a State Machine resource.'
+    "No Step Functions state machine definition found in CloudFormation template. " +
+      "Please provide a direct ASL definition or a CloudFormation template with a State Machine resource.",
   );
 }
 
@@ -255,13 +259,13 @@ export async function loadFromURL(url: string): Promise<ASLDefinition> {
     }
 
     // Check if it's already an ASL definition
-    if (typeof parsed === 'object' && parsed.StartAt && parsed.States) {
+    if (typeof parsed === "object" && parsed.StartAt && parsed.States) {
       return parsed as ASLDefinition;
     }
 
     throw new Error(
       'Invalid format: Expected an ASL definition with "StartAt" and "States" properties, ' +
-      'or a CloudFormation template containing a Step Functions state machine.'
+        "or a CloudFormation template containing a Step Functions state machine.",
     );
   } catch (error) {
     throw new Error(
@@ -307,15 +311,17 @@ export async function loadFromFile(file: File): Promise<ASLDefinition> {
         }
 
         // Check if it's already an ASL definition
-        if (typeof parsed === 'object' && parsed.StartAt && parsed.States) {
+        if (typeof parsed === "object" && parsed.StartAt && parsed.States) {
           resolve(parsed as ASLDefinition);
           return;
         }
 
-        reject(new Error(
-          'Invalid format: Expected an ASL definition with "StartAt" and "States" properties, ' +
-          'or a CloudFormation template containing a Step Functions state machine.'
-        ));
+        reject(
+          new Error(
+            'Invalid format: Expected an ASL definition with "StartAt" and "States" properties, ' +
+              "or a CloudFormation template containing a Step Functions state machine.",
+          ),
+        );
       } catch (error) {
         reject(
           new Error(
@@ -340,44 +346,44 @@ export function parseDefinitionString(definition: string): ASLDefinition {
   try {
     // Try JSON first
     let parsed = JSON.parse(definition);
-    
+
     // Check if it's a CloudFormation template and extract ASL definition
     if (isCloudFormationTemplate(parsed)) {
       return extractASLFromCloudFormation(parsed);
     }
 
     // Check if it's already an ASL definition
-    if (typeof parsed === 'object' && parsed.StartAt && parsed.States) {
+    if (typeof parsed === "object" && parsed.StartAt && parsed.States) {
       return parsed as ASLDefinition;
     }
 
     throw new Error(
       'Invalid JSON format: Expected an ASL definition with "StartAt" and "States" properties, ' +
-      'or a CloudFormation template containing a Step Functions state machine.'
+        "or a CloudFormation template containing a Step Functions state machine.",
     );
   } catch (jsonError) {
     // Try YAML
     try {
       let parsed = parseYAML(definition);
-      
+
       // Check if it's a CloudFormation template and extract ASL definition
       if (isCloudFormationTemplate(parsed)) {
         return extractASLFromCloudFormation(parsed);
       }
 
       // Check if it's already an ASL definition
-      if (typeof parsed === 'object' && parsed.StartAt && parsed.States) {
+      if (typeof parsed === "object" && parsed.StartAt && parsed.States) {
         return parsed as ASLDefinition;
       }
 
       throw new Error(
         'Invalid YAML format: Expected an ASL definition with "StartAt" and "States" properties, ' +
-        'or a CloudFormation template containing a Step Functions state machine.'
+          "or a CloudFormation template containing a Step Functions state machine.",
       );
     } catch (yamlError) {
       throw new Error(
         `Failed to parse as JSON or YAML. JSON error: ${jsonError instanceof Error ? jsonError.message : "Unknown"}. ` +
-        `YAML error: ${yamlError instanceof Error ? yamlError.message : "Unknown"}.`
+          `YAML error: ${yamlError instanceof Error ? yamlError.message : "Unknown"}.`,
       );
     }
   }

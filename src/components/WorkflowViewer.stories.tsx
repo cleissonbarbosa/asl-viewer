@@ -202,7 +202,8 @@ const ecommerceWorkflowDefinition: ASLDefinition = {
           States: {
             CheckProductInventory: {
               Type: "Task",
-              Resource: "arn:aws:lambda:us-east-1:123456789012:function:CheckInventory",
+              Resource:
+                "arn:aws:lambda:us-east-1:123456789012:function:CheckInventory",
               End: true,
             },
           },
@@ -212,7 +213,8 @@ const ecommerceWorkflowDefinition: ASLDefinition = {
           States: {
             ReserveInventory: {
               Type: "Task",
-              Resource: "arn:aws:lambda:us-east-1:123456789012:function:ReserveInventory",
+              Resource:
+                "arn:aws:lambda:us-east-1:123456789012:function:ReserveInventory",
               End: true,
             },
           },
@@ -248,7 +250,8 @@ const ecommerceWorkflowDefinition: ASLDefinition = {
     },
     SendConfirmation: {
       Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:SendConfirmation",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:SendConfirmation",
       Next: "OrderCompleted",
     },
     OrderCompleted: {
@@ -256,12 +259,14 @@ const ecommerceWorkflowDefinition: ASLDefinition = {
     },
     PaymentFailed: {
       Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:HandlePaymentFailure",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:HandlePaymentFailure",
       Next: "OrderFailed",
     },
     OrderValidationFailed: {
       Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:HandleValidationFailure",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:HandleValidationFailure",
       Next: "OrderFailed",
     },
     OrderFailed: {
@@ -290,12 +295,14 @@ const dataProcessingWorkflowDefinition: ASLDefinition = {
         States: {
           ProcessBatch: {
             Type: "Task",
-            Resource: "arn:aws:lambda:us-east-1:123456789012:function:ProcessBatch",
+            Resource:
+              "arn:aws:lambda:us-east-1:123456789012:function:ProcessBatch",
             Next: "ValidateBatch",
           },
           ValidateBatch: {
             Type: "Task",
-            Resource: "arn:aws:lambda:us-east-1:123456789012:function:ValidateBatch",
+            Resource:
+              "arn:aws:lambda:us-east-1:123456789012:function:ValidateBatch",
             Next: "BatchProcessed",
           },
           BatchProcessed: {
@@ -307,7 +314,8 @@ const dataProcessingWorkflowDefinition: ASLDefinition = {
     },
     AggregateResults: {
       Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:AggregateResults",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:AggregateResults",
       Next: "GenerateReport",
     },
     GenerateReport: {
@@ -476,7 +484,9 @@ export const ReadOnlyPresentationMode: Story = {
 // URL Loading Story
 export const LoadFromURL: Story = {
   render: (args) => {
-    const [currentUrl, setCurrentUrl] = React.useState<string>("https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml");
+    const [currentUrl, setCurrentUrl] = React.useState<string>(
+      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml",
+    );
 
     return (
       <div

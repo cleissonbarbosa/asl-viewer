@@ -501,23 +501,23 @@ Handle user interactions and loading events:
 <WorkflowViewer
   definition={workflow}
   onStateClick={(state) => {
-    console.log('State clicked:', state.name, state.type);
+    console.log("State clicked:", state.name, state.type);
     // Handle state selection, show details, etc.
   }}
   onValidationError={(error) => {
-    console.error('Validation error:', error.message);
+    console.error("Validation error:", error.message);
     // Handle validation errors
   }}
   onLoadStart={() => {
-    console.log('Loading workflow...');
+    console.log("Loading workflow...");
     // Show loading indicator
   }}
   onLoadEnd={() => {
-    console.log('Workflow loaded successfully');
+    console.log("Workflow loaded successfully");
     // Hide loading indicator
   }}
   onLoadError={(error) => {
-    console.error('Failed to load workflow:', error);
+    console.error("Failed to load workflow:", error);
     // Show error message
   }}
 />

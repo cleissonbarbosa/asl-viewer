@@ -8,8 +8,8 @@ global.File = class File {
 
   constructor(chunks: BlobPart[], filename: string, options?: FilePropertyBag) {
     this.name = filename;
-    this.type = options?.type || '';
-    this.content = chunks.join('');
+    this.type = options?.type || "";
+    this.content = chunks.join("");
   }
 
   text(): Promise<string> {
@@ -26,7 +26,7 @@ global.File = class File {
       start(controller) {
         controller.enqueue(this.content);
         controller.close();
-      }
+      },
     });
   }
 

@@ -37,12 +37,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/asl-viewer.git"
+    "url": "git+https://github.com/cleissonbarbosa/asl-viewer.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/asl-viewer/issues"
+    "url": "https://github.com/cleissonbarbosa/asl-viewer/issues"
   },
-  "homepage": "https://github.com/your-username/asl-viewer#readme",
+  "homepage": "https://github.com/cleissonbarbosa/asl-viewer#readme",
   "publishConfig": {
     "access": "public"
   },

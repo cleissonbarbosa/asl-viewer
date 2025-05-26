@@ -1,6 +1,6 @@
 # ASL Viewer
 
-[![CI](https://github.com/cleissonb/asl-viewer/workflows/CI/badge.svg)](https://github.com/cleissonb/asl-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/cleissonbarbosa/asl-viewer/workflows/CI/badge.svg)](https://github.com/cleissonbarbosa/asl-viewer/actions/workflows/ci.yml)
 [![Storybook](https://img.shields.io/badge/Storybook-FF4785?style=flat&logo=storybook&logoColor=white)](https://cleissonbarbosa.github.io/asl-viewer-stories/)
 [![npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
 

@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { ValidationError, ViewerTheme } from "../types";
+import {
+  IconAlertHexagonFilled,
+  IconAlertTriangleFilled,
+  IconTool,
+} from "@tabler/icons-react";
 
 interface ErrorDisplayProps {
   errors: ValidationError[];
@@ -29,11 +34,15 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   };
 
   const getSeverityIcon = (severity: "error" | "warning") => {
-    return severity === "error" ? "🚨" : "⚠️";
+    return severity === "error" ? (
+      <IconAlertHexagonFilled color={theme.errorColor} />
+    ) : (
+      <IconAlertTriangleFilled color={theme.warningColor} />
+    );
   };
 
   const getSeverityColor = (severity: "error" | "warning") => {
-    return severity === "error" ? theme.errorColor : "#ff9800";
+    return severity === "error" ? theme.errorColor : theme.warningColor;
   };
 
   return (
@@ -49,7 +58,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         padding: "20px",
         color: theme.textColor,
         boxShadow: `0 4px 12px rgba(0, 0, 0, 0.1)`,
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
       <div
@@ -63,25 +73,25 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
           textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <span 
-          style={{ 
-            marginRight: "12px", 
+        <span
+          style={{
+            marginRight: "12px",
             fontSize: "24px",
-            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))"
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))",
           }}
         >
-          🛠️
+          <IconTool color={theme.errorColor} />
         </span>
         Workflow Validation Issues
       </div>
 
-      <div 
-        style={{ 
-          marginBottom: "20px", 
+      <div
+        style={{
+          marginBottom: "20px",
           fontSize: "14px",
           display: "flex",
           gap: "16px",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
         }}
       >
         {errorCount > 0 && (
@@ -98,25 +108,29 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
               gap: "6px",
             }}
           >
-            <span>🚨</span>
+            <span>
+              <IconAlertHexagonFilled color={theme.errorColor} />
+            </span>
             {errorCount} error{errorCount !== 1 ? "s" : ""}
           </div>
         )}
         {warningCount > 0 && (
           <div
             style={{
-              background: "#ff980020",
-              color: "#ff9800",
+              background: `${theme.warningColor}20`,
+              color: theme.warningColor,
               padding: "8px 12px",
               borderRadius: "20px",
-              border: "1px solid #ff980040",
+              border: `1px solid ${theme.warningColor}40`,
               fontWeight: "500",
               display: "flex",
               alignItems: "center",
               gap: "6px",
             }}
           >
-            <span>⚠️</span>
+            <span>
+              <IconAlertTriangleFilled color={theme.warningColor} />
+            </span>
             {warningCount} warning{warningCount !== 1 ? "s" : ""}
           </div>
         )}
@@ -149,7 +163,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
             onClick={() => toggleErrorExpansion(index)}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(0, 0, 0, 0.15)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
@@ -168,14 +183,16 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                   fontSize: "14px",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
                   <span style={{ fontSize: "16px" }}>
                     {getSeverityIcon(error.severity)}
                   </span>
                   <span>{error.severity.toUpperCase()}</span>
-                  <span 
-                    style={{ 
-                      color: theme.textColor, 
+                  <span
+                    style={{
+                      color: theme.textColor,
                       opacity: 0.7,
                       fontWeight: "400",
                       fontSize: "12px",
@@ -187,18 +204,20 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                     {error.path}
                   </span>
                 </div>
-                <span 
-                  style={{ 
-                    fontSize: "12px", 
+                <span
+                  style={{
+                    fontSize: "12px",
                     opacity: 0.6,
-                    transform: expandedErrors.has(index) ? "rotate(180deg)" : "rotate(0deg)",
+                    transform: expandedErrors.has(index)
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
                     transition: "transform 0.2s ease",
                   }}
                 >
                   ▼
                 </span>
               </div>
-              
+
               <div
                 style={{
                   color: theme.textColor,
@@ -212,39 +231,40 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
               >
                 {error.message}
               </div>
-              
-              {expandedErrors.has(index) && (error.line !== undefined || error.column !== undefined) && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    padding: "8px 12px",
-                    background: `${getSeverityColor(error.severity)}10`,
-                    borderRadius: "6px",
-                    border: `1px solid ${getSeverityColor(error.severity)}20`,
-                  }}
-                >
+
+              {expandedErrors.has(index) &&
+                (error.line !== undefined || error.column !== undefined) && (
                   <div
                     style={{
-                      fontSize: "11px",
-                      fontWeight: "500",
-                      color: getSeverityColor(error.severity),
-                      marginBottom: "4px",
+                      marginTop: "8px",
+                      padding: "8px 12px",
+                      background: `${getSeverityColor(error.severity)}10`,
+                      borderRadius: "6px",
+                      border: `1px solid ${getSeverityColor(error.severity)}20`,
                     }}
                   >
-                    📍 Location Details
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "500",
+                        color: getSeverityColor(error.severity),
+                        marginBottom: "4px",
+                      }}
+                    >
+                      📍 Location Details
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: theme.textColor,
+                        opacity: 0.8,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      Line: {error.line || "?"}, Column: {error.column || "?"}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: theme.textColor,
-                      opacity: 0.8,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    Line: {error.line || "?"}, Column: {error.column || "?"}
-                  </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         ))}

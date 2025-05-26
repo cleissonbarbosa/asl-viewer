@@ -111,6 +111,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        nodesDraggable={false}
         connectionMode={ConnectionMode.Strict}
         fitView
         fitViewOptions={{

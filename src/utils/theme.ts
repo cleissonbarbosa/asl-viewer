@@ -16,6 +16,8 @@ export const lightTheme: ViewerTheme = {
   borderColor: "#d5dbdb",
   connectionColor: "#879196",
   errorColor: "#d13212",
+  warningColor: "#ff9800",
+  infoColor: "#2196f3",
   successColor: "#1d8102",
 };
 
@@ -35,6 +37,8 @@ export const darkTheme: ViewerTheme = {
   borderColor: "#5a6d7d",
   connectionColor: "#aab7b8",
   errorColor: "#ff6b6b",
+  warningColor: "#ff9800",
+  infoColor: "#2196f3",
   successColor: "#51cf66",
 };
 

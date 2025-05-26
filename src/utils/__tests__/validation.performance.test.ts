@@ -91,7 +91,7 @@ describe("Performance tests for validateASLDefinition", () => {
 
     const duration = end - start;
     console.log(
-      `Validated 1000-state linear workflow in ${duration.toFixed(2)}ms`
+      `Validated 1000-state linear workflow in ${duration.toFixed(2)}ms`,
     );
 
     expect(errors).toHaveLength(0);
@@ -108,8 +108,8 @@ describe("Performance tests for validateASLDefinition", () => {
     const duration = end - start;
     console.log(
       `Validated complex workflow with 100 states (including choice branches) in ${duration.toFixed(
-        2
-      )}ms`
+        2,
+      )}ms`,
     );
 
     expect(errors).toHaveLength(0);
@@ -135,13 +135,13 @@ describe("Performance tests for validateASLDefinition", () => {
     const duration = end - start;
     console.log(
       `Validated workflow with 500 reachable + 100 unreachable states in ${duration.toFixed(
-        2
-      )}ms`
+        2,
+      )}ms`,
     );
 
     // Should find 100 unreachable state warnings
     const unreachableErrors = errors.filter((e) =>
-      e.message.includes("unreachable")
+      e.message.includes("unreachable"),
     );
     expect(unreachableErrors).toHaveLength(100);
     expect(duration).toBeLessThan(150); // Should complete in under 150ms
@@ -158,14 +158,14 @@ describe("Performance tests for validateASLDefinition", () => {
     const start = performance.now();
 
     const allErrors = workflows.map((workflow) =>
-      validateASLDefinition(workflow)
+      validateASLDefinition(workflow),
     );
 
     const end = performance.now();
     const duration = end - start;
 
     console.log(
-      `Validated 4 different workflows in sequence in ${duration.toFixed(2)}ms`
+      `Validated 4 different workflows in sequence in ${duration.toFixed(2)}ms`,
     );
 
     // All workflows should be valid

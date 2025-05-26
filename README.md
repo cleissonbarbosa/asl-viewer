@@ -1,6 +1,14 @@
 # ASL Viewer
 
+[![CI](https://github.com/cleissonb/asl-viewer/workflows/CI/badge.svg)](https://github.com/cleissonb/asl-viewer/actions/workflows/ci.yml)
+[![Storybook](https://img.shields.io/badge/Storybook-FF4785?style=flat&logo=storybook&logoColor=white)](https://cleissonbarbosa.github.io/asl-viewer-stories/)
+[![npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
+
 A React library for visualizing AWS Step Functions workflows (Amazon States Language) in the browser. Built with TypeScript and based on the AWS Toolkit for VS Code.
+
+## 📖 Live Examples
+
+Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer-stories/) to see interactive examples and explore all available components and features.
 
 ## Features
 
@@ -135,9 +143,19 @@ yarn build
 
 ### Storybook
 
+Run Storybook locally for development:
+
 ```bash
 yarn storybook
 ```
+
+Build Storybook for production:
+
+```bash
+yarn build-storybook
+```
+
+The Storybook is automatically deployed to GitHub Pages at [https://cleissonb.github.io/asl-viewer/](https://cleissonb.github.io/asl-viewer/) when changes are pushed to the main branch.
 
 ### Testing
 

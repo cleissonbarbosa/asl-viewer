@@ -48,9 +48,9 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
 
     switch (type) {
       case "Pass":
-        return <IconListDetails color={iconColor} size={iconSize} />;
+        return <IconListDetails color={theme.infoColor} size={iconSize} />;
       case "Task":
-        return <IconLambda color={iconColor} size={iconSize} />;
+        return <IconLambda color={"#ed7100"} size={iconSize} />;
       case "Choice":
         return <IconLocationQuestion color={iconColor} size={iconSize} />;
       case "Wait":
@@ -66,7 +66,7 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
       case "Map":
         return <IconSitemap color={iconColor} size={iconSize} />;
       default:
-        return <IconLambda color={iconColor} size={iconSize} />;
+        return <IconLambda color={"#ed7100"} size={iconSize} />;
     }
   };
 
@@ -175,8 +175,8 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
               stateNode.id === "__start__"
                 ? `0 0 20px ${theme.successColor}60, 0 6px 12px rgba(0,0,0,0.2)`
                 : stateNode.id === "__end__"
-                ? `0 0 20px ${theme.errorColor}60, 0 6px 12px rgba(0,0,0,0.2)`
-                : "0 6px 12px rgba(0,0,0,0.2)";
+                  ? `0 0 20px ${theme.errorColor}60, 0 6px 12px rgba(0,0,0,0.2)`
+                  : "0 6px 12px rgba(0,0,0,0.2)";
           }
         }}
         onMouseLeave={(e) => {

@@ -4,7 +4,7 @@ import { ASLDefinition, StateDefinition, ValidationError } from "../types";
  * Validates an ASL definition for syntax and semantic errors
  */
 export function validateASLDefinition(
-  definition: ASLDefinition
+  definition: ASLDefinition,
 ): ValidationError[] {
   const errors: ValidationError[] = [];
 
@@ -68,7 +68,7 @@ export function validateASLDefinition(
 function validateState(
   stateName: string,
   state: StateDefinition,
-  stateNameSet: Set<string>
+  stateNameSet: Set<string>,
 ): ValidationError[] {
   const errors: ValidationError[] = [];
   const basePath = `States.${stateName}`;
@@ -138,7 +138,7 @@ function validateState(
       }
       break;
 
-    case "Wait":
+    case "Wait": {
       // Wait states must have exactly one time specification
       const timeFields = [
         "Seconds",
@@ -147,7 +147,7 @@ function validateState(
         "TimestampPath",
       ] as const;
       const presentTimeFields = timeFields.filter(
-        (field) => field in state && state[field] !== undefined
+        (field) => field in state && state[field] !== undefined,
       );
 
       if (presentTimeFields.length === 0) {
@@ -165,8 +165,9 @@ function validateState(
         });
       }
       break;
+    }
 
-    case "Parallel":
+    case "Parallel": {
       // Parallel states must have Branches
       if (
         !state.Branches ||
@@ -180,8 +181,9 @@ function validateState(
         });
       }
       break;
+    }
 
-    case "Map":
+    case "Map": {
       // Map states must have Iterator
       if (!state.Iterator) {
         errors.push({
@@ -191,8 +193,9 @@ function validateState(
         });
       }
       break;
+    }
 
-    case "Fail":
+    case "Fail": {
       // Fail states cannot have Next and automatically end
       if (hasNext) {
         errors.push({
@@ -202,8 +205,9 @@ function validateState(
         });
       }
       break;
+    }
 
-    case "Succeed":
+    case "Succeed": {
       // Succeed states cannot have Next and automatically end
       if (hasNext) {
         errors.push({
@@ -213,6 +217,7 @@ function validateState(
         });
       }
       break;
+    }
   }
 
   // Validate Next references with O(1) lookup
@@ -345,7 +350,7 @@ function findReachableStates(definition: ASLDefinition): Set<string> {
  * Parses ASL definition from string to object
  */
 export function parseASLDefinition(
-  definition: string | ASLDefinition
+  definition: string | ASLDefinition,
 ): ASLDefinition {
   if (typeof definition === "string") {
     try {

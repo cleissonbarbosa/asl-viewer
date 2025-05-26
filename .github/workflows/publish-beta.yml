@@ -1,0 +1,85 @@
+name: Publish Beta
+
+on:
+  push:
+    branches:
+      - develop
+      - beta
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build project
+        run: yarn build
+
+  publish-beta:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/beta'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build project
+        run: yarn build
+
+      - name: Generate beta version
+        id: beta_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          BETA_VERSION="${CURRENT_VERSION}-beta.${TIMESTAMP}.${COMMIT_HASH}"
+          echo "BETA_VERSION=${BETA_VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated beta version: ${BETA_VERSION}"
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.beta_version.outputs.BETA_VERSION }} --no-git-tag-version
+
+      - name: Publish beta to NPM
+        run: npm publish --tag beta --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Beta version published: \`${{ steps.beta_version.outputs.BETA_VERSION }}\`\n\nYou can install it with:\n\`\`\`bash\nnpm install asl-workflow-viewer@beta\n\`\`\``
+            })

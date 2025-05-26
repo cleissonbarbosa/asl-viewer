@@ -98,7 +98,7 @@ export function createGraphLayout(definition: ASLDefinition): GraphLayout {
 function calculateHierarchicalLayout(
   nodes: StateNode[],
   edges: Connection[],
-  startAt: string
+  startAt: string,
 ): { nodes: StateNode[]; width: number; height: number } {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const visited = new Set<string>();
@@ -116,7 +116,7 @@ function calculateHierarchicalLayout(
   // Check if there are edges with labels between levels
   const hasLabeledEdgesBetweenLevels = (
     fromLevel: number,
-    toLevel: number
+    toLevel: number,
   ): boolean => {
     if (fromLevel >= levels.length || toLevel >= levels.length) return false;
 
@@ -214,7 +214,7 @@ function calculateHierarchicalLayout(
 function createStateNode(
   stateName: string,
   state: StateDefinition,
-  startAt: string
+  startAt: string,
 ): StateNode {
   const isStartState = stateName === startAt;
   const isEndState =
@@ -237,7 +237,7 @@ function createStateNode(
 function getStateSize(
   type: string,
   isStartState = false,
-  isEndState = false
+  isEndState = false,
 ): { width: number; height: number } {
   // All regular state nodes are now rectangular (no more circular end states)
   switch (type) {
@@ -257,7 +257,7 @@ function getStateSize(
 
 function createConnections(
   stateName: string,
-  state: StateDefinition
+  state: StateDefinition,
 ): Connection[] {
   const connections: Connection[] = [];
 
@@ -397,7 +397,7 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
   const hasLabeledEdgesFrom = (nodeId: string): boolean => {
     return edges.some(
       (edge) =>
-        edge.from === nodeId && edge.label && edge.label.trim().length > 0
+        edge.from === nodeId && edge.label && edge.label.trim().length > 0,
     );
   };
 

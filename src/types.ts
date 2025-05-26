@@ -155,5 +155,7 @@ export interface ViewerTheme {
   borderColor: string;
   connectionColor: string;
   errorColor: string;
+  warningColor: string;
+  infoColor: string;
   successColor: string;
 }

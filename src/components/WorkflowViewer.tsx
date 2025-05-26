@@ -103,7 +103,7 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
       setSelectedState(state);
       onStateClick?.(state);
     },
-    [onStateClick]
+    [onStateClick],
   );
 
   const hasErrors = errors.some((error) => error.severity === "error");

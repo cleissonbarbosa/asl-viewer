@@ -66,13 +66,13 @@ describe("Layout Utils", () => {
       // Check connections
       const edges = layout.edges;
       expect(
-        edges.find((e) => e.from === "__start__" && e.to === "First")
+        edges.find((e) => e.from === "__start__" && e.to === "First"),
       ).toBeDefined();
       expect(
-        edges.find((e) => e.from === "First" && e.to === "Second")
+        edges.find((e) => e.from === "First" && e.to === "Second"),
       ).toBeDefined();
       expect(
-        edges.find((e) => e.from === "Second" && e.to === "__end__")
+        edges.find((e) => e.from === "Second" && e.to === "__end__"),
       ).toBeDefined();
     });
 
@@ -160,7 +160,7 @@ describe("Layout Utils", () => {
       const layout = createGraphLayout(definition);
 
       const catchEdge = layout.edges.find(
-        (e) => e.from === "TaskWithCatch" && e.to === "ErrorHandler"
+        (e) => e.from === "TaskWithCatch" && e.to === "ErrorHandler",
       );
       expect(catchEdge).toBeDefined();
       expect(catchEdge?.type).toBe("error");
@@ -198,10 +198,10 @@ describe("Layout Utils", () => {
 
       // Both SuccessState and FailState should connect to artificial end
       const successToEnd = layout.edges.find(
-        (e) => e.from === "SuccessState" && e.to === "__end__"
+        (e) => e.from === "SuccessState" && e.to === "__end__",
       );
       const failToEnd = layout.edges.find(
-        (e) => e.from === "FailState" && e.to === "__end__"
+        (e) => e.from === "FailState" && e.to === "__end__",
       );
 
       expect(successToEnd).toBeDefined();
@@ -316,7 +316,7 @@ describe("Layout Utils", () => {
       const endNode = layout.nodes.find((n) => n.id === "__end__");
 
       expect(startNode?.position.y).toBeLessThan(
-        helloWorldNode?.position.y || 0
+        helloWorldNode?.position.y || 0,
       );
       expect(helloWorldNode?.position.y).toBeLessThan(endNode?.position.y || 0);
     });
@@ -474,7 +474,7 @@ describe("Layout Utils", () => {
       // Both states should be included in the layout
       expect(layout.nodes.find((n) => n.id === "StateA")).toBeDefined();
       expect(
-        layout.nodes.find((n) => n.id === "UnreachableState")
+        layout.nodes.find((n) => n.id === "UnreachableState"),
       ).toBeDefined();
     });
   });
@@ -515,17 +515,17 @@ describe("Layout Utils", () => {
       const layout = createGraphLayout(definition);
 
       const choiceEdges = layout.edges.filter(
-        (e) => e.from === "ChoiceState" && e.type === "choice"
+        (e) => e.from === "ChoiceState" && e.type === "choice",
       );
 
       expect(choiceEdges.find((e) => e.to === "SuccessState")?.condition).toBe(
-        '$.type == "success"'
+        '$.type == "success"',
       );
       expect(choiceEdges.find((e) => e.to === "LessThanState")?.condition).toBe(
-        '$.type < "z"'
+        '$.type < "z"',
       );
       expect(
-        choiceEdges.find((e) => e.to === "GreaterThanState")?.condition
+        choiceEdges.find((e) => e.to === "GreaterThanState")?.condition,
       ).toBe('$.type > "a"');
     });
 
@@ -564,17 +564,17 @@ describe("Layout Utils", () => {
       const layout = createGraphLayout(definition);
 
       const choiceEdges = layout.edges.filter(
-        (e) => e.from === "ChoiceState" && e.type === "choice"
+        (e) => e.from === "ChoiceState" && e.type === "choice",
       );
 
       expect(choiceEdges.find((e) => e.to === "EqualsState")?.condition).toBe(
-        "$.count == 42"
+        "$.count == 42",
       );
       expect(choiceEdges.find((e) => e.to === "LessThanState")?.condition).toBe(
-        "$.count < 100"
+        "$.count < 100",
       );
       expect(
-        choiceEdges.find((e) => e.to === "GreaterThanState")?.condition
+        choiceEdges.find((e) => e.to === "GreaterThanState")?.condition,
       ).toBe("$.count > 0");
     });
 
@@ -601,7 +601,7 @@ describe("Layout Utils", () => {
       const layout = createGraphLayout(definition);
 
       const choiceEdge = layout.edges.find(
-        (e) => e.from === "ChoiceState" && e.to === "ActiveState"
+        (e) => e.from === "ChoiceState" && e.to === "ActiveState",
       );
       expect(choiceEdge?.condition).toBe("$.isActive == true");
     });

@@ -15,7 +15,7 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see 
 - 🎨 **Visual Workflow Rendering** - Display ASL workflows as interactive graphs
 - 🌓 **Theme Support** - Light and dark themes built-in
 - ✅ **ASL Validation** - Comprehensive validation for ASL syntax and semantics
-- 🔄 **Auto Layout** - Automatic graph layout using Dagre algorithm
+- 🔄 **Auto Layout** - Automatic graph layout
 - 📱 **Responsive** - Works on different screen sizes
 - 🖱️ **Interactive** - Click handlers for states and connections
 - 🌐 **Multiple Input Sources** - Load from definition objects, URLs, or files

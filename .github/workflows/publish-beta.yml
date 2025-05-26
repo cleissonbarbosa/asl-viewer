@@ -3,7 +3,7 @@ name: Publish Beta
 on:
   push:
     branches:
-      - develop
+      - development
       - beta
   workflow_dispatch:
 
@@ -32,7 +32,7 @@ jobs:
   publish-beta:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/beta'
+    if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/beta'
     permissions:
       contents: read
       id-token: write

@@ -121,13 +121,27 @@ export interface ValidationError {
 }
 
 export interface WorkflowViewerProps {
-  definition: ASLDefinition | string;
+  definition?: ASLDefinition | string;
+  url?: string;
+  file?: File;
   width?: number;
   height?: number;
   theme?: "light" | "dark";
+  hideComment?: boolean;
+  useMiniMap?: boolean;
+  useControls?: boolean;
+  useZoom?: boolean;
+  useFitView?: boolean;
+  isDraggable?: boolean;
+  isSelectable?: boolean;
+  isConnectable?: boolean;
+  isMultiSelect?: boolean;
   readonly?: boolean;
   onStateClick?: (state: StateNode) => void;
   onValidationError?: (error: ValidationError) => void;
+  onLoadStart?: () => void;
+  onLoadEnd?: () => void;
+  onLoadError?: (error: Error) => void;
   className?: string;
   style?: React.CSSProperties;
 }

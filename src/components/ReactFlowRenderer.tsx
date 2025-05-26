@@ -23,6 +23,14 @@ interface ReactFlowRendererProps {
   height: number;
   theme: ViewerTheme;
   onStateClick?: (state: StateNode) => void;
+  isConnectable?: boolean;
+  isDraggable?: boolean;
+  isSelectable?: boolean;
+  isMultiSelect?: boolean;
+  useMiniMap?: boolean;
+  useControls?: boolean;
+  useZoom?: boolean;
+  useFitView?: boolean;
 }
 
 const nodeTypes = {
@@ -36,6 +44,14 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   height,
   theme,
   onStateClick,
+  isConnectable = true,
+  isDraggable = true,
+  isSelectable = true,
+  isMultiSelect = false,
+  useMiniMap = false,
+  useControls = true,
+  useZoom = true,
+  useFitView = true,
 }) => {
   // Convert StateNode[] to ReactFlow Node[]
   const reactFlowNodes: Node[] = useMemo(() => {
@@ -111,9 +127,18 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        nodesDraggable={false}
+        nodesDraggable={isDraggable}
         connectionMode={ConnectionMode.Strict}
-        fitView
+        fitView={useFitView}
+        zoomOnScroll={useZoom}
+        zoomOnPinch={useZoom}
+        panOnScroll={useZoom}
+        panOnDrag={useZoom}
+        multiSelectionKeyCode={isMultiSelect ? "Shift" : null}
+        selectNodesOnDrag={isSelectable}
+        connectOnClick={isConnectable}
+        nodesConnectable={isConnectable}
+        selectionOnDrag={isSelectable}
         fitViewOptions={{
           padding: 0.2,
           minZoom: 0.1,
@@ -129,16 +154,29 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
           size={1}
           color={theme.borderColor}
         />
-        <Controls />
-        <MiniMap
-          nodeColor={theme.nodeColors.task}
-          nodeStrokeColor={theme.borderColor}
-          maskColor={`${theme.background}90`}
-          style={{
-            backgroundColor: theme.background,
-            border: `1px solid ${theme.borderColor}`,
-          }}
-        />
+        {useControls && (
+          <Controls
+            showInteractive={isDraggable || isSelectable || isMultiSelect}
+          />
+        )}
+        {useMiniMap && (
+          <MiniMap
+            nodeColor={theme.nodeColors.task}
+            nodeStrokeColor={theme.borderColor}
+            maskColor={`${theme.background}90`}
+            zoomable={useZoom}
+            pannable={useZoom}
+            inversePan={true}
+            style={{
+              backgroundColor: theme.background,
+              border: `1px solid ${theme.borderColor}`,
+              width: 150,
+              height: 100,
+              borderRadius: "4px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            }}
+          />
+        )}
       </ReactFlow>
     </div>
   );

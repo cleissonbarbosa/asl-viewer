@@ -3,6 +3,7 @@ export { WorkflowViewer } from "./components/WorkflowViewer";
 export { ReactFlowRenderer } from "./components/ReactFlowRenderer";
 export { ReactFlowStateNode } from "./components/ReactFlowStateNode";
 export { ErrorDisplay } from "./components/ErrorDisplay";
+export { FileUploader, URLInput } from "./components/FileUploader";
 
 // Type exports
 export type {
@@ -25,3 +26,8 @@ export type {
 export { validateASLDefinition, parseASLDefinition } from "./utils/validation";
 export { createGraphLayout, createSimpleLayout } from "./utils/layout";
 export { getTheme, lightTheme, darkTheme } from "./utils/theme";
+export {
+  loadFromURL,
+  loadFromFile,
+  parseDefinitionString,
+} from "./utils/loader";

@@ -21,7 +21,6 @@
     "build-storybook": "storybook build",
     "build-storybook:gh-pages": "NODE_ENV=production storybook build",
     "prepare": "yarn build",
-    "demo": "node scripts/demo.js",
     "check-publish": "scripts/check-publish-ready.sh",
     "prepublishOnly": "yarn test && yarn build"
   },
@@ -33,26 +32,22 @@
     "visualization",
     "asl"
   ],
-  "author": "Your Name",
+  "author": "Cleisson Barbosa",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/asl-viewer.git"
+    "url": "git+https://github.com/cleissonbarbosa/asl-viewer.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/asl-viewer/issues"
+    "url": "https://github.com/cleissonbarbosa/asl-viewer/issues"
   },
-  "homepage": "https://github.com/your-username/asl-viewer#readme",
+  "homepage": "https://github.com/cleissonbarbosa/asl-viewer#readme",
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
-    "@reactflow/background": "^11.0.0",
-    "@reactflow/controls": "^11.0.0",
-    "@reactflow/core": "^11.0.0",
     "react": ">=16.8.0",
-    "react-dom": ">=16.8.0",
-    "reactflow": "^11.0.0"
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
@@ -71,6 +66,7 @@
     "@storybook/react-vite": "^7.0.0",
     "@storybook/testing-library": "^0.2.0",
     "@types/jest": "^29.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
@@ -98,7 +94,10 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.33.0",
-    "d3": "^7.8.0",
+    "@reactflow/background": "^11.0.0",
+    "@reactflow/controls": "^11.0.0",
+    "@reactflow/core": "^11.0.0",
+    "reactflow": "^11.0.0",
     "js-yaml": "^4.1.0"
   }
 }

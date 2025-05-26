@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "yarn"
 
       - name: Install dependencies
@@ -42,12 +42,12 @@ jobs:
         run: touch ./storybook-static/.nojekyll
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './storybook-static'
+          path: "./storybook-static"
 
   deploy:
     environment:
@@ -66,8 +66,8 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const deploymentUrl = 'https://cleissonb.github.io/asl-viewer/';
-            
+            const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer/';
+
             // Get recent PRs that might be related to this push
             const { data: prs } = await github.rest.pulls.list({
               owner,
@@ -75,7 +75,7 @@ jobs:
               state: 'open',
               per_page: 5
             });
-            
+
             for (const pr of prs) {
               await github.rest.issues.createComment({
                 owner,

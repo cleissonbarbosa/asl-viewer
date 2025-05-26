@@ -66,7 +66,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer-stories/';
+            const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer/';
 
             // Get recent PRs that might be related to this push
             const { data: prs } = await github.rest.pulls.list({

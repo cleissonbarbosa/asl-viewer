@@ -42,7 +42,9 @@ jobs:
         run: touch ./storybook-static/.nojekyll
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -66,8 +68,8 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const deploymentUrl = 'https://cleissonb.github.io/asl-viewer/';
-            
+            const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer-stories/';
+
             // Get recent PRs that might be related to this push
             const { data: prs } = await github.rest.pulls.list({
               owner,

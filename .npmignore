@@ -3,19 +3,25 @@ src/
 examples/
 .storybook/
 storybook-static/
+docs/
 
 # Development files
 *.test.ts
 *.test.tsx
 *.spec.ts
 *.spec.tsx
+*.stories.ts
+*.stories.tsx
 __tests__/
 **/__tests__/
+**/stories/
+jest.setup.ts
 
 # Build tools
 rollup.config.js
 tsconfig.json
 jest.config.json
+eslint.config.js
 
 # Development dependencies
 node_modules/
@@ -52,5 +58,5 @@ coverage/
 tmp/
 temp/
 
-# AWS Toolkit (não relacionado ao projeto principal)
-aws-toolkit/
+# Source maps (para reduzir tamanho)
+*.map

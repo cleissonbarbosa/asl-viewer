@@ -3,14 +3,14 @@ import React, { useMemo, useCallback } from "react";
 import ReactFlow, {
   Node,
   Edge,
-  Controls,
-  Background,
   useNodesState,
   useEdgesState,
   ConnectionMode,
   BackgroundVariant,
-  MiniMap,
 } from "reactflow";
+import { Controls } from "@reactflow/controls";
+import { Background } from "@reactflow/background";
+import { MiniMap } from "@reactflow/minimap";
 import "reactflow/dist/style.css";
 
 import { StateNode, Connection, ViewerTheme } from "../types";
@@ -157,6 +157,8 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         {useControls && (
           <Controls
             showInteractive={isDraggable || isSelectable || isMultiSelect}
+            showZoom={useZoom}
+            showFitView={useFitView}
           />
         )}
         {useMiniMap && (

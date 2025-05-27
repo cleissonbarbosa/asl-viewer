@@ -25,7 +25,17 @@ export type {
 // Utility exports
 export { validateASLDefinition, parseASLDefinition } from "./utils/validation";
 export { createGraphLayout, createSimpleLayout } from "./utils/layout";
-export { getTheme, lightTheme, darkTheme } from "./utils/theme";
+export {
+  getTheme,
+  getAllThemes,
+  getThemeNames,
+  createCustomTheme,
+  lightTheme,
+  darkTheme,
+  highContrastTheme,
+  softTheme,
+  type ThemeName,
+} from "./utils/theme";
 export {
   loadFromURL,
   loadFromFile,

@@ -216,7 +216,7 @@ function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
       strokeDasharray,
     },
     labelStyle: {
-      fill: theme.textColor,
+      fill: theme.name === "dark" ? "#000000" : theme.textColor,
       fontSize: "14px",
       fontWeight: "bold",
       background: theme.background,

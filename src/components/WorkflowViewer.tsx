@@ -4,10 +4,11 @@ import {
   StateNode,
   ValidationError,
   ASLDefinition,
+  ViewerTheme,
 } from "../types";
 import { parseASLDefinition, validateASLDefinition } from "../utils/validation";
 import { createGraphLayout, createSimpleLayout } from "../utils/layout";
-import { getTheme } from "../utils/theme";
+import { getTheme, ThemeName } from "../utils/theme";
 import {
   loadFromURL,
   loadFromFile,
@@ -223,7 +224,12 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
     }
   }, [parsedDefinition]);
 
-  const viewerTheme = useMemo(() => getTheme(theme), [theme]);
+  const viewerTheme = useMemo(() => {
+    if (typeof theme === "string") {
+      return getTheme(theme as ThemeName);
+    }
+    return theme;
+  }, [theme]);
 
   const handleStateClick = useCallback(
     (state: StateNode) => {

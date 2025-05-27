@@ -3,7 +3,7 @@ import { fn } from "@storybook/test";
 import { WorkflowViewer } from "../components/WorkflowViewer";
 import { FileUploader, URLInput } from "../components/FileUploader";
 import { ASLDefinition } from "../types";
-import { getTheme } from "../utils/theme";
+import { getTheme, getThemeNames } from "../utils/theme";
 import React from "react";
 
 const meta: Meta<typeof WorkflowViewer> = {
@@ -16,7 +16,7 @@ const meta: Meta<typeof WorkflowViewer> = {
   argTypes: {
     theme: {
       control: { type: "select" },
-      options: ["light", "dark"],
+      options: getThemeNames(),
     },
     width: {
       control: { type: "number", min: 400, max: 1200, step: 50 },
@@ -487,7 +487,7 @@ export const ReadOnlyPresentationMode: Story = {
 export const LoadFromURL: Story = {
   render: (args) => {
     const [currentUrl, setCurrentUrl] = React.useState<string>(
-      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml"
+      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml",
     );
 
     return (
@@ -755,5 +755,151 @@ export const FullControlsEnabled: Story = {
     onValidationError: (error) => {
       console.log("Validation error:", error);
     },
+  },
+};
+
+/**
+ * Theme Showcase - demonstrates all available themes
+ */
+export const ThemeShowcase: StoryObj<typeof WorkflowViewer> = {
+  render: () => {
+    const simpleWorkflow: ASLDefinition = {
+      Comment: "A simple minimal example",
+      StartAt: "Hello",
+      States: {
+        Hello: {
+          Type: "Task",
+          Resource: "arn:aws:states:::lambda:invoke",
+          Parameters: {
+            FunctionName: "HelloWorld",
+          },
+          End: true,
+        },
+      },
+    };
+
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "20px",
+          padding: "20px",
+        }}
+      >
+        <div>
+          <h3>Light Theme</h3>
+          <WorkflowViewer
+            definition={simpleWorkflow}
+            theme="light"
+            width={400}
+            height={300}
+            useControls={false}
+            useMiniMap={false}
+          />
+        </div>
+        <div>
+          <h3>Dark Theme</h3>
+          <WorkflowViewer
+            definition={simpleWorkflow}
+            theme="dark"
+            width={400}
+            height={300}
+            useControls={false}
+            useMiniMap={false}
+          />
+        </div>
+        <div>
+          <h3>High Contrast Theme</h3>
+          <WorkflowViewer
+            definition={simpleWorkflow}
+            theme="highContrast"
+            width={400}
+            height={300}
+            useControls={false}
+            useMiniMap={false}
+          />
+        </div>
+        <div>
+          <h3>Soft Theme</h3>
+          <WorkflowViewer
+            definition={simpleWorkflow}
+            theme="soft"
+            width={400}
+            height={300}
+            useControls={false}
+            useMiniMap={false}
+          />
+        </div>
+      </div>
+    );
+  },
+};
+
+/**
+ * Custom Theme Example - shows how to create a custom theme
+ */
+export const CustomThemeExample: StoryObj<typeof WorkflowViewer> = {
+  render: () => {
+    const simpleWorkflow: ASLDefinition = {
+      Comment: "Custom theme example",
+      StartAt: "ProcessData",
+      States: {
+        ProcessData: {
+          Type: "Task",
+          Resource: "arn:aws:states:::lambda:invoke",
+          Next: "IsComplete",
+        },
+        IsComplete: {
+          Type: "Choice",
+          Choices: [
+            {
+              Variable: "$.status",
+              StringEquals: "complete",
+              Next: "Success",
+            },
+          ],
+          Default: "ProcessData",
+        },
+        Success: {
+          Type: "Succeed",
+        },
+      },
+    };
+
+    // Create a custom purple theme
+    const customTheme = {
+      ...getTheme("dark"),
+      background: "#1a0033",
+      surfaceColor: "#2d1b69",
+      nodeColors: {
+        ...getTheme("dark").nodeColors,
+        task: "#4c1d95",
+        choice: "#7c2d12",
+        succeed: "#065f46",
+      },
+      nodeBorderColors: {
+        ...getTheme("dark").nodeBorderColors,
+        task: "#8b5cf6",
+        choice: "#f59e0b",
+        succeed: "#10b981",
+      },
+      textColor: "#e879f9",
+      connectionColor: "#c084fc",
+    };
+
+    return (
+      <div style={{ padding: "20px" }}>
+        <h3>Custom Purple Theme</h3>
+        <WorkflowViewer
+          definition={simpleWorkflow}
+          theme={customTheme}
+          width={600}
+          height={400}
+          useControls={true}
+          useMiniMap={true}
+        />
+      </div>
+    );
   },
 };

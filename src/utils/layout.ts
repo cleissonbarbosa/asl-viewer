@@ -242,16 +242,16 @@ function getStateSize(
   // All regular state nodes are now rectangular (no more circular end states)
   switch (type) {
     case "Choice":
-      return { width: 240, height: 40 };
+      return { width: 240, height: 60 };
     case "Parallel":
     case "Map":
-      return { width: 260, height: 40 };
+      return { width: 260, height: 60 };
     case "Task":
-      return { width: 230, height: 40 };
+      return { width: 230, height: 60 };
     case "Wait":
-      return { width: 220, height: 40 };
+      return { width: 220, height: 60 };
     default:
-      return { width: 220, height: 40 };
+      return { width: 220, height: 60 };
   }
 }
 

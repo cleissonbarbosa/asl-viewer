@@ -249,10 +249,10 @@ describe("Layout Utils", () => {
       const parallelNode = layout.nodes.find((n) => n.id === "ParallelState");
       const waitNode = layout.nodes.find((n) => n.id === "WaitState");
 
-      expect(taskNode?.size).toEqual({ width: 230, height: 40 });
-      expect(choiceNode?.size).toEqual({ width: 240, height: 40 });
-      expect(parallelNode?.size).toEqual({ width: 260, height: 40 });
-      expect(waitNode?.size).toEqual({ width: 220, height: 40 });
+      expect(taskNode?.size).toEqual({ width: 230, height: 60 });
+      expect(choiceNode?.size).toEqual({ width: 240, height: 60 });
+      expect(parallelNode?.size).toEqual({ width: 260, height: 60 });
+      expect(waitNode?.size).toEqual({ width: 220, height: 60 });
     });
 
     it("should position nodes hierarchically", () => {

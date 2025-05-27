@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 import { WorkflowViewer } from "../components/WorkflowViewer";
 import { FileUploader, URLInput } from "../components/FileUploader";
 import { ASLDefinition } from "../types";
@@ -379,6 +380,7 @@ export const WithErrors: Story = {
     height: 400,
     theme: "light",
     readonly: true,
+    onValidationError: fn(),
   },
 };
 
@@ -485,7 +487,7 @@ export const ReadOnlyPresentationMode: Story = {
 export const LoadFromURL: Story = {
   render: (args) => {
     const [currentUrl, setCurrentUrl] = React.useState<string>(
-      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml",
+      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml"
     );
 
     return (

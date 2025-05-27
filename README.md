@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/cleissonbarbosa/asl-viewer/workflows/CI/badge.svg)](https://github.com/cleissonbarbosa/asl-viewer/actions/workflows/ci.yml)
 [![Storybook](https://img.shields.io/badge/Storybook-FF4785?style=flat&logo=storybook&logoColor=white)](https://cleissonbarbosa.github.io/asl-viewer/)
-[![npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
+[![asl-viewer npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/asl-viewer.svg)](https://bundlephobia.com/result?p=asl-viewer)
 [![License](https://img.shields.io/npm/l/asl-viewer)](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)
 

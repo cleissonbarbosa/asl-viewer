@@ -7,7 +7,6 @@ import {
   getAllThemes,
   getThemeNames,
   createCustomTheme,
-  ThemeName,
 } from "../theme";
 import { ViewerTheme } from "../../types";
 

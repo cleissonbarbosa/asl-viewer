@@ -3,7 +3,7 @@ import { fn } from "@storybook/test";
 import { WorkflowViewer } from "../components/WorkflowViewer";
 import { FileUploader, URLInput } from "../components/FileUploader";
 import { ASLDefinition } from "../types";
-import { getTheme, getThemeNames } from "../utils/theme";
+import { createCustomTheme, getTheme, getThemeNames } from "../utils/theme";
 import React from "react";
 
 const meta: Meta<typeof WorkflowViewer> = {
@@ -868,25 +868,26 @@ export const CustomThemeExample: StoryObj<typeof WorkflowViewer> = {
     };
 
     // Create a custom purple theme
-    const customTheme = {
-      ...getTheme("dark"),
+    const customTheme = createCustomTheme("dark", {
+      name: "customPurple", // Explicitly name the custom theme
       background: "#1a0033",
       surfaceColor: "#2d1b69",
       nodeColors: {
-        ...getTheme("dark").nodeColors,
         task: "#4c1d95",
         choice: "#7c2d12",
         succeed: "#065f46",
       },
       nodeBorderColors: {
-        ...getTheme("dark").nodeBorderColors,
         task: "#8b5cf6",
         choice: "#f59e0b",
         succeed: "#10b981",
       },
       textColor: "#e879f9",
       connectionColor: "#c084fc",
-    };
+      // Potentially override other new properties like tooltipBackground etc.
+      tooltipBackground: "#3c004d",
+      tooltipTextColor: "#f0f0f0",
+    });
 
     return (
       <div style={{ padding: "20px" }}>

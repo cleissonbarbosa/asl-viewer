@@ -5,10 +5,11 @@ import {
   ValidationError,
   ASLDefinition,
   ViewerTheme,
+  ThemeName,
 } from "../types";
-import { parseASLDefinition, validateASLDefinition } from "../utils/validation";
+import { validateASLDefinition } from "../utils/validation";
 import { createGraphLayout, createSimpleLayout } from "../utils/layout";
-import { getTheme, ThemeName } from "../utils/theme";
+import { getTheme } from "../utils/theme";
 import {
   loadFromURL,
   loadFromFile,

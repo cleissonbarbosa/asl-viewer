@@ -1,4 +1,4 @@
-import { ViewerTheme } from "../types";
+import { ThemeName, ViewerTheme } from "../types";
 
 /**
  * Modern Light Theme - Clean and professional with subtle shadows
@@ -285,11 +285,6 @@ export const softTheme: ViewerTheme = {
 };
 
 /**
- * Available theme names
- */
-export type ThemeName = "light" | "dark" | "highContrast" | "soft";
-
-/**
  * Get theme by name
  */
 export function getTheme(themeName: ThemeName): ViewerTheme {
@@ -330,7 +325,13 @@ export function getThemeNames(): ThemeName[] {
  */
 export function createCustomTheme(
   baseTheme: ThemeName,
-  overrides: Partial<ViewerTheme>,
+  overrides: Partial<
+    Omit<ViewerTheme, "nodeColors" | "nodeBorderColors" | "nodeHoverColors"> & {
+      nodeColors?: Partial<ViewerTheme["nodeColors"]>;
+      nodeBorderColors?: Partial<ViewerTheme["nodeBorderColors"]>;
+      nodeHoverColors?: Partial<ViewerTheme["nodeHoverColors"]>;
+    }
+  >,
 ): ViewerTheme {
   const base = getTheme(baseTheme);
   return {

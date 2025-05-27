@@ -1,5 +1,3 @@
-import { ThemeName } from "./utils/theme";
-
 export interface ASLDefinition {
   Comment?: string;
   StartAt: string;
@@ -128,7 +126,7 @@ export interface WorkflowViewerProps {
   file?: File;
   width?: number;
   height?: number;
-  theme?: "light" | "dark" | "highContrast" | "soft" | ViewerTheme;
+  theme?: ThemeName | ViewerTheme;
   hideComment?: boolean;
   useMiniMap?: boolean;
   useControls?: boolean;
@@ -155,8 +153,13 @@ export interface GraphLayout {
   height: number;
 }
 
+/**
+ * Available theme names
+ */
+export type ThemeName = "light" | "dark" | "highContrast" | "soft";
+
 export interface ViewerTheme {
-  name: ThemeName;
+  name: ThemeName | string;
   background: string;
   surfaceColor: string;
   overlayColor: string;

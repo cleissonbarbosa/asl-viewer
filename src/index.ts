@@ -16,6 +16,7 @@ export type {
   ValidationError,
   WorkflowViewerProps,
   GraphLayout,
+  ThemeName,
   ViewerTheme,
   ChoiceRule,
   RetryDefinition,
@@ -34,7 +35,6 @@ export {
   darkTheme,
   highContrastTheme,
   softTheme,
-  type ThemeName,
 } from "./utils/theme";
 export {
   loadFromURL,

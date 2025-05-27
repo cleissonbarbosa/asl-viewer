@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/cleissonbarbosa/asl-viewer/workflows/CI/badge.svg)](https://github.com/cleissonbarbosa/asl-viewer/actions/workflows/ci.yml)
 [![Storybook](https://img.shields.io/badge/Storybook-FF4785?style=flat&logo=storybook&logoColor=white)](https://cleissonbarbosa.github.io/asl-viewer/)
-[![npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
+[![asl-viewer npm version](https://badge.fury.io/js/asl-viewer.svg)](https://badge.fury.io/js/asl-viewer)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/asl-viewer.svg)](https://bundlephobia.com/result?p=asl-viewer)
 [![License](https://img.shields.io/npm/l/asl-viewer)](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)
 
@@ -11,6 +11,13 @@ A React library for visualizing AWS Step Functions workflows (Amazon States Lang
 ## 📖 Live Examples
 
 Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see interactive examples and explore all available components and features.
+
+<details>
+<summary>GIF Example</summary>
+
+![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif)
+
+</details>
 
 ## Features
 
@@ -33,6 +40,32 @@ npm install asl-viewer
 yarn add asl-viewer
 ```
 
+## CSS Import
+
+**Important:** You must import the CSS file for the component to display correctly.
+
+### ES Modules / Webpack
+
+```js
+import "asl-viewer/dist/index.css";
+```
+
+### CommonJS
+
+```js
+require("asl-viewer/dist/index.css");
+```
+
+### HTML (if using a CDN)
+
+```html
+<link rel="stylesheet" href="path/to/asl-viewer/dist/index.css" />
+```
+
+### CSS-in-JS / Styled Components
+
+If you're using CSS-in-JS libraries or have build tools that don't handle CSS imports automatically, make sure to include the CSS file in your build process or import it in your main application file.
+
 ## Quick Start
 
 ### Basic Usage with Definition Object
@@ -40,6 +73,7 @@ yarn add asl-viewer
 ```tsx
 import React from "react";
 import { WorkflowViewer } from "asl-viewer";
+import "asl-viewer/dist/index.css"; // Required CSS import
 
 const workflow = {
   Comment: "A simple minimal example",
@@ -70,6 +104,7 @@ function App() {
 ```tsx
 import React from "react";
 import { WorkflowViewer } from "asl-viewer";
+import "asl-viewer/dist/index.css"; // Required CSS import
 
 function App() {
   return (
@@ -91,6 +126,7 @@ function App() {
 ```tsx
 import React, { useState } from "react";
 import { WorkflowViewer, FileUploader } from "asl-viewer";
+import "asl-viewer/dist/index.css"; // Required CSS import
 
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -575,13 +611,16 @@ yarn test
 
 ### Custom Themes
 
+#### Example 1:
+
 ```tsx
 import { WorkflowViewer, getTheme } from "asl-viewer";
+import "asl-viewer/dist/index.css"; // Don't forget the CSS import
 
 const customTheme = {
   ...getTheme("light"),
-  colors: {
-    ...getTheme("light").colors,
+  nodeColors: {
+    ...getTheme("light").nodeColors,
     taskState: "#ff6b6b",
     choiceState: "#4ecdc4",
   },
@@ -590,14 +629,33 @@ const customTheme = {
 <WorkflowViewer definition={workflow} theme={customTheme} />;
 ```
 
-### Custom State Rendering
-
-The library provides granular components for custom implementations:
+#### Example 2:
 
 ```tsx
-import { GraphRenderer, StateComponent, ConnectionComponent } from "asl-viewer";
+import { WorkflowViewer, createCustomTheme } from "asl-viewer";
+import "asl-viewer/dist/index.css"; // Don't forget the CSS import
 
-// Use individual components for custom layouts
+const customPurple = createCustomTheme("dark", {
+  name: "customPurple",
+  background: "#1a0033",
+  surfaceColor: "#2d1b69",
+  nodeColors: {
+    task: "#4c1d95",
+    choice: "#7c2d12",
+    succeed: "#065f46",
+  },
+  nodeBorderColors: {
+    task: "#8b5cf6",
+    choice: "#f59e0b",
+    succeed: "#10b981",
+  },
+  textColor: "#e879f9",
+  connectionColor: "#c084fc",
+  tooltipBackground: "#3c004d",
+  tooltipTextColor: "#f0f0f0",
+});
+
+<WorkflowViewer definition={workflow} theme={customPurple} />;
 ```
 
 ## Contributing
@@ -612,8 +670,3 @@ import { GraphRenderer, StateComponent, ConnectionComponent } from "asl-viewer";
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Based on the AWS Toolkit for VS Code Step Functions visualization
-- Inspired by the AWS Step Functions console

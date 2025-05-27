@@ -126,7 +126,7 @@ export interface WorkflowViewerProps {
   file?: File;
   width?: number;
   height?: number;
-  theme?: "light" | "dark";
+  theme?: ThemeName | ViewerTheme;
   hideComment?: boolean;
   useMiniMap?: boolean;
   useControls?: boolean;
@@ -153,8 +153,16 @@ export interface GraphLayout {
   height: number;
 }
 
+/**
+ * Available theme names
+ */
+export type ThemeName = "light" | "dark" | "highContrast" | "soft";
+
 export interface ViewerTheme {
+  name: ThemeName | string;
   background: string;
+  surfaceColor: string;
+  overlayColor: string;
   nodeColors: {
     pass: string;
     task: string;
@@ -165,11 +173,45 @@ export interface ViewerTheme {
     parallel: string;
     map: string;
   };
+  nodeBorderColors: {
+    pass: string;
+    task: string;
+    choice: string;
+    wait: string;
+    succeed: string;
+    fail: string;
+    parallel: string;
+    map: string;
+  };
+  nodeHoverColors: {
+    pass: string;
+    task: string;
+    choice: string;
+    wait: string;
+    succeed: string;
+    fail: string;
+    parallel: string;
+    map: string;
+  };
   textColor: string;
+  textColorSecondary: string;
+  textColorMuted: string;
   borderColor: string;
+  borderColorHover: string;
   connectionColor: string;
+  connectionHoverColor: string;
+  connectionLabelColor: string;
+  startNodeColor: string;
+  endNodeColor: string;
+  selectedNodeColor: string;
+  shadowColor: string;
   errorColor: string;
   warningColor: string;
   infoColor: string;
   successColor: string;
+  gridColor: string;
+  miniMapBackground: string;
+  controlsBackground: string;
+  tooltipBackground: string;
+  tooltipTextColor: string;
 }

@@ -14,43 +14,72 @@ export default [
       {
         file: packageJson.main,
         format: "cjs",
-        sourcemap: true,
+        sourcemap: false, // Disable sourcemaps for production
         exports: "named",
       },
       {
         file: packageJson.module,
         format: "esm",
-        sourcemap: true,
+        sourcemap: false, // Disable sourcemaps for production
         exports: "named",
       },
     ],
     plugins: [
       resolve({
         browser: true,
+        preferBuiltins: false,
       }),
       commonjs(),
       postcss({
         extract: true,
         minimize: true,
+        sourceMap: false,
       }),
       typescript({
         tsconfig: "./tsconfig.json",
-        exclude: ["**/*.test.*", "**/*.stories.*"],
+        exclude: [
+          "**/*.test.*",
+          "**/*.stories.*",
+          "**/stories/**",
+          "**/__tests__/**",
+          "**/examples/**",
+          "**/docs/**",
+        ],
+        sourceMap: false,
       }),
     ],
     external: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "reactflow",
+      "@reactflow/core",
+      "@reactflow/controls",
+      "@reactflow/background",
+      "@reactflow/minimap",
+      "@tabler/icons-react",
+      "js-yaml",
+    ],
+  },
+  {
+    input: "dist/index.d.ts",
+    output: [{ file: "dist/index.d.ts", format: "esm" }],
+    plugins: [
+      dts({
+        respectExternal: true,
+      }),
+    ],
+    external: [
+      /\.css$/,
       "react",
       "react-dom",
       "reactflow",
       "@reactflow/core",
       "@reactflow/controls",
       "@reactflow/background",
+      "@reactflow/minimap",
+      "@tabler/icons-react",
+      "js-yaml",
     ],
-  },
-  {
-    input: "dist/index.d.ts",
-    output: [{ file: "dist/index.d.ts", format: "esm" }],
-    plugins: [dts()],
-    external: [/\.css$/],
   },
 ];

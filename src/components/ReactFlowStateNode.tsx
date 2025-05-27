@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { Handle, Position } from "reactflow";
 
 import { StateNode, ViewerTheme } from "../types";
+// Import specific icons instead of the whole package
 import {
   IconCheck,
   IconPlayerPlay,

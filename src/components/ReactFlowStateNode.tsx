@@ -169,7 +169,11 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
             : undefined
         }
         onMouseEnter={(e) => {
-          if (onStateClick) {
+          if (
+            stateNode.id !== "__end__" &&
+            stateNode.id !== "__start__" &&
+            onStateClick
+          ) {
             e.currentTarget.style.transform = "scale(1.05)";
             e.currentTarget.style.boxShadow =
               stateNode.id === "__start__"
@@ -180,7 +184,11 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
           }
         }}
         onMouseLeave={(e) => {
-          if (onStateClick) {
+          if (
+            stateNode.id !== "__end__" &&
+            stateNode.id !== "__start__" &&
+            onStateClick
+          ) {
             e.currentTarget.style.transform = "scale(1)";
             e.currentTarget.style.boxShadow = getBoxShadow();
           }

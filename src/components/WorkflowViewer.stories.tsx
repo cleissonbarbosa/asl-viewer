@@ -1,55 +1,95 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
-import { WorkflowViewer } from "../components/WorkflowViewer";
-import { FileUploader, URLInput } from "../components/FileUploader";
-import { ASLDefinition } from "../types";
-import { createCustomTheme, getTheme, getThemeNames } from "../utils/theme";
-import React from "react";
+import { WorkflowViewer } from "./WorkflowViewer";
+import { getThemeNames } from "../utils/theme";
+import {
+  helloWorldDefinition,
+  complexWorkflowDefinition,
+} from "./stories/workflow-definitions";
+import { WorkflowViewerProps } from "../types";
 
-const meta: Meta<typeof WorkflowViewer> = {
-  title: "WorkflowViewer",
+const meta: Meta<WorkflowViewerProps> = {
+  title: "Components/WorkflowViewer",
   component: WorkflowViewer,
   parameters: {
     layout: "centered",
+    docs: {
+      description: {
+        component: `
+
+A React component for visualizing AWS Step Functions state machines using React Flow.
+
+## Features
+
+- 🎨 **Multiple Themes**: Light, dark, high contrast, and soft themes
+- 🖱️ **Interactive**: Draggable nodes, multi-select, zoom controls
+- 🗺️ **MiniMap**: Navigation aid for large workflows
+- 📁 **File Support**: Load from JSON/YAML files or URLs
+- 🔧 **Customizable**: Extensive props for customization
+- ♿ **Accessible**: Keyboard navigation and high contrast support
+
+## Organized Stories
+
+The stories are organized into categories:
+
+- **Basic**: Core functionality and simple examples
+- **Themes**: Different visual themes and custom theme creation
+- **Examples**: Real-world workflow examples (e-commerce, data processing)
+- **Features**: Specific feature demonstrations (MiniMap, dragging, etc.)
+- **Loading**: URL and file loading capabilities
+        `,
+      },
+    },
   },
-  tags: ["autodocs"],
+  tags: ["autodocs", "!dev"],
   argTypes: {
     theme: {
       control: { type: "select" },
       options: getThemeNames(),
+      description: "Visual theme for the workflow viewer",
     },
     width: {
       control: { type: "number", min: 400, max: 1200, step: 50 },
+      description: "Width of the viewer in pixels",
     },
     height: {
       control: { type: "number", min: 300, max: 800, step: 50 },
+      description: "Height of the viewer in pixels",
     },
     readonly: {
       control: { type: "boolean" },
+      description: "Whether the workflow is read-only or interactive",
     },
     isConnectable: {
       control: { type: "boolean" },
+      description: "Whether nodes can be connected",
     },
     isDraggable: {
       control: { type: "boolean" },
+      description: "Whether nodes can be dragged",
     },
     isSelectable: {
       control: { type: "boolean" },
+      description: "Whether nodes can be selected",
     },
     isMultiSelect: {
       control: { type: "boolean" },
+      description: "Whether multiple nodes can be selected",
     },
     useMiniMap: {
       control: { type: "boolean" },
+      description: "Show mini-map for navigation",
     },
     useControls: {
       control: { type: "boolean" },
+      description: "Show zoom and pan controls",
     },
     useZoom: {
       control: { type: "boolean" },
+      description: "Enable zoom functionality",
     },
     useFitView: {
       control: { type: "boolean" },
+      description: "Automatically fit the view to content",
     },
   },
 };
@@ -57,289 +97,9 @@ const meta: Meta<typeof WorkflowViewer> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Simple Hello World workflow
-const helloWorldDefinition: ASLDefinition = {
-  Comment: "A Hello World example",
-  StartAt: "HelloWorld",
-  States: {
-    HelloWorld: {
-      Type: "Pass",
-      Result: "Hello World!",
-      End: true,
-    },
-  },
-};
-
-// More complex workflow with choices and parallel execution
-const complexWorkflowDefinition: ASLDefinition = {
-  Comment: "Complex workflow demonstrating various state types",
-  StartAt: "ValidateInput",
-  States: {
-    ValidateInput: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:ValidateInput",
-      Next: "CheckValidation",
-    },
-    CheckValidation: {
-      Type: "Choice",
-      Choices: [
-        {
-          Variable: "$.isValid",
-          BooleanEquals: true,
-          Next: "ProcessInParallel",
-        },
-        {
-          Variable: "$.isValid",
-          BooleanEquals: false,
-          Next: "HandleError",
-        },
-      ],
-      Default: "HandleError",
-    },
-    ProcessInParallel: {
-      Type: "Parallel",
-      Branches: [
-        {
-          StartAt: "ProcessDataA",
-          States: {
-            ProcessDataA: {
-              Type: "Task",
-              Resource:
-                "arn:aws:lambda:us-east-1:123456789012:function:ProcessDataA",
-              End: true,
-            },
-          },
-        },
-        {
-          StartAt: "ProcessDataB",
-          States: {
-            ProcessDataB: {
-              Type: "Task",
-              Resource:
-                "arn:aws:lambda:us-east-1:123456789012:function:ProcessDataB",
-              End: true,
-            },
-          },
-        },
-      ],
-      Next: "WaitForProcessing",
-    },
-    WaitForProcessing: {
-      Type: "Wait",
-      Seconds: 5,
-      Next: "FinalizeProcessing",
-    },
-    FinalizeProcessing: {
-      Type: "Task",
-      Resource:
-        "arn:aws:lambda:us-east-1:123456789012:function:FinalizeProcessing",
-      Next: "Success",
-    },
-    HandleError: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:HandleError",
-      Next: "Failure",
-    },
-    Success: {
-      Type: "Succeed",
-    },
-    Failure: {
-      Type: "Fail",
-      Cause: "Validation failed or processing error",
-    },
-  },
-};
-
-// Workflow with errors for testing error display
-const invalidWorkflowDefinition: ASLDefinition = {
-  Comment: "Invalid workflow for testing error handling",
-  StartAt: "NonExistentState",
-  States: {
-    TaskWithoutResource: {
-      Type: "Task",
-      Next: "AnotherNonExistentState",
-    },
-    ChoiceWithoutChoices: {
-      Type: "Choice",
-      End: true,
-    },
-  },
-};
-
-// E-commerce order processing workflow
-const ecommerceWorkflowDefinition: ASLDefinition = {
-  Comment: "E-commerce order processing workflow",
-  StartAt: "ReceiveOrder",
-  States: {
-    ReceiveOrder: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:ReceiveOrder",
-      Next: "ValidateOrder",
-    },
-    ValidateOrder: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:ValidateOrder",
-      Retry: [
-        {
-          ErrorEquals: ["States.TaskFailed"],
-          IntervalSeconds: 2,
-          MaxAttempts: 3,
-          BackoffRate: 2.0,
-        },
-      ],
-      Catch: [
-        {
-          ErrorEquals: ["States.ALL"],
-          Next: "OrderValidationFailed",
-        },
-      ],
-      Next: "CheckInventory",
-    },
-    CheckInventory: {
-      Type: "Parallel",
-      Branches: [
-        {
-          StartAt: "CheckProductInventory",
-          States: {
-            CheckProductInventory: {
-              Type: "Task",
-              Resource:
-                "arn:aws:lambda:us-east-1:123456789012:function:CheckInventory",
-              End: true,
-            },
-          },
-        },
-        {
-          StartAt: "ReserveInventory",
-          States: {
-            ReserveInventory: {
-              Type: "Task",
-              Resource:
-                "arn:aws:lambda:us-east-1:123456789012:function:ReserveInventory",
-              End: true,
-            },
-          },
-        },
-      ],
-      Next: "ProcessPayment",
-    },
-    ProcessPayment: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:ProcessPayment",
-      Next: "PaymentResult",
-    },
-    PaymentResult: {
-      Type: "Choice",
-      Choices: [
-        {
-          Variable: "$.paymentStatus",
-          StringEquals: "SUCCESS",
-          Next: "FulfillOrder",
-        },
-        {
-          Variable: "$.paymentStatus",
-          StringEquals: "FAILED",
-          Next: "PaymentFailed",
-        },
-      ],
-      Default: "PaymentFailed",
-    },
-    FulfillOrder: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:FulfillOrder",
-      Next: "SendConfirmation",
-    },
-    SendConfirmation: {
-      Type: "Task",
-      Resource:
-        "arn:aws:lambda:us-east-1:123456789012:function:SendConfirmation",
-      Next: "OrderCompleted",
-    },
-    OrderCompleted: {
-      Type: "Succeed",
-    },
-    PaymentFailed: {
-      Type: "Task",
-      Resource:
-        "arn:aws:lambda:us-east-1:123456789012:function:HandlePaymentFailure",
-      Next: "OrderFailed",
-    },
-    OrderValidationFailed: {
-      Type: "Task",
-      Resource:
-        "arn:aws:lambda:us-east-1:123456789012:function:HandleValidationFailure",
-      Next: "OrderFailed",
-    },
-    OrderFailed: {
-      Type: "Fail",
-      Cause: "Order processing failed",
-    },
-  },
-};
-
-// Data processing pipeline
-const dataProcessingWorkflowDefinition: ASLDefinition = {
-  Comment: "Data processing pipeline with Map state",
-  StartAt: "PrepareData",
-  States: {
-    PrepareData: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:PrepareData",
-      Next: "ProcessBatches",
-    },
-    ProcessBatches: {
-      Type: "Map",
-      ItemsPath: "$.batches",
-      MaxConcurrency: 5,
-      Iterator: {
-        StartAt: "ProcessBatch",
-        States: {
-          ProcessBatch: {
-            Type: "Task",
-            Resource:
-              "arn:aws:lambda:us-east-1:123456789012:function:ProcessBatch",
-            Next: "ValidateBatch",
-          },
-          ValidateBatch: {
-            Type: "Task",
-            Resource:
-              "arn:aws:lambda:us-east-1:123456789012:function:ValidateBatch",
-            Next: "BatchProcessed",
-          },
-          BatchProcessed: {
-            Type: "Succeed",
-          },
-        },
-      },
-      Next: "AggregateResults",
-    },
-    AggregateResults: {
-      Type: "Task",
-      Resource:
-        "arn:aws:lambda:us-east-1:123456789012:function:AggregateResults",
-      Next: "GenerateReport",
-    },
-    GenerateReport: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:GenerateReport",
-      Next: "WaitForReview",
-    },
-    WaitForReview: {
-      Type: "Wait",
-      Seconds: 300,
-      Next: "SendReport",
-    },
-    SendReport: {
-      Type: "Task",
-      Resource: "arn:aws:lambda:us-east-1:123456789012:function:SendReport",
-      Next: "ProcessingComplete",
-    },
-    ProcessingComplete: {
-      Type: "Succeed",
-    },
-  },
-};
-
+/**
+ * Simple Hello World workflow - the most basic example
+ */
 export const HelloWorld: Story = {
   args: {
     definition: helloWorldDefinition,
@@ -348,8 +108,19 @@ export const HelloWorld: Story = {
     theme: "light",
     readonly: true,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A minimal workflow with a single Pass state that outputs 'Hello World!'",
+      },
+    },
+  },
 };
 
+/**
+ * Complex workflow demonstrating multiple state types
+ */
 export const ComplexWorkflow: Story = {
   args: {
     definition: complexWorkflowDefinition,
@@ -357,550 +128,15 @@ export const ComplexWorkflow: Story = {
     height: 600,
     theme: "light",
     readonly: true,
-  },
-};
-
-export const DarkTheme: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "dark",
-    readonly: true,
-  },
-  parameters: {
-    backgrounds: { default: "dark" },
-  },
-};
-
-export const WithErrors: Story = {
-  args: {
-    definition: invalidWorkflowDefinition,
-    width: 600,
-    height: 400,
-    theme: "light",
-    readonly: true,
-    onValidationError: fn(),
-  },
-};
-
-export const Interactive: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: false,
-    isDraggable: true,
-    isMultiSelect: true,
-    onStateClick: (state) => {
-      console.log("State clicked:", state);
-    },
-    onValidationError: (error) => {
-      console.log("Validation error:", error);
-    },
-  },
-};
-
-// New stories showcasing the new props
-export const WithMiniMap: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    useMiniMap: true,
-    useControls: true,
-    readonly: true,
-  },
-};
-
-export const DraggableNodes: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    isDraggable: true,
-    isSelectable: true,
-    isMultiSelect: true,
-    readonly: false,
-  },
-};
-
-export const MinimalView: Story = {
-  args: {
-    definition: helloWorldDefinition,
-    width: 400,
-    height: 600,
-    theme: "light",
-    useControls: false,
-    useMiniMap: false,
-    useZoom: false,
-    useFitView: false,
-    isSelectable: false,
-    readonly: true,
-  },
-};
-
-export const FullyInteractive: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 900,
-    height: 700,
-    theme: "dark",
-    useMiniMap: true,
-    useControls: true,
-    useZoom: true,
-    useFitView: true,
-    isDraggable: true,
-    isSelectable: true,
-    isMultiSelect: true,
-    isConnectable: true,
-    readonly: false,
-    onStateClick: (state) => {
-      console.log("State clicked:", state);
-    },
-  },
-  parameters: {
-    backgrounds: { default: "dark" },
-  },
-};
-
-export const ReadOnlyPresentationMode: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: true,
-    useControls: false,
-    useMiniMap: false,
-    isDraggable: false,
-    isSelectable: false,
-    isConnectable: false,
-    useZoom: false,
-  },
-};
-
-// URL Loading Story
-export const LoadFromURL: Story = {
-  render: (args) => {
-    const [currentUrl, setCurrentUrl] = React.useState<string>(
-      "https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml",
-    );
-
-    return (
-      <div
-        style={{ width: args.width || 800, height: (args.height || 600) + 100 }}
-      >
-        <div style={{ marginBottom: "16px" }}>
-          <URLInput
-            onUrlSubmit={setCurrentUrl}
-            theme={getTheme("light")}
-            defaultValue="https://raw.githubusercontent.com/aws-samples/aws-stepfunctions-examples/refs/heads/main/sam/demo-asl-features/template.yaml"
-            placeholder="Try: https://raw.githubusercontent.com/aws/aws-toolkit-vscode/main/examples/simple-workflow.json"
-          />
-        </div>
-        <WorkflowViewer
-          {...args}
-          url={currentUrl}
-          onLoadStart={() => console.log("Loading started")}
-          onLoadEnd={() => console.log("Loading finished")}
-          onLoadError={(error) => console.error("Loading error:", error)}
-        />
-      </div>
-    );
-  },
-  args: {
-    width: 800,
-    height: 500,
-    theme: "light",
-    readonly: true,
-  },
-};
-
-// File Upload Story
-export const LoadFromFile: Story = {
-  render: (args) => {
-    const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-
-    return (
-      <div
-        style={{ width: args.width || 800, height: (args.height || 600) + 200 }}
-      >
-        <div style={{ marginBottom: "16px" }}>
-          <FileUploader
-            onFileSelect={setSelectedFile}
-            theme={getTheme("light")}
-            style={{ marginBottom: "8px" }}
-          />
-          {selectedFile && (
-            <div style={{ fontSize: "12px", color: "#666" }}>
-              Selected: {selectedFile.name} (
-              {(selectedFile.size / 1024).toFixed(1)} KB)
-            </div>
-          )}
-        </div>
-        <WorkflowViewer
-          {...args}
-          file={selectedFile || undefined}
-          onLoadStart={() => console.log("Loading started")}
-          onLoadEnd={() => console.log("Loading finished")}
-          onLoadError={(error) => console.error("Loading error:", error)}
-        />
-      </div>
-    );
-  },
-  args: {
-    width: 800,
-    height: 400,
-    theme: "light",
-    readonly: true,
-  },
-};
-
-// YAML Support Story
-export const YAMLSupport: Story = {
-  args: {
-    definition: `# YAML ASL Definition
-Comment: "A Hello World example in YAML"
-StartAt: "HelloWorld"
-States:
-  HelloWorld:
-    Type: "Pass"
-    Result: "Hello World from YAML!"
-    End: true`,
-    width: 400,
-    height: 300,
-    theme: "light",
-    readonly: true,
-  },
-};
-
-// New complex workflow stories
-export const ECommerceWorkflow: Story = {
-  args: {
-    definition: ecommerceWorkflowDefinition,
-    width: 900,
-    height: 700,
-    theme: "light",
-    readonly: true,
-    useMiniMap: true,
-    useControls: true,
-    onStateClick: (state) => {
-      console.log("E-commerce state clicked:", state);
-    },
-  },
-};
-
-export const DataProcessingPipeline: Story = {
-  args: {
-    definition: dataProcessingWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "dark",
-    readonly: true,
     useMiniMap: true,
     useControls: true,
   },
   parameters: {
-    backgrounds: { default: "dark" },
-  },
-};
-
-// Feature-specific stories
-export const InteractiveMultiSelect: Story = {
-  args: {
-    definition: ecommerceWorkflowDefinition,
-    width: 900,
-    height: 700,
-    theme: "light",
-    readonly: false,
-    isDraggable: true,
-    isSelectable: true,
-    isMultiSelect: true,
-    useMiniMap: true,
-    useControls: true,
-    onStateClick: (state) => {
-      console.log("Multi-select state clicked:", state);
-    },
-  },
-};
-
-export const MiniMapNavigation: Story = {
-  args: {
-    definition: dataProcessingWorkflowDefinition,
-    width: 700,
-    height: 500,
-    theme: "light",
-    readonly: true,
-    useMiniMap: true,
-    useControls: true,
-    useFitView: true,
-    useZoom: true,
-  },
-};
-
-export const DraggableWorkflow: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: false,
-    isDraggable: true,
-    isSelectable: true,
-    useControls: true,
-    onStateClick: (state) => {
-      console.log("Draggable node clicked:", state);
-    },
-  },
-};
-
-export const MinimalEmbedded: Story = {
-  args: {
-    definition: helloWorldDefinition,
-    width: 300,
-    height: 200,
-    theme: "light",
-    readonly: true,
-    useControls: false,
-    useMiniMap: false,
-    useZoom: false,
-    useFitView: true,
-    isSelectable: false,
-    isDraggable: false,
-  },
-};
-
-export const LargeWorkflowWithMiniMap: Story = {
-  args: {
-    definition: ecommerceWorkflowDefinition,
-    width: 1000,
-    height: 800,
-    theme: "dark",
-    readonly: true,
-    useMiniMap: true,
-    useControls: true,
-    useZoom: true,
-    useFitView: true,
-  },
-  parameters: {
-    backgrounds: { default: "dark" },
-  },
-};
-
-// Comparison stories
-export const ComparisonWithoutMiniMap: Story = {
-  name: "Complex Workflow - No MiniMap",
-  args: {
-    definition: ecommerceWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: true,
-    useMiniMap: false,
-    useControls: true,
-  },
-};
-
-export const ComparisonWithMiniMap: Story = {
-  name: "Complex Workflow - With MiniMap",
-  args: {
-    definition: ecommerceWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: true,
-    useMiniMap: true,
-    useControls: true,
-  },
-};
-
-// Accessibility and control stories
-export const KeyboardNavigationOnly: Story = {
-  args: {
-    definition: complexWorkflowDefinition,
-    width: 800,
-    height: 600,
-    theme: "light",
-    readonly: true,
-    useControls: false,
-    useMiniMap: false,
-    isDraggable: false,
-    isSelectable: true,
-    useZoom: false,
-  },
-};
-
-export const FullControlsEnabled: Story = {
-  args: {
-    definition: dataProcessingWorkflowDefinition,
-    width: 900,
-    height: 700,
-    theme: "light",
-    readonly: false,
-    useControls: true,
-    useMiniMap: true,
-    useZoom: true,
-    useFitView: true,
-    isDraggable: true,
-    isSelectable: true,
-    isMultiSelect: true,
-    isConnectable: true,
-    onStateClick: (state) => {
-      console.log("Full controls - state clicked:", state);
-    },
-    onValidationError: (error) => {
-      console.log("Validation error:", error);
-    },
-  },
-};
-
-/**
- * Theme Showcase - demonstrates all available themes
- */
-export const ThemeShowcase: StoryObj<typeof WorkflowViewer> = {
-  render: () => {
-    const simpleWorkflow: ASLDefinition = {
-      Comment: "A simple minimal example",
-      StartAt: "Hello",
-      States: {
-        Hello: {
-          Type: "Task",
-          Resource: "arn:aws:states:::lambda:invoke",
-          Parameters: {
-            FunctionName: "HelloWorld",
-          },
-          End: true,
-        },
+    docs: {
+      description: {
+        story:
+          "A more complex workflow showing Task, Choice, Parallel, Wait, Succeed, and Fail states with MiniMap and controls",
       },
-    };
-
-    return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px",
-          padding: "20px",
-        }}
-      >
-        <div>
-          <h3>Light Theme</h3>
-          <WorkflowViewer
-            definition={simpleWorkflow}
-            theme="light"
-            width={400}
-            height={300}
-            useControls={false}
-            useMiniMap={false}
-          />
-        </div>
-        <div>
-          <h3>Dark Theme</h3>
-          <WorkflowViewer
-            definition={simpleWorkflow}
-            theme="dark"
-            width={400}
-            height={300}
-            useControls={false}
-            useMiniMap={false}
-          />
-        </div>
-        <div>
-          <h3>High Contrast Theme</h3>
-          <WorkflowViewer
-            definition={simpleWorkflow}
-            theme="highContrast"
-            width={400}
-            height={300}
-            useControls={false}
-            useMiniMap={false}
-          />
-        </div>
-        <div>
-          <h3>Soft Theme</h3>
-          <WorkflowViewer
-            definition={simpleWorkflow}
-            theme="soft"
-            width={400}
-            height={300}
-            useControls={false}
-            useMiniMap={false}
-          />
-        </div>
-      </div>
-    );
-  },
-};
-
-/**
- * Custom Theme Example - shows how to create a custom theme
- */
-export const CustomThemeExample: StoryObj<typeof WorkflowViewer> = {
-  render: () => {
-    const simpleWorkflow: ASLDefinition = {
-      Comment: "Custom theme example",
-      StartAt: "ProcessData",
-      States: {
-        ProcessData: {
-          Type: "Task",
-          Resource: "arn:aws:states:::lambda:invoke",
-          Next: "IsComplete",
-        },
-        IsComplete: {
-          Type: "Choice",
-          Choices: [
-            {
-              Variable: "$.status",
-              StringEquals: "complete",
-              Next: "Success",
-            },
-          ],
-          Default: "ProcessData",
-        },
-        Success: {
-          Type: "Succeed",
-        },
-      },
-    };
-
-    // Create a custom purple theme
-    const customTheme = createCustomTheme("dark", {
-      name: "customPurple", // Explicitly name the custom theme
-      background: "#1a0033",
-      surfaceColor: "#2d1b69",
-      nodeColors: {
-        task: "#4c1d95",
-        choice: "#7c2d12",
-        succeed: "#065f46",
-      },
-      nodeBorderColors: {
-        task: "#8b5cf6",
-        choice: "#f59e0b",
-        succeed: "#10b981",
-      },
-      textColor: "#e879f9",
-      connectionColor: "#c084fc",
-      // Potentially override other new properties like tooltipBackground etc.
-      tooltipBackground: "#3c004d",
-      tooltipTextColor: "#f0f0f0",
-    });
-
-    return (
-      <div style={{ padding: "20px" }}>
-        <h3>Custom Purple Theme</h3>
-        <WorkflowViewer
-          definition={simpleWorkflow}
-          theme={customTheme}
-          width={600}
-          height={400}
-          useControls={true}
-          useMiniMap={true}
-        />
-      </div>
-    );
+    },
   },
 };

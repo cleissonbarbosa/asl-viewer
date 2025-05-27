@@ -64,9 +64,17 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         theme,
         onStateClick,
       },
+      // Use width and height properties directly instead of style
+      width: stateNode.size.width,
+      height: stateNode.size.height,
       style: {
         width: stateNode.size.width,
         height: stateNode.size.height,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        flexWrap: "nowrap",
       },
     }));
   }, [stateNodes, theme, onStateClick]);

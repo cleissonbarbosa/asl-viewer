@@ -1,9 +1,11 @@
+import { readFileSync } from "fs";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
-import dts from "rollup-plugin-dts";
 import postcss from "rollup-plugin-postcss";
-import { readFileSync } from "fs";
+import terser from "@rollup/plugin-terser";
+import dts from "rollup-plugin-dts";
+import { visualizer } from "rollup-plugin-visualizer";
 
 const packageJson = JSON.parse(readFileSync("./package.json", "utf8"));
 
@@ -14,13 +16,13 @@ export default [
       {
         file: packageJson.main,
         format: "cjs",
-        sourcemap: false, // Disable sourcemaps for production
+        sourcemap: false,
         exports: "named",
       },
       {
         file: packageJson.module,
         format: "esm",
-        sourcemap: false, // Disable sourcemaps for production
+        sourcemap: false,
         exports: "named",
       },
     ],
@@ -34,6 +36,8 @@ export default [
         extract: true,
         minimize: true,
         sourceMap: false,
+        modules: false, // Ensure CSS modules are not used by default
+        to: "dist/index.css", // Explicitly name the CSS output for CJS
       }),
       typescript({
         tsconfig: "./tsconfig.json",
@@ -46,6 +50,14 @@ export default [
           "**/docs/**",
         ],
         sourceMap: false,
+        declaration: true,
+        declarationDir: "dist",
+        jsx: "react-jsx", // Ensure JSX runtime is correctly handled
+      }),
+      terser(),
+      visualizer({
+        filename: "bundle-stats.html",
+        open: false,
       }),
     ],
     external: [
@@ -73,6 +85,7 @@ export default [
       /\.css$/,
       "react",
       "react-dom",
+      "react/jsx-runtime",
       "reactflow",
       "@reactflow/core",
       "@reactflow/controls",

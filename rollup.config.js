@@ -54,7 +54,7 @@ export default [
       terser(), // Add terser plugin for minification
       visualizer({ // Add visualizer plugin
         filename: "bundle-stats.html",
-        open: true, // Automatically open the report in the browser
+        open: false, // Automatically open the report in the browser
       }),
     ],
     external: [

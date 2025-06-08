@@ -7,6 +7,12 @@ on:
       - beta
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  checks: write
+  
 jobs:
   test:
     runs-on: ubuntu-latest

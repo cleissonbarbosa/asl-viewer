@@ -51,7 +51,8 @@ jobs:
 
   comment:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    needs: test
+    if: github.event_name == 'pull_request' && needs.test.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

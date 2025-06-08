@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { Handle, Position } from "reactflow";
 
 import { StateNode, ViewerTheme } from "../types";
+import { nodeTransitionStyles } from "../core/layout";
 // Import specific icons instead of the whole package
 import {
   IconCheck,
@@ -34,7 +35,7 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
   }, [onStateClick, stateNode]);
 
   const getStateIcon = (type: string): React.ReactElement => {
-    const iconSize = "35px";
+    const iconSize = stateNode.parentId ? "20px" : "35px"; // Smaller icons for child nodes
     const iconColor = theme.textColor;
 
     // Special case for the artificial start node
@@ -103,6 +104,9 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
     const isCircular =
       stateNode.id === "__start__" || stateNode.id === "__end__";
 
+    // Child nodes have different styling
+    const isChildNode = !!stateNode.parentId;
+
     return {
       width: "100%",
       height: "100%",
@@ -119,12 +123,15 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
         stateNode.id !== "__start__"
           ? "pointer"
           : "default",
-      boxShadow: getBoxShadow(),
-      transition: "all 0.2s ease",
+      boxShadow: isChildNode ? "0 2px 4px rgba(0,0,0,0.1)" : getBoxShadow(),
       userSelect: "none",
       position: "relative",
-      padding: isCircular ? "0" : "12px",
+      padding: isCircular ? "0" : isChildNode ? "8px" : "12px",
       gap: isCircular ? "0" : "12px",
+      opacity: isChildNode ? 0.9 : 1,
+      transform: isChildNode ? "scale(0.85)" : "scale(1)",
+      // Enhanced transition for smooth movement
+      ...nodeTransitionStyles,
     };
   };
 
@@ -175,13 +182,21 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
             stateNode.id !== "__start__" &&
             onStateClick
           ) {
-            e.currentTarget.style.transform = "scale(1.05)";
+            const currentTransform = stateNode.parentId
+              ? "scale(0.85)"
+              : "scale(1)";
+            const hoverTransform = stateNode.parentId
+              ? "scale(0.90)"
+              : "scale(1.05)";
+            e.currentTarget.style.transform = hoverTransform;
             e.currentTarget.style.boxShadow =
               stateNode.id === "__start__"
                 ? `0 0 20px ${theme.successColor}60, 0 6px 12px rgba(0,0,0,0.2)`
                 : stateNode.id === "__end__"
                   ? `0 0 20px ${theme.errorColor}60, 0 6px 12px rgba(0,0,0,0.2)`
-                  : "0 6px 12px rgba(0,0,0,0.2)";
+                  : stateNode.parentId
+                    ? "0 3px 6px rgba(0,0,0,0.15)"
+                    : "0 6px 12px rgba(0,0,0,0.2)";
           }
         }}
         onMouseLeave={(e) => {
@@ -190,8 +205,13 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
             stateNode.id !== "__start__" &&
             onStateClick
           ) {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.boxShadow = getBoxShadow();
+            const normalTransform = stateNode.parentId
+              ? "scale(0.85)"
+              : "scale(1)";
+            e.currentTarget.style.transform = normalTransform;
+            e.currentTarget.style.boxShadow = stateNode.parentId
+              ? "0 2px 4px rgba(0,0,0,0.1)"
+              : getBoxShadow();
           }
         }}
       >
@@ -247,7 +267,7 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
               {/* State name */}
               <div
                 style={{
-                  fontSize: "18px",
+                  fontSize: stateNode.parentId ? "14px" : "18px",
                   fontWeight: "bold",
                   color: theme.textColor,
                   lineHeight: "1.2",
@@ -263,7 +283,7 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
               {/* State type */}
               <div
                 style={{
-                  fontSize: "14px",
+                  fontSize: stateNode.parentId ? "11px" : "14px",
                   color: theme.textColor,
                   opacity: 0.7,
                   marginTop: "2px",
@@ -272,6 +292,13 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
                 }}
               >
                 {stateNode.type}
+                {stateNode.parentId && (
+                  <span style={{ marginLeft: "4px", fontSize: "10px" }}>
+                    {stateNode.branchIndex !== undefined
+                      ? `(Branch ${stateNode.branchIndex + 1})`
+                      : "(Iterator)"}
+                  </span>
+                )}
               </div>
             </div>
           </>

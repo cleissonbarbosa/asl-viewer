@@ -1,5 +1,5 @@
 import { validateASLDefinition, parseASLDefinition } from "../validation";
-import { ASLDefinition, StateDefinition, ValidationError } from "../../types";
+import { ASLDefinition, StateDefinition } from "../../types";
 
 describe("validateASLDefinition", () => {
   describe("Basic validation", () => {

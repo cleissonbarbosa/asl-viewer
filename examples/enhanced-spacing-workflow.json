@@ -1,0 +1,179 @@
+{
+  "Comment": "A complex workflow demonstrating improved spacing and reactive layout",
+  "StartAt": "InitializeProcess",
+  "States": {
+    "InitializeProcess": {
+      "Type": "Pass",
+      "Result": {
+        "initialized": true
+      },
+      "Next": "CheckInputData"
+    },
+    "CheckInputData": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.dataSize",
+          "NumericGreaterThan": 1000,
+          "Next": "ParallelProcessing"
+        },
+        {
+          "Variable": "$.dataType",
+          "StringEquals": "simple",
+          "Next": "SimpleProcessing"
+        }
+      ],
+      "Default": "ErrorState"
+    },
+    "ParallelProcessing": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Branch1Process",
+          "States": {
+            "Branch1Process": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessBranch1",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2.0
+                }
+              ],
+              "Next": "Branch1Validate"
+            },
+            "Branch1Validate": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ValidateBranch1",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Branch2Process",
+          "States": {
+            "Branch2Process": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessBranch2",
+              "Next": "Branch2Wait"
+            },
+            "Branch2Wait": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Branch2Validate"
+            },
+            "Branch2Validate": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ValidateBranch2",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Branch3Process",
+          "States": {
+            "Branch3Process": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessBranch3",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "Branch3ErrorHandler"
+                }
+              ],
+              "End": true
+            },
+            "Branch3ErrorHandler": {
+              "Type": "Pass",
+              "Result": {
+                "error": "Branch3 failed but handled gracefully"
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "CombineResults",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ErrorState"
+        }
+      ]
+    },
+    "SimpleProcessing": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:SimpleProcess",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Next": "CombineResults"
+    },
+    "CombineResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:CombineResults",
+      "Next": "MapProcessing"
+    },
+    "MapProcessing": {
+      "Type": "Map",
+      "ItemsPath": "$.results",
+      "MaxConcurrency": 3,
+      "Iterator": {
+        "StartAt": "ProcessItem",
+        "States": {
+          "ProcessItem": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessItem",
+            "Next": "ValidateItem"
+          },
+          "ValidateItem": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ValidateItem",
+            "Next": "ItemChoice"
+          },
+          "ItemChoice": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.itemValid",
+                "BooleanEquals": true,
+                "Next": "ItemSuccess"
+              }
+            ],
+            "Default": "ItemFailed"
+          },
+          "ItemSuccess": {
+            "Type": "Succeed"
+          },
+          "ItemFailed": {
+            "Type": "Fail",
+            "Cause": "Item validation failed"
+          }
+        }
+      },
+      "Next": "FinalValidation"
+    },
+    "FinalValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:FinalValidation",
+      "Next": "SuccessState"
+    },
+    "SuccessState": {
+      "Type": "Succeed"
+    },
+    "ErrorState": {
+      "Type": "Fail",
+      "Cause": "Workflow execution failed"
+    }
+  }
+}

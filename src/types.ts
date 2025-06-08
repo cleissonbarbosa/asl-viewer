@@ -14,7 +14,9 @@ export interface StateDefinition {
   InputPath?: string;
   OutputPath?: string;
   ResultPath?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Parameters?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ResultSelector?: Record<string, any>;
   Retry?: RetryDefinition[];
   Catch?: CatchDefinition[];
@@ -37,6 +39,7 @@ export interface StateDefinition {
   ItemsPath?: string;
   MaxConcurrency?: number;
   // Pass-specific
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Result?: any;
   // Fail-specific
   Cause?: string;
@@ -100,6 +103,12 @@ export interface StateNode {
   connections: Connection[];
   isStartState: boolean;
   isEndState: boolean;
+  parentId?: string; // For child nodes in Parallel/Map states
+  branchIndex?: number; // For Parallel branches or Map iterator
+  children?: StateNode[]; // For Parallel/Map parent nodes
+  isGroup?: boolean; // For group nodes that contain parent + children
+  groupBounds?: { width: number; height: number }; // Size of the group container
+  isExpanded?: boolean; // For controlling visibility of child nodes
 }
 
 export interface Connection {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { WorkflowViewer } from "../WorkflowViewer";
 import { FileUploader, URLInput } from "../FileUploader";
-import { getTheme } from "../../utils/theme";
+import { getTheme } from "../../core/theme";
 
 const meta: Meta<typeof WorkflowViewer> = {
   title: "Components/WorkflowViewer/Loading",

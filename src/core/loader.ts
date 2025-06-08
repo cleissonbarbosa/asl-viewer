@@ -121,6 +121,7 @@ const CloudFormationSchema = yaml.DEFAULT_SCHEMA.extend([
 /**
  * Parse YAML content to JSON using js-yaml library
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseYAML(yamlContent: string): any {
   try {
     // First try with CloudFormation schema to handle intrinsic functions

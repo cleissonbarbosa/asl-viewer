@@ -1,5 +1,4 @@
 import { parseDefinitionString, loadFromFile } from "../loader";
-import { ASLDefinition } from "../../types";
 
 // Mock FileReader for Node.js test environment
 class MockFileReader {

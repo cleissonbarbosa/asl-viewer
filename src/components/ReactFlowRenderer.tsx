@@ -1,4 +1,10 @@
-import React, { useMemo, useCallback } from "react";
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 
 import ReactFlow, {
   Node,
@@ -15,6 +21,13 @@ import "reactflow/dist/style.css";
 
 import { StateNode, Connection, ViewerTheme } from "../types";
 import { ReactFlowStateNode } from "./ReactFlowStateNode";
+import { ReactFlowGroupNode } from "./ReactFlowGroupNode";
+import {
+  calculateReactiveLayout,
+  LayoutCache,
+  NodeAnimationManager,
+  ANIMATION_DURATION,
+} from "../core/layout";
 
 interface ReactFlowRendererProps {
   nodes: StateNode[];
@@ -35,6 +48,7 @@ interface ReactFlowRendererProps {
 
 const nodeTypes = {
   stateNode: ReactFlowStateNode,
+  groupNode: ReactFlowGroupNode,
 };
 
 export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
@@ -53,16 +67,150 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   useZoom = true,
   useFitView = true,
 }) => {
+  // State to track which group nodes are expanded
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // Layout cache for storing original positions and managing reactive layout
+  const layoutCacheRef = useRef<LayoutCache>({
+    originalPositions: new Map(),
+    expandedNodes: new Set(),
+  });
+
+  // Animation manager for smooth transitions
+  const animationManagerRef = useRef<NodeAnimationManager>(
+    new NodeAnimationManager(),
+  );
+
+  // State for animation positions (used during transitions)
+  const [animatingPositions, setAnimatingPositions] = useState<
+    Map<string, { x: number; y: number }>
+  >(new Map());
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Store previous layout to detect changes for animation
+  const previousLayoutRef = useRef<StateNode[]>([]);
+
+  // Function to toggle the expanded state of a group node with animation
+  const handleToggleExpand = useCallback((nodeId: string) => {
+    setExpandedNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Calculate reactive layout with proper spacing adjustments
+  const reactiveLayoutNodes = useMemo(() => {
+    return calculateReactiveLayout(
+      stateNodes,
+      connections,
+      expandedNodes,
+      layoutCacheRef.current,
+    );
+  }, [stateNodes, connections, expandedNodes]);
+
+  // Effect to animate layout changes
+  useEffect(() => {
+    const currentLayout = reactiveLayoutNodes;
+    const previousLayout = previousLayoutRef.current;
+
+    // Only animate if we have a previous layout and it's different
+    if (
+      previousLayout.length > 0 &&
+      previousLayout.length === currentLayout.length
+    ) {
+      // Check if positions have changed
+      const hasPositionChanges = currentLayout.some((currentNode) => {
+        const previousNode = previousLayout.find(
+          (p) => p.id === currentNode.id,
+        );
+        return (
+          previousNode &&
+          (Math.abs(currentNode.position.x - previousNode.position.x) > 1 ||
+            Math.abs(currentNode.position.y - previousNode.position.y) > 1)
+        );
+      });
+
+      if (hasPositionChanges) {
+        // Start animation
+        setIsAnimating(true);
+        animationManagerRef.current.startAnimation(
+          previousLayout,
+          currentLayout,
+          ANIMATION_DURATION,
+          (progress, positions) => {
+            setAnimatingPositions(new Map(positions));
+            if (progress >= 1) {
+              setIsAnimating(false);
+            }
+          },
+        );
+      }
+    }
+
+    // Update previous layout reference
+    previousLayoutRef.current = [...currentLayout];
+  }, [reactiveLayoutNodes]);
+
+  // Update state nodes with current expanded state
+  const updatedStateNodes = useMemo(() => {
+    return reactiveLayoutNodes.map((node) => {
+      // Use animated position if animation is running
+      const animatedPosition = isAnimating
+        ? animatingPositions.get(node.id)
+        : null;
+      const position = animatedPosition || node.position;
+
+      if (node.isGroup) {
+        return {
+          ...node,
+          position,
+          isExpanded: expandedNodes.has(node.id),
+        };
+      }
+      return {
+        ...node,
+        position,
+      };
+    });
+  }, [reactiveLayoutNodes, expandedNodes, isAnimating, animatingPositions]);
+
   // Convert StateNode[] to ReactFlow Node[]
   const reactFlowNodes: Node[] = useMemo(() => {
-    return stateNodes.map((stateNode) => ({
+    // Get all child node IDs that are being rendered inside group nodes
+    const childNodeIds = new Set<string>();
+    updatedStateNodes.forEach((node) => {
+      if (node.isGroup && node.children) {
+        node.children.forEach((child) => childNodeIds.add(child.id));
+      }
+    });
+
+    // Filter nodes based on expand/collapse state
+    const visibleNodes = updatedStateNodes.filter((stateNode) => {
+      // Never show child nodes as separate ReactFlow nodes - they are rendered inside groups
+      if (childNodeIds.has(stateNode.id)) return false;
+
+      // Always show group nodes
+      if (stateNode.isGroup) return true;
+
+      // Show other nodes that don't have a parent (root nodes)
+      return !stateNode.parentId;
+    });
+
+    return visibleNodes.map((stateNode) => ({
       id: stateNode.id,
-      type: "stateNode",
+      type: stateNode.isGroup ? "groupNode" : "stateNode",
       position: stateNode.position,
       data: {
         stateNode,
         theme,
         onStateClick,
+        onToggleExpand: handleToggleExpand,
+        children: stateNode.children || [],
       },
       // Use width and height properties directly instead of style
       width: stateNode.size.width,
@@ -76,12 +224,46 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         justifyContent: "center",
         flexWrap: "nowrap",
       },
+      draggable: isDraggable,
     }));
-  }, [stateNodes, theme, onStateClick]);
+  }, [
+    updatedStateNodes,
+    theme,
+    onStateClick,
+    expandedNodes,
+    handleToggleExpand,
+  ]);
 
   // Convert Connection[] to ReactFlow Edge[]
   const reactFlowEdges: Edge[] = useMemo(() => {
-    return connections.map((connection, index) => {
+    // Get all child node IDs that are being rendered inside group nodes
+    const childNodeIds = new Set<string>();
+    updatedStateNodes.forEach((node) => {
+      if (node.isGroup && node.children) {
+        node.children.forEach((child) => childNodeIds.add(child.id));
+      }
+    });
+
+    // Get the IDs of visible nodes (excluding children that are rendered inside groups)
+    const visibleNodeIds = new Set(
+      updatedStateNodes
+        .filter((stateNode) => {
+          // Never include child nodes as they are rendered inside groups
+          if (childNodeIds.has(stateNode.id)) return false;
+          if (stateNode.isGroup) return true;
+          return !stateNode.parentId;
+        })
+        .map((node) => node.id),
+    );
+
+    // Filter connections to only include those between visible nodes
+    const visibleConnections = connections.filter(
+      (connection) =>
+        visibleNodeIds.has(connection.from) &&
+        visibleNodeIds.has(connection.to),
+    );
+
+    return visibleConnections.map((connection, index) => {
       const edgeStyle = getEdgeStyle(connection, theme);
 
       return {
@@ -98,7 +280,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         animated: connection.type === "error" || connection.type === "retry",
       };
     });
-  }, [connections, theme]);
+  }, [connections, theme, updatedStateNodes, expandedNodes]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(reactFlowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(reactFlowEdges);
@@ -112,6 +294,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   React.useEffect(() => {
     setEdges(reactFlowEdges);
   }, [reactFlowEdges, setEdges]);
+
+  // Cleanup animation on unmount
+  React.useEffect(() => {
+    return () => {
+      animationManagerRef.current.stopAnimation();
+    };
+  }, []);
 
   const onConnect = useCallback(() => {
     // Prevent manual connections in readonly mode
@@ -164,7 +353,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         />
         {useControls && (
           <Controls
-            showInteractive={isDraggable || isSelectable || isMultiSelect}
+            showInteractive={isDraggable}
             showZoom={useZoom}
             showFitView={useFitView}
           />

@@ -24,8 +24,8 @@ export type {
 } from "./types";
 
 // Utility exports
-export { validateASLDefinition, parseASLDefinition } from "./utils/validation";
-export { createGraphLayout, createSimpleLayout } from "./utils/layout";
+export { validateASLDefinition, parseASLDefinition } from "./core/validation";
+export { createGraphLayout, createSimpleLayout } from "./core/layout";
 export {
   getTheme,
   getAllThemes,
@@ -35,9 +35,9 @@ export {
   darkTheme,
   highContrastTheme,
   softTheme,
-} from "./utils/theme";
+} from "./core/theme";
 export {
   loadFromURL,
   loadFromFile,
   parseDefinitionString,
-} from "./utils/loader";
+} from "./core/loader";

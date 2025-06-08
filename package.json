@@ -3,11 +3,21 @@
   "version": "1.0.2",
   "description": "React library for viewing AWS Step Functions workflows in the browser",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json",
+    "./dist/index.css": "./dist/index.css",
+    "./dist/index.esm.css": "./dist/index.esm.css"
+  },
   "files": [
-    "dist/index.js",
+    "dist/index.cjs",
     "dist/index.esm.js",
     "dist/index.d.ts",
     "dist/index.css",
@@ -53,8 +63,8 @@
     "access": "public"
   },
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
   },
   "devDependencies": {
     "@tabler/icons-react": ">=3.33.0",

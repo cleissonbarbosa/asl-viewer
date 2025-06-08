@@ -24,7 +24,8 @@ permissions:
   id-token: write
   contents: write
   pull-requests: write
-  checks: write
+  actions: read
+  packages: write
 
 jobs:
   test:
@@ -79,8 +80,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.inputs.tag != ''
     permissions:
-      contents: read
+      contents: write
       id-token: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

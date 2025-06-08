@@ -4,17 +4,16 @@ import {
   StateNode,
   ValidationError,
   ASLDefinition,
-  ViewerTheme,
   ThemeName,
 } from "../types";
-import { validateASLDefinition } from "../utils/validation";
-import { createGraphLayout, createSimpleLayout } from "../utils/layout";
-import { getTheme } from "../utils/theme";
+import { validateASLDefinition } from "../core/validation";
+import { createGraphLayout, createSimpleLayout } from "../core/layout";
+import { getTheme } from "../core/theme";
 import {
   loadFromURL,
   loadFromFile,
   parseDefinitionString,
-} from "../utils/loader";
+} from "../core/loader";
 import { ReactFlowRenderer } from "./ReactFlowRenderer";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { IconLoader } from "@tabler/icons-react";

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { WorkflowViewer } from "./WorkflowViewer";
-import { getThemeNames } from "../utils/theme";
+import { getThemeNames } from "../core/theme";
 import {
   helloWorldDefinition,
   complexWorkflowDefinition,

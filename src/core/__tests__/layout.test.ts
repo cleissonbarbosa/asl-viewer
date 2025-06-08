@@ -1,5 +1,5 @@
 import { createGraphLayout, createSimpleLayout } from "../layout";
-import { ASLDefinition, StateNode, Connection } from "../../types";
+import { ASLDefinition } from "../../types";
 
 describe("Layout Utils", () => {
   describe("createGraphLayout", () => {
@@ -251,8 +251,13 @@ describe("Layout Utils", () => {
 
       expect(taskNode?.size).toEqual({ width: 230, height: 60 });
       expect(choiceNode?.size).toEqual({ width: 240, height: 60 });
-      expect(parallelNode?.size).toEqual({ width: 260, height: 60 });
+      expect(parallelNode?.size).toEqual({ width: 260, height: 60 }); // Group node starts collapsed
       expect(waitNode?.size).toEqual({ width: 220, height: 60 });
+
+      // Test group node properties
+      expect(parallelNode?.isGroup).toBe(true);
+      expect(parallelNode?.isExpanded).toBe(false);
+      expect(parallelNode?.groupBounds).toEqual({ width: 350, height: 250 }); // Updated with improved spacing
     });
 
     it("should position nodes hierarchically", () => {

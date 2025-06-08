@@ -1,8 +1,30 @@
 import type { Preview } from "@storybook/react";
+import {
+  Title,
+  Subtitle,
+  Description,
+  Primary,
+  Controls,
+  Stories,
+} from "@storybook/addon-docs/blocks";
 
 const preview: Preview = {
   parameters: {
     actions: {},
+    docs: {
+      toc: true,
+      codePanel: true,
+      page: () => (
+        <>
+          <Title />
+          <Subtitle />
+          <Description />
+          <Primary />
+          <Controls />
+          <Stories />
+        </>
+      ),
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -21,6 +43,11 @@ const preview: Preview = {
           value: "#333333",
         },
       ],
+    },
+  },
+  initialGlobals: {
+    a11y: {
+      manual: true,
     },
   },
 };

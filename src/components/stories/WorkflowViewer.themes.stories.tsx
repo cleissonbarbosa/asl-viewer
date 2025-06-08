@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { WorkflowViewer } from "../WorkflowViewer";
-import { createCustomTheme } from "../../utils/theme";
+import { createCustomTheme } from "../../core/theme";
 import {
   complexWorkflowDefinition,
   simpleWorkflow,

@@ -83,3 +83,13 @@ jobs:
               repo: context.repo.repo,
               body: `🚀 Beta version published: \`${{ steps.beta_version.outputs.BETA_VERSION }}\`\n\nYou can install it with:\n\`\`\`bash\nnpm install asl-workflow-viewer@beta\n\`\`\``
             })
+      
+      - name: Create GitHub Release
+        if: github.event_name != 'workflow_dispatch'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "v${{ steps.beta_version.outputs.BETA_VERSION }}"
+          name: Release ${{ steps.beta_version.outputs.BETA_VERSION }}
+          generateReleaseNotes: true
+          prerelease: true
+          commit: ${{ github.sha }}

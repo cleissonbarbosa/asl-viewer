@@ -11,6 +11,7 @@ on:
         required: true
         default: "latest"
 
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -77,15 +78,11 @@ jobs:
 
       - name: Create GitHub Release
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.extract_version.outputs.VERSION }}
-          body: |
-            ## Changes in this Release
-
-            Please see the changelog for details.
+          tag: "v${{ steps.extract_version.outputs.VERSION }}"
+          name: Release ${{ steps.extract_version.outputs.VERSION }}
+          generateReleaseNotes: true
           draft: false
           prerelease: false
+          commit: ${{ github.sha }}

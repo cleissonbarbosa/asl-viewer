@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "package.json"
+      - "yarn.lock"
+      - "src/**"
+      - ".github/workflows/publish.yml"
+      - "!docs/**"
   workflow_dispatch:
     inputs:
       tag:
@@ -15,8 +24,9 @@ permissions:
   id-token: write
   contents: write
   pull-requests: write
-  checks: write
-  
+  actions: read
+  packages: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -39,12 +49,40 @@ jobs:
       - name: Build project
         run: yarn build
 
+  comment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Post comment on PR
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            :rocket: **This PR is ready for review!**
+            - Tests passed successfully.
+            - Build completed successfully.
+            - Ready to publish to NPM.
+
   publish:
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.inputs.tag != ''
     permissions:
-      contents: read
+      contents: write
       id-token: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

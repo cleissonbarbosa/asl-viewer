@@ -11,11 +11,11 @@ permissions:
   id-token: write
   contents: write
   pull-requests: write
-  checks: write
-  
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,8 +40,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/beta'
     permissions:
-      contents: read
+      contents: write
       id-token: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -77,18 +78,6 @@ jobs:
         run: npm publish --tag beta --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Comment on PR (if applicable)
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 Beta version published: \`${{ steps.beta_version.outputs.BETA_VERSION }}\`\n\nYou can install it with:\n\`\`\`bash\nnpm install asl-workflow-viewer@beta\n\`\`\``
-            })
       
       - name: Create GitHub Release
         if: github.event_name != 'workflow_dispatch'

@@ -53,11 +53,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@reactflow/background": ">=11.0.0",
-    "@reactflow/controls": ">=11.0.0",
-    "@reactflow/core": ">=11.0.0",
     "react": ">=16.8.0",
-    "@tabler/icons-react": ">=3.33.0",
     "react-dom": ">=16.8.0"
   },
   "devDependencies": {
@@ -105,6 +101,10 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
+    "@reactflow/background": "^11.0.0",
+    "@reactflow/controls": "^11.0.0",
+    "@reactflow/core": "^11.0.0",
+    "@tabler/icons-react": "^3.33.0",
     "js-yaml": "^4.1.0",
     "reactflow": "^11.0.0"
   }

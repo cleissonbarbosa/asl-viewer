@@ -14,6 +14,7 @@ export function calculateReactiveLayout(
   edges: Connection[],
   expandedNodeIds: Set<string>,
   layoutCache: LayoutCache,
+  direction: "TB" | "LR" = "TB",
 ): StateNode[] {
   // Make a copy of nodes to avoid mutation
   const updatedNodes = nodes.map((node) => ({ ...node }));
@@ -40,16 +41,20 @@ export function calculateReactiveLayout(
     (node) => !node.isGroup && !node.parentId,
   );
 
-  // Sort nodes by vertical position for proper adjustment calculation
-  const sortedNodes = [...groupNodes, ...regularNodes].sort(
-    (a, b) => a.position.y - b.position.y,
-  );
+  // Sort nodes by position for proper adjustment calculation
+  const sortedNodes = [...groupNodes, ...regularNodes].sort((a, b) => {
+    if (direction === "TB") {
+      return a.position.y - b.position.y;
+    } else {
+      return a.position.x - b.position.x;
+    }
+  });
 
   // Calculate space requirements for each expanded group
   const spaceRequirements = new Map<string, number>();
   groupNodes.forEach((groupNode) => {
     if (expandedNodeIds.has(groupNode.id)) {
-      const requiredSpace = calculateExpandedGroupSpace(groupNode);
+      const requiredSpace = calculateExpandedGroupSpace(groupNode, direction);
       spaceRequirements.set(groupNode.id, requiredSpace);
     }
   });
@@ -60,6 +65,7 @@ export function calculateReactiveLayout(
     spaceRequirements,
     layoutCache.originalPositions,
     expandedNodeIds,
+    direction,
   );
 
   // Position child nodes for expanded groups
@@ -103,6 +109,7 @@ function adjustNodePositions(
   spaceRequirements: Map<string, number>,
   originalPositions: Map<string, { x: number; y: number }>,
   expandedNodeIds: Set<string>,
+  direction: "TB" | "LR",
 ): void {
   let cumulativeOffset = 0;
   const processedNodes = new Set<string>();
@@ -113,11 +120,18 @@ function adjustNodePositions(
     const originalPos = originalPositions.get(node.id);
     if (!originalPos) return;
 
-    // Apply cumulative offset to vertical position
-    node.position = {
-      x: originalPos.x,
-      y: originalPos.y + cumulativeOffset,
-    };
+    // Apply cumulative offset to position based on direction
+    if (direction === "TB") {
+      node.position = {
+        x: originalPos.x,
+        y: originalPos.y + cumulativeOffset,
+      };
+    } else {
+      node.position = {
+        x: originalPos.x + cumulativeOffset,
+        y: originalPos.y,
+      };
+    }
 
     processedNodes.add(node.id);
 
@@ -132,14 +146,22 @@ function adjustNodePositions(
 /**
  * Calculates the additional space needed when a group is expanded
  */
-function calculateExpandedGroupSpace(groupNode: StateNode): number {
+function calculateExpandedGroupSpace(
+  groupNode: StateNode,
+  direction: "TB" | "LR",
+): number {
   if (!groupNode.groupBounds) return 0;
 
   const collapsedSize = getCollapsedSize(groupNode.type);
-  const expandedHeight = groupNode.groupBounds.height;
+  const expandedSize =
+    direction === "TB"
+      ? groupNode.groupBounds.height
+      : groupNode.groupBounds.width;
+  const collapsedDimension =
+    direction === "TB" ? collapsedSize.height : collapsedSize.width;
 
-  // Return the additional space needed (expanded height - collapsed height)
-  return Math.max(0, expandedHeight - collapsedSize.height + 50); // Extra 50px for spacing
+  // Return the additional space needed (expanded size - collapsed size)
+  return Math.max(0, expandedSize - collapsedDimension + 80); // Extra 80px for spacing
 }
 
 /**
@@ -182,34 +204,34 @@ export function calculateImprovedSpacing(
   const hasErrorHandling = edges.some((edge) => edge.type === "error");
 
   // Base spacing values
-  let nodeSpacing = 300; // Horizontal spacing between nodes
-  let levelSpacing = 120; // Vertical spacing between levels
+  let nodeSpacing = 60; // Horizontal spacing between nodes
+  let levelSpacing = 60; // Vertical spacing between levels
 
   // Adjust spacing based on complexity
   if (hasLabeledEdges) {
-    nodeSpacing += 40;
-    levelSpacing += 30;
-  }
-
-  if (hasMultipleChoices) {
-    nodeSpacing += 60;
+    nodeSpacing += 20;
     levelSpacing += 20;
   }
 
+  if (hasMultipleChoices) {
+    nodeSpacing += 20;
+    levelSpacing += 10;
+  }
+
   if (hasErrorHandling) {
-    nodeSpacing += 30;
-    levelSpacing += 25;
+    nodeSpacing += 10;
+    levelSpacing += 10;
   }
 
   // Check for group nodes that might need extra space
   const hasGroupNodes = nodes.some((node) => node.isGroup);
   if (hasGroupNodes) {
-    nodeSpacing += 50;
-    levelSpacing += 40;
+    nodeSpacing += 20;
+    levelSpacing += 20;
   }
 
   return {
-    nodeSpacing: Math.min(nodeSpacing, 500), // Cap at reasonable maximum
-    levelSpacing: Math.min(levelSpacing, 200),
+    nodeSpacing: Math.min(nodeSpacing, 200), // Cap at reasonable maximum
+    levelSpacing: Math.min(levelSpacing, 150),
   };
 }

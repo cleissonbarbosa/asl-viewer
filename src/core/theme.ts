@@ -5,69 +5,69 @@ import { ThemeName, ViewerTheme } from "../types";
  */
 export const lightTheme: ViewerTheme = {
   name: "light",
-  background: "#fafbfc",
+  background: "#f8f9fa", // Lighter gray background
   surfaceColor: "#ffffff",
   overlayColor: "rgba(255, 255, 255, 0.95)",
 
   nodeColors: {
-    pass: "#e8f4fd",
-    task: "#f0f9f0",
-    choice: "#fff8e1",
-    wait: "#f8f4ff",
-    succeed: "#e8f5e8",
-    fail: "#ffebee",
-    parallel: "#e0f7fa",
-    map: "#f1f8e9",
+    pass: "#ffffff",
+    task: "#ffffff",
+    choice: "#ffffff",
+    wait: "#ffffff",
+    succeed: "#f0fdf4", // Subtle green tint
+    fail: "#fef2f2", // Subtle red tint
+    parallel: "#ffffff",
+    map: "#ffffff",
   },
 
   nodeBorderColors: {
-    pass: "#2196f3",
-    task: "#4caf50",
-    choice: "#ff9800",
-    wait: "#9c27b0",
-    succeed: "#4caf50",
-    fail: "#f44336",
-    parallel: "#00bcd4",
-    map: "#8bc34a",
+    pass: "#e2e8f0", // Slate 200
+    task: "#3b82f6", // Blue 500
+    choice: "#f59e0b", // Amber 500
+    wait: "#8b5cf6", // Violet 500
+    succeed: "#22c55e", // Green 500
+    fail: "#ef4444", // Red 500
+    parallel: "#06b6d4", // Cyan 500
+    map: "#84cc16", // Lime 500
   },
 
   nodeHoverColors: {
-    pass: "#d4ecfc",
-    task: "#e6f5e6",
-    choice: "#ffecb3",
-    wait: "#ede7f6",
-    succeed: "#d4edda",
-    fail: "#f5c6cb",
-    parallel: "#b2ebf2",
-    map: "#dcedc8",
+    pass: "#f8fafc",
+    task: "#eff6ff",
+    choice: "#fffbeb",
+    wait: "#f5f3ff",
+    succeed: "#dcfce7",
+    fail: "#fee2e2",
+    parallel: "#ecfeff",
+    map: "#f7fee7",
   },
 
-  textColor: "#1a1a1a",
-  textColorSecondary: "#4a4a4a",
-  textColorMuted: "#757575",
+  textColor: "#1e293b", // Slate 800
+  textColorSecondary: "#64748b", // Slate 500
+  textColorMuted: "#94a3b8", // Slate 400
 
-  borderColor: "#e1e4e8",
-  borderColorHover: "#c6cbd1",
+  borderColor: "#e2e8f0",
+  borderColorHover: "#cbd5e1",
 
-  connectionColor: "#6a737d",
-  connectionHoverColor: "#24292e",
-  connectionLabelColor: "#586069",
+  connectionColor: "#94a3b8",
+  connectionHoverColor: "#475569",
+  connectionLabelColor: "#64748b",
 
-  startNodeColor: "#28a745",
-  endNodeColor: "#dc3545",
-  selectedNodeColor: "#0366d6",
+  startNodeColor: "#22c55e",
+  endNodeColor: "#ef4444",
+  selectedNodeColor: "#3b82f6",
 
-  shadowColor: "rgba(27, 31, 35, 0.15)",
+  shadowColor: "rgba(0, 0, 0, 0.05)", // Much softer shadow
 
-  errorColor: "#d73a49",
-  warningColor: "#f66a0a",
-  infoColor: "#0366d6",
-  successColor: "#28a745",
+  errorColor: "#ef4444",
+  warningColor: "#f59e0b",
+  infoColor: "#3b82f6",
+  successColor: "#22c55e",
 
-  gridColor: "#f0f0f0",
+  gridColor: "#e2e8f0",
   miniMapBackground: "#ffffff",
   controlsBackground: "#ffffff",
-  tooltipBackground: "#24292e",
+  tooltipBackground: "#1e293b",
   tooltipTextColor: "#ffffff",
 };
 
@@ -76,70 +76,70 @@ export const lightTheme: ViewerTheme = {
  */
 export const darkTheme: ViewerTheme = {
   name: "dark",
-  background: "#0d1117",
-  surfaceColor: "#161b22",
-  overlayColor: "rgba(22, 27, 34, 0.95)",
+  background: "#0f172a", // Slate 900
+  surfaceColor: "#1e293b", // Slate 800
+  overlayColor: "rgba(15, 23, 42, 0.95)",
 
   nodeColors: {
-    pass: "#1f2937",
-    task: "#064e3b",
-    choice: "#451a03",
-    wait: "#581c87",
-    succeed: "#064e3b",
-    fail: "#7f1d1d",
-    parallel: "#164e63",
-    map: "#365314",
+    pass: "#1e293b",
+    task: "#1e293b",
+    choice: "#1e293b",
+    wait: "#1e293b",
+    succeed: "#064e3b", // Dark green
+    fail: "#7f1d1d", // Dark red
+    parallel: "#1e293b",
+    map: "#1e293b",
   },
 
   nodeBorderColors: {
-    pass: "#3b82f6",
-    task: "#10b981",
+    pass: "#334155", // Slate 700
+    task: "#3b82f6",
     choice: "#f59e0b",
-    wait: "#a855f7",
-    succeed: "#10b981",
+    wait: "#8b5cf6",
+    succeed: "#22c55e",
     fail: "#ef4444",
     parallel: "#06b6d4",
     map: "#84cc16",
   },
 
   nodeHoverColors: {
-    pass: "#374151",
-    task: "#065f46",
-    choice: "#78350f",
-    wait: "#6b21a8",
+    pass: "#334155",
+    task: "#1e3a8a",
+    choice: "#451a03",
+    wait: "#4c1d95",
     succeed: "#065f46",
     fail: "#991b1b",
-    parallel: "#0e7490",
-    map: "#4d7c0f",
+    parallel: "#155e75",
+    map: "#365314",
   },
 
-  textColor: "#f0f6fc",
-  textColorSecondary: "#c9d1d9",
-  textColorMuted: "#8b949e",
+  textColor: "#f8fafc", // Slate 50
+  textColorSecondary: "#cbd5e1", // Slate 300
+  textColorMuted: "#64748b", // Slate 500
 
-  borderColor: "#30363d",
-  borderColorHover: "#484f58",
+  borderColor: "#334155",
+  borderColorHover: "#475569",
 
-  connectionColor: "#8b949e",
-  connectionHoverColor: "#f0f6fc",
-  connectionLabelColor: "#c9d1d9",
+  connectionColor: "#475569",
+  connectionHoverColor: "#94a3b8",
+  connectionLabelColor: "#94a3b8",
 
   startNodeColor: "#22c55e",
   endNodeColor: "#ef4444",
   selectedNodeColor: "#3b82f6",
 
-  shadowColor: "rgba(0, 0, 0, 0.5)",
+  shadowColor: "rgba(0, 0, 0, 0.3)",
 
-  errorColor: "#f85149",
-  warningColor: "#ff8700",
-  infoColor: "#58a6ff",
-  successColor: "#3fb950",
+  errorColor: "#ef4444",
+  warningColor: "#f59e0b",
+  infoColor: "#3b82f6",
+  successColor: "#22c55e",
 
-  gridColor: "#21262d",
-  miniMapBackground: "#161b22",
-  controlsBackground: "#21262d",
-  tooltipBackground: "#484f58",
-  tooltipTextColor: "#f0f6fc",
+  gridColor: "#1e293b",
+  miniMapBackground: "#1e293b",
+  controlsBackground: "#1e293b",
+  tooltipBackground: "#f8fafc",
+  tooltipTextColor: "#0f172a",
 };
 
 /**

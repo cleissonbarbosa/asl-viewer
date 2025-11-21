@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WorkflowViewer } from "../WorkflowViewer";
 import {
   ecommerceWorkflowDefinition,
@@ -35,6 +35,7 @@ export const ECommerceWorkflow: Story = {
     height: 700,
     theme: "light",
     readonly: true,
+    showToolbar: false,
     useMiniMap: true,
     useControls: true,
     onStateClick: (state) => {
@@ -64,13 +65,19 @@ export const DataProcessingPipeline: Story = {
     useMiniMap: true,
     useControls: true,
   },
+
   parameters: {
-    backgrounds: { default: "dark" },
     docs: {
       description: {
         story:
           "Data processing pipeline demonstrating Map state for parallel batch processing",
       },
+    },
+  },
+
+  globals: {
+    backgrounds: {
+      value: "dark",
     },
   },
 };
@@ -107,16 +114,23 @@ export const LargeWorkflowWithMiniMap: Story = {
     readonly: true,
     useMiniMap: true,
     useControls: true,
+    showToolbar: false,
     useZoom: true,
     useFitView: true,
   },
+
   parameters: {
-    backgrounds: { default: "dark" },
     docs: {
       description: {
         story:
           "Large workflow showing how MiniMap helps with navigation in complex diagrams",
       },
+    },
+  },
+
+  globals: {
+    backgrounds: {
+      value: "dark",
     },
   },
 };
@@ -162,6 +176,29 @@ export const ComparisonWithMiniMap: Story = {
     docs: {
       description: {
         story: "Same complex workflow with MiniMap showing navigation benefits",
+      },
+    },
+  },
+};
+
+/**
+ * Data processing pipeline in Horizontal Layout
+ */
+export const DataProcessingHorizontal: Story = {
+  args: {
+    definition: dataProcessingWorkflowDefinition,
+    width: 900,
+    height: 600,
+    layoutDirection: "LR",
+    showToolbar: true,
+    showControls: true,
+    showMiniMap: true,
+  } as WorkflowViewerProps,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Data processing pipeline displayed in a horizontal (Left-to-Right) layout",
       },
     },
   },

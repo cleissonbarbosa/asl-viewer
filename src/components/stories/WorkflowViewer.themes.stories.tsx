@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WorkflowViewer } from "../WorkflowViewer";
 import { createCustomTheme } from "../../core/theme";
 import {
@@ -60,13 +60,19 @@ export const DarkTheme: Story = {
     useMiniMap: true,
     useControls: true,
   },
+
   parameters: {
-    backgrounds: { default: "dark" },
     docs: {
       description: {
         story:
           "Dark theme ideal for low-light environments or dark mode interfaces",
       },
+    },
+  },
+
+  globals: {
+    backgrounds: {
+      value: "dark",
     },
   },
 };

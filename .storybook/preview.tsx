@@ -1,4 +1,4 @@
-import type { Preview } from "@storybook/react";
+import type { Preview } from "@storybook/react-vite";
 import {
   Title,
   Subtitle,
@@ -32,22 +32,26 @@ const preview: Preview = {
       },
     },
     backgrounds: {
-      default: "light",
-      values: [
-        {
+      options: {
+        light: {
           name: "light",
           value: "#ffffff",
         },
-        {
+
+        dark: {
           name: "dark",
           value: "#333333",
         },
-      ],
+      },
     },
   },
   initialGlobals: {
     a11y: {
       manual: true,
+    },
+
+    backgrounds: {
+      value: "light",
     },
   },
 };

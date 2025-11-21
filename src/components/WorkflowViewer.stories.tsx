@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WorkflowViewer } from "./WorkflowViewer";
 import { getThemeNames } from "../core/theme";
 import {
@@ -83,6 +83,10 @@ The stories are organized into categories:
       control: { type: "boolean" },
       description: "Show zoom and pan controls",
     },
+    showToolbar: {
+      control: { type: "boolean" },
+      description: "Show the toolbar",
+    },
     useZoom: {
       control: { type: "boolean" },
       description: "Enable zoom functionality",
@@ -130,6 +134,7 @@ export const ComplexWorkflow: Story = {
     readonly: true,
     useMiniMap: true,
     useControls: true,
+    showToolbar: false,
   },
   parameters: {
     docs: {

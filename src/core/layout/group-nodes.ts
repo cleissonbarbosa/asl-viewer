@@ -121,9 +121,9 @@ export function positionChildNodes(
 ): void {
   if (children.length === 0) return;
 
-  const childSpacing = 180; // Increased spacing between branches
-  const verticalOffset = 100; // Increased vertical offset from parent
-  const verticalSpacing = 90; // Increased spacing between nodes in same branch
+  const childSpacing = 140; // Compact spacing between branches
+  const verticalOffset = 60; // Compact vertical offset from parent
+  const verticalSpacing = 60; // Compact spacing between nodes in same branch
 
   if (parentNode.type === "Parallel") {
     // Group children by branch

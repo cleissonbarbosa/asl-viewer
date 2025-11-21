@@ -42,8 +42,10 @@ interface ReactFlowRendererProps {
   isMultiSelect?: boolean;
   useMiniMap?: boolean;
   useControls?: boolean;
+  useBackground?: boolean;
   useZoom?: boolean;
   useFitView?: boolean;
+  layoutDirection?: "TB" | "LR";
 }
 
 const nodeTypes = {
@@ -64,8 +66,10 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   isMultiSelect = false,
   useMiniMap = false,
   useControls = true,
+  useBackground = true,
   useZoom = true,
   useFitView = true,
+  layoutDirection = "TB",
 }) => {
   // State to track which group nodes are expanded
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -75,6 +79,16 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
     originalPositions: new Map(),
     expandedNodes: new Set(),
   });
+
+  // Reset layout cache when nodes or layout direction change significantly
+  useEffect(() => {
+    layoutCacheRef.current = {
+      originalPositions: new Map(),
+      expandedNodes: new Set(),
+    };
+    previousLayoutRef.current = [];
+    setExpandedNodes(new Set());
+  }, [stateNodes.length, layoutDirection]);
 
   // Animation manager for smooth transitions
   const animationManagerRef = useRef<NodeAnimationManager>(
@@ -110,8 +124,9 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
       connections,
       expandedNodes,
       layoutCacheRef.current,
+      layoutDirection,
     );
-  }, [stateNodes, connections, expandedNodes]);
+  }, [stateNodes, connections, expandedNodes, layoutDirection]);
 
   // Effect to animate layout changes
   useEffect(() => {
@@ -205,6 +220,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
       id: stateNode.id,
       type: stateNode.isGroup ? "groupNode" : "stateNode",
       position: stateNode.position,
+      zIndex: stateNode.isExpanded ? 1000 : stateNode.isGroup ? 10 : 1,
       data: {
         stateNode,
         theme,
@@ -274,8 +290,11 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         style: edgeStyle.style,
         label: connection.label,
         labelStyle: edgeStyle.labelStyle,
+        labelShowBg: true,
+        labelBgStyle: edgeStyle.labelBgStyle,
         markerEnd: {
           type: "arrowclosed" as any,
+          color: edgeStyle.style.stroke,
         },
         animated: connection.type === "error" || connection.type === "retry",
       };
@@ -345,12 +364,14 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         style={{ background: theme.background }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1}
-          color={theme.borderColor}
-        />
+        {useBackground && (
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1}
+            color={theme.borderColor}
+          />
+        )}
         {useControls && (
           <Controls
             showInteractive={isDraggable}
@@ -385,6 +406,7 @@ function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
   let strokeColor = theme.connectionColor;
   let strokeWidth = 2;
   let strokeDasharray = "none";
+  let animation = undefined;
 
   switch (connection.type) {
     case "error":
@@ -392,15 +414,16 @@ function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
       strokeDasharray = "5,5";
       break;
     case "retry":
-      strokeColor = "#ff9800";
+      strokeColor = theme.warningColor;
       strokeDasharray = "5,5";
       break;
     case "choice":
-      strokeColor = "#2196f3";
+      strokeColor = theme.infoColor;
       break;
     case "default":
-      strokeColor = "#9e9e9e";
-      strokeWidth = 1;
+      strokeColor = theme.textColorMuted;
+      strokeWidth = 1.5;
+      strokeDasharray = "3,3";
       break;
     case "next":
     default:
@@ -415,14 +438,16 @@ function getEdgeStyle(connection: Connection, theme: ViewerTheme) {
       strokeDasharray,
     },
     labelStyle: {
-      fill:
-        theme.name === "dark" || theme.name === "highContrast"
-          ? "#000000"
-          : theme.textColor,
-      fontSize: "14px",
-      fontWeight: "bold",
-      background: theme.background,
-      padding: "4px 8px",
+      fill: theme.textColor,
+      fontSize: "12px",
+      fontWeight: 600,
+      fontFamily: "'Inter', sans-serif",
+    },
+    labelBgStyle: {
+      fill: theme.background,
+      fillOpacity: 0.8,
+      rx: 4,
+      ry: 4,
     },
   };
 }

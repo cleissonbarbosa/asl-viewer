@@ -57,10 +57,21 @@ export function createConnections(
   return connections;
 }
 
+type ChoiceRule = {
+  Variable?: string;
+  StringEquals?: string;
+  StringLessThan?: string;
+  StringGreaterThan?: string;
+  NumericEquals?: number;
+  NumericLessThan?: number;
+  NumericGreaterThan?: number;
+  BooleanEquals?: boolean;
+};
+
 /**
  * Formats choice condition into human-readable string
  */
-function formatChoiceCondition(choice: any): string {
+function formatChoiceCondition(choice: ChoiceRule): string {
   // Create a human-readable condition string
   if (choice.Variable) {
     const variable = choice.Variable;

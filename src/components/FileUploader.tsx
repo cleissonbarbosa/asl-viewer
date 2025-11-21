@@ -54,18 +54,31 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       className={className}
       style={{
         border: `2px dashed ${theme.borderColor}`,
-        borderRadius: "8px",
-        padding: "20px",
+        borderRadius: "12px",
+        padding: "32px",
         textAlign: "center",
         background: theme.background,
         color: theme.textColor,
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        transition: "border-color 0.2s ease",
+        opacity: disabled ? 0.6 : 1,
+        transition: "all 0.2s ease",
+        fontFamily: "'Inter', sans-serif",
         ...style,
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.borderColor = theme.infoColor;
+          e.currentTarget.style.background = `${theme.infoColor}05`;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.borderColor = theme.borderColor;
+          e.currentTarget.style.background = theme.background;
+        }
+      }}
       onClick={() => {
         if (!disabled) {
           document.getElementById("file-input")?.click();
@@ -81,14 +94,36 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         style={{ display: "none" }}
       />
 
-      <div style={{ fontSize: "24px", marginBottom: "8px" }}>📁</div>
       <div
-        style={{ fontSize: "16px", marginBottom: "4px", fontWeight: "bold" }}
+        style={{
+          fontSize: "32px",
+          marginBottom: "16px",
+          color: theme.infoColor,
+          filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
+        }}
+      >
+        📁
+      </div>
+      <div
+        style={{
+          fontSize: "16px",
+          marginBottom: "8px",
+          fontWeight: 600,
+          color: theme.textColor,
+        }}
       >
         Drop a file here or click to browse
       </div>
-      <div style={{ fontSize: "12px", opacity: 0.7 }}>
-        Supports JSON and YAML files
+      <div
+        style={{
+          fontSize: "13px",
+          color: theme.textColorSecondary,
+          maxWidth: "200px",
+          margin: "0 auto",
+          lineHeight: "1.5",
+        }}
+      >
+        Supports JSON and YAML workflow definitions
       </div>
     </div>
   );
@@ -134,7 +169,7 @@ export const URLInput: React.FC<URLInputProps> = ({
       className={className}
       style={{
         display: "flex",
-        gap: "8px",
+        gap: "12px",
         ...style,
       }}
     >
@@ -146,27 +181,48 @@ export const URLInput: React.FC<URLInputProps> = ({
         disabled={disabled}
         style={{
           flex: 1,
-          padding: "8px 12px",
+          padding: "10px 16px",
           border: `1px solid ${theme.borderColor}`,
-          borderRadius: "4px",
-          background: theme.background,
+          borderRadius: "8px",
+          background: theme.surfaceColor,
           color: theme.textColor,
           fontSize: "14px",
+          fontFamily: "'Inter', sans-serif",
+          outline: "none",
+          transition: "border-color 0.2s",
         }}
+        onFocus={(e) => (e.target.style.borderColor = theme.infoColor)}
+        onBlur={(e) => (e.target.style.borderColor = theme.borderColor)}
       />
       <button
         type="submit"
         disabled={!url.trim() || disabled}
         style={{
-          padding: "8px 16px",
+          padding: "10px 20px",
           border: "none",
-          borderRadius: "4px",
+          borderRadius: "8px",
           background:
             url.trim() && !disabled ? theme.infoColor : theme.borderColor,
           color: "white",
           cursor: url.trim() && !disabled ? "pointer" : "not-allowed",
           fontSize: "14px",
-          fontWeight: "bold",
+          fontWeight: 600,
+          fontFamily: "'Inter', sans-serif",
+          transition: "all 0.2s",
+          boxShadow:
+            url.trim() && !disabled ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+        }}
+        onMouseEnter={(e) => {
+          if (url.trim() && !disabled) {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (url.trim() && !disabled) {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+          }
         }}
       >
         Load

@@ -25,307 +25,249 @@ interface ReactFlowStateNodeProps {
   };
 }
 
-export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = ({
-  data,
-}) => {
-  const { stateNode, theme, onStateClick } = data;
+export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
+  ({ data }) => {
+    const { stateNode, theme, onStateClick } = data;
 
-  const handleClick = useCallback(() => {
-    onStateClick?.(stateNode);
-  }, [onStateClick, stateNode]);
+    const handleClick = useCallback(() => {
+      onStateClick?.(stateNode);
+    }, [onStateClick, stateNode]);
 
-  const getStateIcon = (type: string): React.ReactElement => {
-    const iconSize = stateNode.parentId ? "20px" : "35px"; // Smaller icons for child nodes
-    const iconColor = theme.textColor;
+    const getStateIcon = (type: string): React.ReactElement => {
+      const iconSize = stateNode.parentId ? "18px" : "24px";
+      const iconColor = theme.textColor;
 
-    // Special case for the artificial start node
-    if (stateNode.id === "__start__") {
-      return <IconPlayerPlay size={iconSize} color={iconColor} />;
-    }
+      if (stateNode.id === "__start__") {
+        return <IconPlayerPlay size={iconSize} color={theme.successColor} />;
+      }
 
-    // Special case for the artificial end node
-    if (stateNode.id === "__end__") {
-      return <IconCheck size={iconSize} color={iconColor} />;
-    }
+      if (stateNode.id === "__end__") {
+        return <IconCheck size={iconSize} color={theme.surfaceColor} />;
+      }
 
-    switch (type) {
-      case "Pass":
-        return <IconListDetails color={theme.infoColor} size={iconSize} />;
-      case "Task":
-        return <IconLambda color={"#ed7100"} size={iconSize} />;
-      case "Choice":
-        return <IconLocationQuestion color={iconColor} size={iconSize} />;
-      case "Wait":
-        return <IconStopwatch color={iconColor} size={iconSize} />;
-      case "Succeed":
-        return (
-          <IconRosetteDiscountCheckFilled size={iconSize} color="#16a34a" />
-        );
-      case "Fail":
-        return <IconX size={iconSize} color="#dc2626" />;
-      case "Parallel":
-        return <IconVectorBezier color={iconColor} size={iconSize} />;
-      case "Map":
-        return <IconSitemap color={iconColor} size={iconSize} />;
-      default:
-        return <IconLambda color={"#ed7100"} size={iconSize} />;
-    }
-  };
+      switch (type) {
+        case "Pass":
+          return <IconListDetails color={theme.infoColor} size={iconSize} />;
+        case "Task":
+          return <IconLambda color={theme.infoColor} size={iconSize} />;
+        case "Choice":
+          return (
+            <IconLocationQuestion color={theme.warningColor} size={iconSize} />
+          );
+        case "Wait":
+          return (
+            <IconStopwatch
+              color={theme.nodeBorderColors.wait}
+              size={iconSize}
+            />
+          );
+        case "Succeed":
+          return (
+            <IconRosetteDiscountCheckFilled
+              size={iconSize}
+              color={theme.successColor}
+            />
+          );
+        case "Fail":
+          return <IconX size={iconSize} color={theme.errorColor} />;
+        case "Parallel":
+          return (
+            <IconVectorBezier
+              color={theme.nodeBorderColors.parallel}
+              size={iconSize}
+            />
+          );
+        case "Map":
+          return (
+            <IconSitemap color={theme.nodeBorderColors.map} size={iconSize} />
+          );
+        default:
+          return <IconLambda color={theme.infoColor} size={iconSize} />;
+      }
+    };
 
-  const getNodeColor = (): string => {
-    // Special color for the artificial start node
-    if (stateNode.id === "__start__") {
-      return theme.nodeColors.pass;
-    }
+    const getNodeColor = (): string => {
+      if (stateNode.id === "__start__") {
+        return theme.surfaceColor;
+      }
+
+      if (stateNode.id === "__end__") {
+        return theme.errorColor;
+      }
+
+      return (
+        theme.nodeColors[
+          stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
+        ] || theme.nodeColors.pass
+      );
+    };
+
+    const getBorderColor = (): string => {
+      if (stateNode.id === "__start__") return theme.successColor;
+      if (stateNode.id === "__end__") return theme.errorColor;
+
+      return (
+        theme.nodeBorderColors[
+          stateNode.type.toLowerCase() as keyof typeof theme.nodeBorderColors
+        ] || theme.borderColor
+      );
+    };
+
+    const getBoxShadow = (): string => {
+      if (stateNode.id === "__start__")
+        return `0 4px 12px ${theme.successColor}40`;
+      if (stateNode.id === "__end__") return `0 4px 12px ${theme.errorColor}40`;
+      return `0 2px 8px ${theme.shadowColor}, 0 1px 2px ${theme.shadowColor}`;
+    };
+
+    const isArtificial =
+      stateNode.id === "__start__" || stateNode.id === "__end__";
+    const isEnd = stateNode.id === "__end__";
 
     return (
-      theme.nodeColors[
-        stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
-      ] || theme.nodeColors.pass
-    );
-  };
-
-  const getBorderStyle = (): string => {
-    if (stateNode.id === "__start__") return `2px solid ${theme.successColor}`;
-    if (stateNode.id === "__end__") return `2px solid ${theme.errorColor}`;
-    return `2px solid ${theme.borderColor}`;
-  };
-
-  const getBoxShadow = (): string => {
-    if (stateNode.id === "__start__")
-      return `0 0 15px ${theme.successColor}40, 0 4px 8px rgba(0,0,0,0.1)`;
-    if (stateNode.id === "__end__")
-      return `0 0 15px ${theme.errorColor}40, 0 4px 8px rgba(0,0,0,0.1)`;
-    return "0 4px 8px rgba(0,0,0,0.1)";
-  };
-
-  const getNodeStyles = (): React.CSSProperties => {
-    // Special circular nodes for the artificial start and end nodes
-    const isCircular =
-      stateNode.id === "__start__" || stateNode.id === "__end__";
-
-    // Child nodes have different styling
-    const isChildNode = !!stateNode.parentId;
-
-    return {
-      width: "100%",
-      height: "100%",
-      background: getNodeColor(),
-      border: getBorderStyle(),
-      borderRadius: isCircular ? "50%" : "12px",
-      display: "flex",
-      flexDirection: isCircular ? "column" : "row",
-      alignItems: "center",
-      justifyContent: isCircular ? "center" : "flex-start",
-      cursor:
-        onStateClick &&
-        stateNode.id !== "__end__" &&
-        stateNode.id !== "__start__"
-          ? "pointer"
-          : "default",
-      boxShadow: isChildNode ? "0 2px 4px rgba(0,0,0,0.1)" : getBoxShadow(),
-      userSelect: "none",
-      position: "relative",
-      padding: isCircular ? "0" : isChildNode ? "8px" : "12px",
-      gap: isCircular ? "0" : "12px",
-      opacity: isChildNode ? 0.9 : 1,
-      transform: isChildNode ? "scale(0.85)" : "scale(1)",
-      // Enhanced transition for smooth movement
-      ...nodeTransitionStyles,
-    };
-  };
-
-  return (
-    <>
-      {/* Input handles */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{
-          background: "transparent",
-          border: `none`,
-          width: 8,
-          height: 8,
-        }}
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        style={{
-          background: "transparent",
-          border: `none`,
-          width: 8,
-          height: 8,
-        }}
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        style={{
-          background: "transparent",
-          border: `none`,
-          width: 8,
-          height: 8,
-        }}
-      />
-
       <div
-        style={getNodeStyles()}
-        onClick={
-          stateNode.id !== "__end__" && stateNode.id !== "__start__"
-            ? handleClick
-            : undefined
-        }
+        onClick={handleClick}
+        style={{
+          padding: isArtificial ? "8px" : "12px 16px",
+          borderRadius: isArtificial ? "50%" : "12px",
+          background: getNodeColor(),
+          border: isArtificial
+            ? `2px solid ${getBorderColor()}`
+            : `1px solid ${theme.borderColor}`,
+          borderLeft: isArtificial
+            ? undefined
+            : `4px solid ${getBorderColor()}`,
+          color: isEnd ? theme.surfaceColor : theme.textColor,
+          minWidth: isArtificial ? "auto" : "180px",
+          maxWidth: isArtificial ? "auto" : "280px",
+          boxShadow: getBoxShadow(),
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isArtificial ? "center" : "flex-start",
+          justifyContent: "center",
+          fontSize: "14px",
+          fontFamily:
+            "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          position: "relative",
+          ...nodeTransitionStyles,
+        }}
+        className="react-flow-node-custom"
         onMouseEnter={(e) => {
-          if (
-            stateNode.id !== "__end__" &&
-            stateNode.id !== "__start__" &&
-            onStateClick
-          ) {
-            const currentTransform = stateNode.parentId
-              ? "scale(0.85)"
-              : "scale(1)";
-            const hoverTransform = stateNode.parentId
-              ? "scale(0.90)"
-              : "scale(1.05)";
-            e.currentTarget.style.transform = hoverTransform;
-            e.currentTarget.style.boxShadow =
-              stateNode.id === "__start__"
-                ? `0 0 20px ${theme.successColor}60, 0 6px 12px rgba(0,0,0,0.2)`
-                : stateNode.id === "__end__"
-                  ? `0 0 20px ${theme.errorColor}60, 0 6px 12px rgba(0,0,0,0.2)`
-                  : stateNode.parentId
-                    ? "0 3px 6px rgba(0,0,0,0.15)"
-                    : "0 6px 12px rgba(0,0,0,0.2)";
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = `0 8px 16px ${theme.shadowColor}, 0 4px 8px ${theme.shadowColor}`;
+          if (!isArtificial) {
+            e.currentTarget.style.background =
+              theme.nodeHoverColors[
+                stateNode.type.toLowerCase() as keyof typeof theme.nodeHoverColors
+              ] || theme.nodeHoverColors.pass;
           }
         }}
         onMouseLeave={(e) => {
-          if (
-            stateNode.id !== "__end__" &&
-            stateNode.id !== "__start__" &&
-            onStateClick
-          ) {
-            const normalTransform = stateNode.parentId
-              ? "scale(0.85)"
-              : "scale(1)";
-            e.currentTarget.style.transform = normalTransform;
-            e.currentTarget.style.boxShadow = stateNode.parentId
-              ? "0 2px 4px rgba(0,0,0,0.1)"
-              : getBoxShadow();
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = getBoxShadow();
+          if (!isArtificial) {
+            e.currentTarget.style.background = getNodeColor();
           }
         }}
       >
-        {/* Special handling for the artificial start and end nodes */}
-        {stateNode.id === "__start__" ? (
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: theme.textColor,
-              textAlign: "center",
-            }}
-          >
-            START
-          </div>
-        ) : stateNode.id === "__end__" ? (
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: theme.textColor,
-              textAlign: "center",
-            }}
-          >
-            END
-          </div>
-        ) : (
-          <>
-            {/* Icon on the left */}
-            <div
-              style={{
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "18px",
-                color: theme.textColor,
-              }}
-            >
-              {getStateIcon(stateNode.type)}
-            </div>
+        <Handle
+          type="target"
+          position={Position.Top}
+          style={{
+            background: "transparent",
+            border: "none",
+            width: 1,
+            height: 1,
+            top: -2,
+          }}
+        />
 
-            {/* Content on the right */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            marginBottom: isArtificial ? 0 : "4px",
+          }}
+        >
+          <div
+            style={{
+              marginRight: isArtificial ? 0 : "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {getStateIcon(stateNode.type)}
+          </div>
+
+          {!isArtificial && (
             <div
               style={{
+                fontWeight: 600,
+                fontSize: "14px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
                 flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                minWidth: 0, // Allow text to shrink
               }}
             >
-              {/* State name */}
-              <div
-                style={{
-                  fontSize: stateNode.parentId ? "14px" : "18px",
-                  fontWeight: "bold",
-                  color: theme.textColor,
-                  lineHeight: "1.2",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                title={stateNode.name} // Tooltip for full name
-              >
-                {stateNode.name}
-              </div>
-
-              {/* State type */}
-              <div
-                style={{
-                  fontSize: stateNode.parentId ? "11px" : "14px",
-                  color: theme.textColor,
-                  opacity: 0.7,
-                  marginTop: "2px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                {stateNode.type}
-                {stateNode.parentId && (
-                  <span style={{ marginLeft: "4px", fontSize: "10px" }}>
-                    {stateNode.branchIndex !== undefined
-                      ? `(Branch ${stateNode.branchIndex + 1})`
-                      : "(Iterator)"}
-                  </span>
-                )}
-              </div>
+              {stateNode.id}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Output handles */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{
-          background: "transparent",
-          border: `none`,
-          width: 8,
-          height: 8,
-        }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          background: "transparent",
-          border: `none`,
-          width: 8,
-          height: 8,
-        }}
-      />
-    </>
-  );
-};
+        {!isArtificial && stateNode.definition.Comment && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: theme.textColorSecondary,
+              marginTop: "4px",
+              lineHeight: "1.4",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {stateNode.definition.Comment}
+          </div>
+        )}
+
+        {!isArtificial && (
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "10px",
+              color: theme.textColorMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              fontWeight: 600,
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <span>{stateNode.type}</span>
+            {stateNode.definition.End && <span>END</span>}
+          </div>
+        )}
+
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          style={{
+            background: "transparent",
+            border: "none",
+            width: 1,
+            height: 1,
+            bottom: -2,
+          }}
+        />
+      </div>
+    );
+  },
+);
+
+ReactFlowStateNode.displayName = "ReactFlowStateNode";

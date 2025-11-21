@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import React from "react";
 import { WorkflowViewer } from "../WorkflowViewer";
 import { FileUploader, URLInput } from "../FileUploader";
@@ -162,6 +162,7 @@ export const URLLoadingDarkTheme: Story = {
       </div>
     );
   },
+
   args: {
     width: 800,
     height: 500,
@@ -170,12 +171,18 @@ export const URLLoadingDarkTheme: Story = {
     useMiniMap: true,
     useControls: true,
   },
+
   parameters: {
-    backgrounds: { default: "dark" },
     docs: {
       description: {
         story: "URL loading with dark theme styling for the input and viewer",
       },
+    },
+  },
+
+  globals: {
+    backgrounds: {
+      value: "dark",
     },
   },
 };

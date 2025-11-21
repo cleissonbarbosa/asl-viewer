@@ -293,6 +293,39 @@ describe("Layout Utils", () => {
       expect(secondNode?.position.y).toBeLessThan(thirdNode?.position.y || 0);
       expect(thirdNode?.position.y).toBeLessThan(endNode?.position.y || 0);
     });
+
+    it("should support horizontal layout (LR)", () => {
+      const definition: ASLDefinition = {
+        StartAt: "First",
+        States: {
+          First: {
+            Type: "Pass",
+            Next: "Second",
+          },
+          Second: {
+            Type: "Pass",
+            End: true,
+          },
+        },
+      };
+
+      const layoutTB = createGraphLayout(definition, "TB");
+      const layoutLR = createGraphLayout(definition, "LR");
+
+      // In TB, y increases more than x for sequential nodes
+      const firstTB = layoutTB.nodes.find((n) => n.id === "First")!;
+      const secondTB = layoutTB.nodes.find((n) => n.id === "Second")!;
+      expect(secondTB.position.y).toBeGreaterThan(firstTB.position.y);
+
+      // In LR, x increases more than y for sequential nodes
+      const firstLR = layoutLR.nodes.find((n) => n.id === "First")!;
+      const secondLR = layoutLR.nodes.find((n) => n.id === "Second")!;
+      expect(secondLR.position.x).toBeGreaterThan(firstLR.position.x);
+
+      // Check that dimensions are swapped roughly
+      expect(layoutLR.width).toBeGreaterThan(layoutTB.width); // LR should be wider
+      expect(layoutLR.height).toBeLessThan(layoutTB.height); // LR should be shorter
+    });
   });
 
   describe("createSimpleLayout", () => {

@@ -11,7 +11,7 @@ This project uses Storybook to showcase components and provide interactive docum
 ### Example Structure
 
 ```tsx
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { YourComponent } from "./YourComponent";
 
 const meta: Meta<typeof YourComponent> = {

@@ -194,7 +194,7 @@ function extractASLFromCloudFormation(template: any): ASLDefinition {
 
   // Look for AWS::StepFunctions::StateMachine or AWS::Serverless::StateMachine
   for (const [resourceName, resource] of Object.entries(resources)) {
-    const res = resource as any;
+    const res = resource as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (
       res.Type === "AWS::StepFunctions::StateMachine" ||
       res.Type === "AWS::Serverless::StateMachine"
@@ -234,7 +234,7 @@ export async function loadFromURL(url: string): Promise<ASLDefinition> {
     const contentType = response.headers.get("content-type") || "";
     const text = await response.text();
 
-    let parsed: any;
+    let parsed: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     if (contentType.includes("application/json") || url.endsWith(".json")) {
       parsed = JSON.parse(text);
@@ -285,7 +285,7 @@ export async function loadFromFile(file: File): Promise<ASLDefinition> {
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
-        let parsed: any;
+        let parsed: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
         if (file.type === "application/json" || file.name.endsWith(".json")) {
           parsed = JSON.parse(text);

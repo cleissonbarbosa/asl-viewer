@@ -23,10 +23,12 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see 
 
 - 🎨 **Visual Workflow Rendering** - Display ASL workflows as interactive graphs
 - 🌓 **Theme Support** - Light and dark themes built-in
+- 📐 **Layout Options** - Support for Top-to-Bottom and Left-to-Right layouts
 - ✅ **ASL Validation** - Comprehensive validation for ASL syntax and semantics
-- 🔄 **Auto Layout** - Automatic graph layout
+- 🔄 **Auto Layout** - Automatic graph layout with reactive updates
 - 📱 **Responsive** - Works on different screen sizes
 - 🖱️ **Interactive** - Click handlers for states and connections
+- 🔍 **Detailed Inspection** - Rich state details panel with JSON viewing
 - 🌐 **Multiple Input Sources** - Load from definition objects, URLs, or files
 - 📄 **YAML Support** - Support for both JSON and YAML formats
 - 🔧 **Extensible** - Easy to customize and extend
@@ -59,7 +61,7 @@ require("asl-viewer/dist/index.css");
 ### HTML (if using a CDN)
 
 ```html
-<link rel="stylesheet" href="path/to/asl-viewer/dist/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asl-viewer@1.0.8/dist/index.css" />
 ```
 
 ### CSS-in-JS / Styled Components
@@ -314,6 +316,7 @@ States:
 | `url`               | `string`                           | -         | URL to load the ASL definition from        |
 | `file`              | `File`                             | -         | File object containing the ASL definition  |
 | `theme`             | `'light' \| 'dark'`                | `'light'` | Visual theme                               |
+| `layoutDirection`   | `'TB' \| 'LR'`                     | `'TB'`    | Layout direction (Top-Bottom or Left-Right)|
 | `width`             | `number`                           | `800`     | Viewer width in pixels                     |
 | `height`            | `number`                           | `600`     | Viewer height in pixels                    |
 | `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only            |
@@ -325,6 +328,8 @@ States:
 | `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls          |
 | `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                 |
 | `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes |
+| `showToolbar`       | `boolean`                          | `false`   | Whether to show the toolbar                |
+| `hideComment`       | `boolean`                          | `false`   | Whether to hide the workflow comment       |
 | `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked           |
 | `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors             |
 | `onLoadStart`       | `() => void`                       | -         | Callback when loading starts               |
@@ -383,6 +388,19 @@ Ideal for complex workflows with enhanced navigation features:
   useZoom={true}
   width={1000}
   height={800}
+/>
+```
+
+### Horizontal Layout
+
+Display the workflow from left to right instead of top to bottom:
+
+```tsx
+<WorkflowViewer
+  definition={workflow}
+  layoutDirection="LR"
+  width={1000}
+  height={600}
 />
 ```
 

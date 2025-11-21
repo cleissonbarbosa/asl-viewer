@@ -1,10 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WorkflowViewer } from "../WorkflowViewer";
 import {
   complexWorkflowDefinition,
   ecommerceWorkflowDefinition,
   dataProcessingWorkflowDefinition,
   helloWorldDefinition,
+  simpleWorkflow,
 } from "./workflow-definitions";
 import { WorkflowViewerProps } from "../../types";
 
@@ -150,13 +151,19 @@ export const FullyInteractive: Story = {
       console.log("State clicked:", state);
     },
   } as WorkflowViewerProps,
+
   parameters: {
-    backgrounds: { default: "dark" },
     docs: {
       description: {
         story:
           "All interactive features enabled - dragging, selecting, connecting, zooming, and more",
       },
+    },
+  },
+
+  globals: {
+    backgrounds: {
+      value: "dark",
     },
   },
 };
@@ -272,5 +279,41 @@ export const DraggableWorkflow: Story = {
           "Interactive workflow where nodes can be repositioned by dragging",
       },
     },
+  },
+};
+
+/**
+ * Custom styling example
+ */
+export const CustomStyling: Story = {
+  args: {
+    definition: simpleWorkflow,
+    height: 600,
+    theme: "dark",
+  },
+};
+
+/**
+ * Horizontal layout demonstration
+ */
+export const HorizontalLayout: Story = {
+  args: {
+    definition: simpleWorkflow,
+    height: 600,
+    layoutDirection: "LR",
+    showToolbar: true,
+  },
+};
+
+/**
+ * Toolbar features showcase
+ */
+export const WithToolbar: Story = {
+  args: {
+    definition: simpleWorkflow,
+    height: 600,
+    showToolbar: true,
+    showControls: true,
+    showMiniMap: true,
   },
 };

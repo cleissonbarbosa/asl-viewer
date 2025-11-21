@@ -8,6 +8,7 @@ export function calculateHierarchicalLayout(
   nodes: StateNode[],
   edges: Connection[],
   startAt: string,
+  direction: "TB" | "LR" = "TB",
 ): { nodes: StateNode[]; width: number; height: number } {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const visited = new Set<string>();
@@ -85,7 +86,13 @@ export function calculateHierarchicalLayout(
   const spacingConfig = calculateImprovedSpacing(parentNodes, edges);
 
   // Position nodes with dynamic spacing based on labeled edges
-  const layout = positionNodesInLevels(levels, nodeMap, edges, spacingConfig);
+  const layout = positionNodesInLevels(
+    levels,
+    nodeMap,
+    edges,
+    direction,
+    spacingConfig,
+  );
 
   return {
     nodes: Array.from(nodeMap.values()),
@@ -101,17 +108,44 @@ function positionNodesInLevels(
   levels: string[][],
   nodeMap: Map<string, StateNode>,
   edges: Connection[],
+  direction: "TB" | "LR",
   spacingConfig?: { nodeSpacing: number; levelSpacing: number },
 ): { width: number; height: number } {
   // Use provided spacing or fall back to defaults
-  const nodeSpacing = spacingConfig?.nodeSpacing || 340;
-  const baseLevelSpacing = spacingConfig?.levelSpacing || 150;
-  const labeledEdgeSpacing = 50; // Extra spacing for labeled edges
-  const startX = 100;
-  const startY = 100;
+  const gapBetweenNodes = spacingConfig?.nodeSpacing || 60;
+  const gapBetweenLevels = spacingConfig?.levelSpacing || 60;
+  const labeledEdgeSpacing = 40; // Extra spacing for labeled edges
+  const startX = 50;
+  const startY = 50;
 
-  let maxWidth = 0;
-  let currentY = startY;
+  // Build incoming edges map for fast lookup of parents
+  const incomingEdges = new Map<string, string[]>();
+  edges.forEach((edge) => {
+    if (!incomingEdges.has(edge.to)) {
+      incomingEdges.set(edge.to, []);
+    }
+    incomingEdges.get(edge.to)!.push(edge.from);
+  });
+
+  // Store calculated CENTER positions (X for TB, Y for LR)
+  const calculatedCenterPositions = new Map<string, number>();
+
+  // Track current level position (Y for TB, X for LR)
+  let currentFlowPos = direction === "TB" ? startY : startX;
+
+  // Helper to get node dimension in the non-flow direction (Width for TB)
+  const getNodeSize = (id: string) => {
+    const node = nodeMap.get(id);
+    if (!node) return 0;
+    return direction === "TB" ? node.size.width : node.size.height;
+  };
+
+  // Helper to get node dimension in the flow direction (Height for TB)
+  const getNodeFlowSize = (id: string) => {
+    const node = nodeMap.get(id);
+    if (!node) return 0;
+    return direction === "TB" ? node.size.height : node.size.width;
+  };
 
   // Check if there are edges with labels between levels
   const hasLabeledEdgesBetweenLevels = (
@@ -132,46 +166,130 @@ function positionNodesInLevels(
   };
 
   levels.forEach((level, levelIndex) => {
-    const levelWidth = level.length * nodeSpacing;
-    maxWidth = Math.max(maxWidth, levelWidth);
+    // 1. Calculate desired positions based on parents
+    const nodeData = level.map((nodeId) => {
+      const parents = incomingEdges.get(nodeId) || [];
+      // Filter parents that have been positioned (should be all from previous levels)
+      const positionedParents = parents.filter((p) =>
+        calculatedCenterPositions.has(p),
+      );
 
-    const startXForLevel = startX + (maxWidth - levelWidth) / 2;
+      let desiredPos = 0;
+      if (positionedParents.length > 0) {
+        const sum = positionedParents.reduce(
+          (acc, p) => acc + (calculatedCenterPositions.get(p) || 0),
+          0,
+        );
+        desiredPos = sum / positionedParents.length;
+      } else if (levelIndex > 0) {
+        // If no parents (e.g. disconnected), try to stay near 0 (center)
+        desiredPos = 0;
+      }
 
-    level.forEach((nodeId, nodeIndex) => {
-      const node = nodeMap.get(nodeId);
-      if (node) {
-        node.position = {
-          x: startXForLevel + nodeIndex * nodeSpacing,
-          y: currentY,
-        };
+      return {
+        id: nodeId,
+        desiredPos,
+        width: getNodeSize(nodeId),
+        flowSize: getNodeFlowSize(nodeId),
+      };
+    });
+
+    // 2. Sort nodes by desired position to preserve relative order
+    nodeData.sort((a, b) => a.desiredPos - b.desiredPos);
+
+    // 3. Resolve overlaps (Left-to-Right pass)
+    const placedPositions: number[] = [];
+
+    nodeData.forEach((node, i) => {
+      let pos = node.desiredPos;
+
+      // Constraint: Must be to the right of previous node
+      if (i > 0) {
+        const prevPos = placedPositions[i - 1];
+        const prevHalfWidth = nodeData[i - 1].width / 2;
+        const currHalfWidth = node.width / 2;
+        const minPos =
+          prevPos + prevHalfWidth + gapBetweenNodes + currHalfWidth;
+        if (pos < minPos) {
+          pos = minPos;
+        }
+      }
+      placedPositions.push(pos);
+    });
+
+    // The L->R pass pushes everything right.
+    // We need to center the group relative to the desired positions.
+    let totalDeviation = 0;
+    nodeData.forEach((node, i) => {
+      totalDeviation += placedPositions[i] - node.desiredPos;
+    });
+    const avgDeviation = totalDeviation / nodeData.length;
+
+    // Shift back by average deviation
+    const finalPositions = placedPositions.map((p) => p - avgDeviation);
+
+    // Store results
+    nodeData.forEach((node, i) => {
+      calculatedCenterPositions.set(node.id, finalPositions[i]);
+    });
+
+    // 4. Assign positions to nodes (converting center to top-left)
+    nodeData.forEach((node, i) => {
+      const centerPos = finalPositions[i];
+      const topLeftPos = centerPos - node.width / 2;
+
+      const stateNode = nodeMap.get(node.id)!;
+      if (direction === "TB") {
+        stateNode.position = { x: topLeftPos, y: currentFlowPos };
+      } else {
+        stateNode.position = { x: currentFlowPos, y: topLeftPos };
       }
     });
 
+    // 5. Update Flow Position (Y)
+    const maxFlowSize =
+      nodeData.length > 0 ? Math.max(...nodeData.map((n) => n.flowSize)) : 0;
+
     // Calculate spacing for next level
     if (levelIndex < levels.length - 1) {
-      let spacingToNext = baseLevelSpacing;
+      let spacingToNext = gapBetweenLevels + maxFlowSize;
 
       // Check if there are labeled edges between this level and the next
       if (hasLabeledEdgesBetweenLevels(levelIndex, levelIndex + 1)) {
         spacingToNext += labeledEdgeSpacing;
       }
 
-      // Add extra space if current level has group nodes
-      const hasGroupNodes = level.some((nodeId) => {
-        const node = nodeMap.get(nodeId);
-        return node && node.isGroup;
-      });
-
-      if (hasGroupNodes) {
-        spacingToNext += 50; // Extra space for group nodes
-      }
-
-      currentY += spacingToNext;
+      currentFlowPos += spacingToNext;
+    } else {
+      currentFlowPos += maxFlowSize;
     }
   });
 
-  const totalWidth = maxWidth + 200;
-  const totalHeight = currentY + 100;
+  // 6. Normalize coordinates (shift so min X/Y is startX/startY)
+  let minPos = Infinity;
+  let maxPos = -Infinity;
+
+  nodeMap.forEach((node) => {
+    const pos = direction === "TB" ? node.position.x : node.position.y;
+    const size = direction === "TB" ? node.size.width : node.size.height;
+    minPos = Math.min(minPos, pos);
+    maxPos = Math.max(maxPos, pos + size);
+  });
+
+  const shift = (direction === "TB" ? startX : startY) - minPos;
+
+  nodeMap.forEach((node) => {
+    if (direction === "TB") {
+      node.position.x += shift;
+    } else {
+      node.position.y += shift;
+    }
+  });
+
+  const totalWidth =
+    direction === "TB" ? maxPos - minPos + startX * 2 : currentFlowPos + startX;
+  const totalHeight =
+    direction === "TB" ? currentFlowPos + startY : maxPos - minPos + startY * 2;
 
   return { width: totalWidth, height: totalHeight };
 }

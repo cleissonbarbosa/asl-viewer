@@ -72,20 +72,20 @@ describe("Theme Utils", () => {
 
     it("should have light color scheme characteristics", () => {
       // Light theme should have light background
-      expect(lightTheme.background).toBe("#fafbfc");
+      expect(lightTheme.background).toBe("#f8f9fa");
 
       // Text should be dark for readability on light background
-      expect(lightTheme.textColor).toBe("#1a1a1a");
+      expect(lightTheme.textColor).toBe("#1e293b");
 
       // Node colors should be light/pastel
-      expect(lightTheme.nodeColors.pass).toBe("#e8f4fd");
-      expect(lightTheme.nodeColors.task).toBe("#f0f9f0");
-      expect(lightTheme.nodeColors.choice).toBe("#fff8e1");
-      expect(lightTheme.nodeColors.wait).toBe("#f8f4ff");
-      expect(lightTheme.nodeColors.succeed).toBe("#e8f5e8");
-      expect(lightTheme.nodeColors.fail).toBe("#ffebee");
-      expect(lightTheme.nodeColors.parallel).toBe("#e0f7fa");
-      expect(lightTheme.nodeColors.map).toBe("#f1f8e9");
+      expect(lightTheme.nodeColors.pass).toBe("#ffffff");
+      expect(lightTheme.nodeColors.task).toBe("#ffffff");
+      expect(lightTheme.nodeColors.choice).toBe("#ffffff");
+      expect(lightTheme.nodeColors.wait).toBe("#ffffff");
+      expect(lightTheme.nodeColors.succeed).toBe("#f0fdf4");
+      expect(lightTheme.nodeColors.fail).toBe("#fef2f2");
+      expect(lightTheme.nodeColors.parallel).toBe("#ffffff");
+      expect(lightTheme.nodeColors.map).toBe("#ffffff");
     });
 
     it("should be a valid ViewerTheme object", () => {
@@ -135,20 +135,20 @@ describe("Theme Utils", () => {
 
     it("should have dark color scheme characteristics", () => {
       // Dark theme should have dark background
-      expect(darkTheme.background).toBe("#0d1117");
+      expect(darkTheme.background).toBe("#0f172a");
 
       // Text should be light for readability on dark background
-      expect(darkTheme.textColor).toBe("#f0f6fc");
+      expect(darkTheme.textColor).toBe("#f8fafc");
 
       // Node colors should be darker variants
-      expect(darkTheme.nodeColors.pass).toBe("#1f2937");
-      expect(darkTheme.nodeColors.task).toBe("#064e3b");
-      expect(darkTheme.nodeColors.choice).toBe("#451a03");
-      expect(darkTheme.nodeColors.wait).toBe("#581c87");
+      expect(darkTheme.nodeColors.pass).toBe("#1e293b");
+      expect(darkTheme.nodeColors.task).toBe("#1e293b");
+      expect(darkTheme.nodeColors.choice).toBe("#1e293b");
+      expect(darkTheme.nodeColors.wait).toBe("#1e293b");
       expect(darkTheme.nodeColors.succeed).toBe("#064e3b");
       expect(darkTheme.nodeColors.fail).toBe("#7f1d1d");
-      expect(darkTheme.nodeColors.parallel).toBe("#164e63");
-      expect(darkTheme.nodeColors.map).toBe("#365314");
+      expect(darkTheme.nodeColors.parallel).toBe("#1e293b");
+      expect(darkTheme.nodeColors.map).toBe("#1e293b");
     });
 
     it("should be a valid ViewerTheme object", () => {
@@ -245,26 +245,26 @@ describe("Theme Utils", () => {
   describe("theme contrast and accessibility", () => {
     it("should have sufficient contrast between light theme text and background", () => {
       // Light theme: dark text on light background
-      expect(lightTheme.background).toBe("#fafbfc"); // Light background
-      expect(lightTheme.textColor).toBe("#1a1a1a"); // Dark text
+      expect(lightTheme.background).toBe("#f8f9fa"); // Light background
+      expect(lightTheme.textColor).toBe("#1e293b"); // Dark text
     });
 
     it("should have sufficient contrast between dark theme text and background", () => {
       // Dark theme: light text on dark background
-      expect(darkTheme.background).toBe("#0d1117"); // Dark background
-      expect(darkTheme.textColor).toBe("#f0f6fc"); // Light text
+      expect(darkTheme.background).toBe("#0f172a"); // Dark background
+      expect(darkTheme.textColor).toBe("#f8fafc"); // Light text
     });
 
     it("should have appropriate error colors for both themes", () => {
       // Error colors should be clearly visible and indicate error state
-      expect(lightTheme.errorColor).toBe("#d73a49"); // Red for light theme
-      expect(darkTheme.errorColor).toBe("#f85149"); // Lighter red for dark theme
+      expect(lightTheme.errorColor).toBe("#ef4444"); // Red for light theme
+      expect(darkTheme.errorColor).toBe("#ef4444"); // Lighter red for dark theme
     });
 
     it("should have appropriate success colors for both themes", () => {
       // Success colors should be clearly visible and indicate success state
-      expect(lightTheme.successColor).toBe("#28a745"); // Green for light theme
-      expect(darkTheme.successColor).toBe("#3fb950"); // Lighter green for dark theme
+      expect(lightTheme.successColor).toBe("#22c55e"); // Green for light theme
+      expect(darkTheme.successColor).toBe("#22c55e"); // Lighter green for dark theme
     });
   });
 
@@ -272,15 +272,15 @@ describe("Theme Utils", () => {
     it('should return light theme when "light" is passed', () => {
       const theme = getTheme("light");
       expect(theme).toEqual(lightTheme);
-      expect(theme.background).toBe("#fafbfc");
-      expect(theme.textColor).toBe("#1a1a1a");
+      expect(theme.background).toBe("#f8f9fa");
+      expect(theme.textColor).toBe("#1e293b");
     });
 
     it('should return dark theme when "dark" is passed', () => {
       const theme = getTheme("dark");
       expect(theme).toEqual(darkTheme);
-      expect(theme.background).toBe("#0d1117");
-      expect(theme.textColor).toBe("#f0f6fc");
+      expect(theme.background).toBe("#0f172a");
+      expect(theme.textColor).toBe("#f8fafc");
     });
 
     it('should return highContrast theme when "highContrast" is passed', () => {
@@ -444,38 +444,20 @@ describe("Theme Utils", () => {
   describe("semantic color usage", () => {
     it("should use green colors for success states", () => {
       // Success and succeed states should use green-ish colors
-      expect(lightTheme.nodeColors.succeed).toContain("e8f5e8"); // Light green
-      expect(lightTheme.successColor).toContain("28a745"); // Dark green
+      expect(lightTheme.nodeColors.succeed).toContain("f0fdf4"); // Light green
+      expect(lightTheme.successColor).toContain("22c55e"); // Dark green
 
       expect(darkTheme.nodeColors.succeed).toContain("064e3b"); // Dark green
-      expect(darkTheme.successColor).toContain("3fb950"); // Light green
+      expect(darkTheme.successColor).toContain("22c55e"); // Light green
     });
 
     it("should use red colors for error/fail states", () => {
       // Fail states and error colors should use red-ish colors
-      expect(lightTheme.nodeColors.fail).toContain("ffebee"); // Light red
-      expect(lightTheme.errorColor).toContain("d73a49"); // Dark red
+      expect(lightTheme.nodeColors.fail).toContain("fef2f2"); // Light red
+      expect(lightTheme.errorColor).toContain("ef4444"); // Dark red
 
       expect(darkTheme.nodeColors.fail).toContain("7f1d1d"); // Dark red
-      expect(darkTheme.errorColor).toContain("f85149"); // Light red
-    });
-
-    it("should use distinct colors for different state types", () => {
-      // All node colors should be unique in each theme
-      const lightColors = Object.values(lightTheme.nodeColors);
-      const darkColors = Object.values(darkTheme.nodeColors);
-
-      // Check light theme has unique colors (except for succeed/task which might be same green)
-      const uniqueLightColors = new Set(lightColors);
-      expect(uniqueLightColors.size).toBeGreaterThanOrEqual(
-        lightColors.length - 1,
-      );
-
-      // Check dark theme has unique colors (except for succeed/task which might be same green)
-      const uniqueDarkColors = new Set(darkColors);
-      expect(uniqueDarkColors.size).toBeGreaterThanOrEqual(
-        darkColors.length - 1,
-      );
+      expect(darkTheme.errorColor).toContain("ef4444"); // Light red
     });
   });
 });

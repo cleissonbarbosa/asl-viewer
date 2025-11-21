@@ -146,6 +146,8 @@ export interface WorkflowViewerProps {
   isConnectable?: boolean;
   isMultiSelect?: boolean;
   readonly?: boolean;
+  layoutDirection?: "TB" | "LR";
+  showToolbar?: boolean;
   onStateClick?: (state: StateNode) => void;
   onValidationError?: (error: ValidationError) => void;
   onLoadStart?: () => void;

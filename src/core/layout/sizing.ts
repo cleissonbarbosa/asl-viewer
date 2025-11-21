@@ -50,22 +50,22 @@ export function calculateGroupBounds(
     const maxBranchHeight = Math.max(
       ...Array.from(branches.values()).map(
         (branchChildren) =>
-          branchChildren.length * 90 + (branchChildren.length - 1) * 20, // Increased spacing
+          branchChildren.length * 60 + (branchChildren.length - 1) * 20, // Compact spacing
       ),
     );
 
     return {
-      width: Math.max(450, branchCount * 200 + (branchCount - 1) * 40 + 60), // Increased width
-      height: Math.max(250, maxBranchHeight + 150), // Increased padding and height
+      width: Math.max(300, branchCount * 240 + (branchCount - 1) * 20 + 40), // Compact width
+      height: Math.max(150, maxBranchHeight + 100), // Compact padding and height
     };
   } else if (type === "Map") {
     // Map iterator children are arranged vertically with better spacing
-    const totalHeight = children.length * 90 + (children.length - 1) * 20; // Increased spacing
+    const totalHeight = children.length * 60 + (children.length - 1) * 20; // Compact spacing
     return {
-      width: 350, // Increased width
-      height: Math.max(250, totalHeight + 150), // Increased padding
+      width: 300, // Compact width
+      height: Math.max(150, totalHeight + 100), // Compact padding
     };
   }
 
-  return { width: 350, height: 250 }; // Increased default size
+  return { width: 300, height: 150 }; // Compact default size
 }

@@ -12,7 +12,10 @@ import { calculateImprovedSpacing } from "./reactive-layout";
 /**
  * Converts ASL definition to graph layout using a hierarchical approach optimized for React Flow
  */
-export function createGraphLayout(definition: ASLDefinition): GraphLayout {
+export function createGraphLayout(
+  definition: ASLDefinition,
+  direction: "TB" | "LR" = "TB",
+): GraphLayout {
   const nodes: StateNode[] = [];
   const edges: Connection[] = [];
 
@@ -75,7 +78,12 @@ export function createGraphLayout(definition: ASLDefinition): GraphLayout {
   });
 
   // Calculate hierarchical layout
-  const layout = calculateHierarchicalLayout(nodes, edges, "__start__");
+  const layout = calculateHierarchicalLayout(
+    nodes,
+    edges,
+    "__start__",
+    direction,
+  );
 
   return {
     nodes: layout.nodes,
@@ -160,6 +168,8 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
   // Create nodes in simple vertical layout with dynamic spacing
   const stateEntries = Object.entries(definition.States);
   stateEntries.forEach(([stateName, state], index) => {
+    let currentNodeHeight = 0;
+
     if (state.Type === "Parallel" && state.Branches) {
       // Create a group node for Parallel state
       const childNodes = createParallelChildNodes(stateName, state.Branches);
@@ -174,6 +184,7 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
         y: currentY,
       };
       nodes.push(groupNode);
+      currentNodeHeight = groupNode.size.height;
     } else if (state.Type === "Map" && state.Iterator) {
       // Create a group node for Map state
       const childNodes = createMapChildNodes(stateName, state.Iterator);
@@ -188,11 +199,13 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
         y: currentY,
       };
       nodes.push(groupNode);
+      currentNodeHeight = groupNode.size.height;
     } else {
       // Regular state node
       const node = createStateNode(stateName, state, definition.StartAt);
       node.position = { x: centerX - node.size.width / 2, y: currentY };
       nodes.push(node);
+      currentNodeHeight = node.size.height;
     }
 
     // Calculate spacing for next node
@@ -207,10 +220,10 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
         (state.Type === "Parallel" && state.Branches) ||
         (state.Type === "Map" && state.Iterator)
       ) {
-        spacingToNext += 50;
+        spacingToNext += 20;
       }
 
-      currentY += spacingToNext;
+      currentY += currentNodeHeight + spacingToNext;
     } else {
       // For the last state, check if it has labeled edges to end
       let spacingToEnd = baseSpacing;
@@ -223,10 +236,10 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
         (state.Type === "Parallel" && state.Branches) ||
         (state.Type === "Map" && state.Iterator)
       ) {
-        spacingToEnd += 50;
+        spacingToEnd += 20;
       }
 
-      currentY += spacingToEnd;
+      currentY += currentNodeHeight + spacingToEnd;
     }
   });
 

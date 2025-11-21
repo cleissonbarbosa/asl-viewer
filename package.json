@@ -1,6 +1,6 @@
 {
   "name": "asl-viewer",
-  "version": "1.0.2",
+  "version": "1.0.8",
   "description": "React library for viewing AWS Step Functions workflows in the browser",
   "type": "module",
   "main": "dist/index.cjs",

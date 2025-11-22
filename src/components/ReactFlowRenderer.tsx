@@ -48,6 +48,7 @@ interface ReactFlowRendererProps {
   useFitView?: boolean;
   layoutDirection?: "TB" | "LR";
   searchTerm?: string;
+  searchMatchIndex?: number;
   onNodeClick?: (state: StateNode) => void;
 }
 
@@ -74,6 +75,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   useFitView = true,
   layoutDirection = "TB",
   searchTerm = "",
+  searchMatchIndex = 0,
   onNodeClick,
 }) => {
   // State to track which group nodes are expanded
@@ -109,6 +111,9 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
 
   // Store previous layout to detect changes for animation
   const previousLayoutRef = useRef<StateNode[]>([]);
+
+  // Store previous search term to detect when search is cleared
+  const prevSearchTermRef = useRef(searchTerm);
 
   // Function to toggle the expanded state of a group node with animation
   const handleToggleExpand = useCallback((nodeId: string) => {
@@ -326,8 +331,10 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
 
   // Center on found node when search term changes
   useEffect(() => {
-    if (searchTerm && rfInstance && nodes.length > 0) {
-      const matchingNode = nodes.find(
+    if (!rfInstance || nodes.length === 0) return;
+
+    if (searchTerm) {
+      const matchingNodes = nodes.filter(
         (n) =>
           n.data.stateNode.name &&
           n.data.stateNode.name
@@ -335,15 +342,26 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
             .includes(searchTerm.toLowerCase()),
       );
 
-      if (matchingNode) {
+      if (matchingNodes.length > 0) {
+        const index = searchMatchIndex % matchingNodes.length;
+        const matchingNode = matchingNodes[index];
+
         rfInstance.fitView({
           nodes: [{ id: matchingNode.id }],
           padding: 0.5,
           duration: 800,
         });
       }
+    } else if (prevSearchTermRef.current) {
+      // Reset zoom when search is cleared
+      rfInstance.fitView({
+        padding: 0.2,
+        duration: 800,
+      });
     }
-  }, [searchTerm, rfInstance, nodes]);
+
+    prevSearchTermRef.current = searchTerm;
+  }, [searchTerm, rfInstance, nodes, searchMatchIndex]);
 
   // Cleanup animation on unmount
   React.useEffect(() => {

@@ -145,7 +145,17 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   const [showControlsState, setShowControlsState] = useState(useControls);
   const [showBackgroundState, setShowBackgroundState] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchMatchIndex, setSearchMatchIndex] = useState(0);
   const [selectedNode, setSelectedNode] = useState<StateNode | null>(null);
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setSearchMatchIndex(0);
+  };
+
+  const handleSearchNext = () => {
+    setSearchMatchIndex((prev) => prev + 1);
+  };
 
   // Update state when props change
   useEffect(() => {
@@ -415,7 +425,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
               setShowBackgroundState(!showBackgroundState)
             }
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={handleSearchChange}
+            onSearchNext={handleSearchNext}
           />
         )}
         <ReactFlowRenderer
@@ -436,6 +447,7 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
           useFitView={useFitView}
           layoutDirection={layoutDirection}
           searchTerm={searchTerm}
+          searchMatchIndex={searchMatchIndex}
           onNodeClick={handleStateClick}
         />
       </div>

@@ -25,6 +25,7 @@ interface ViewerToolbarProps {
   onToggleBackground: () => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  onSearchNext?: () => void;
 }
 
 export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
@@ -41,6 +42,7 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   onToggleBackground,
   searchTerm,
   onSearchChange,
+  onSearchNext,
 }) => {
   const buttonStyle: React.CSSProperties = {
     background: theme.surfaceColor,
@@ -97,6 +99,11 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
           placeholder="Search states..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onSearchNext) {
+              onSearchNext();
+            }
+          }}
           style={{
             border: "none",
             background: "none",

@@ -17,6 +17,7 @@ import {
 import { ReactFlowRenderer } from "./ReactFlowRenderer";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ViewerToolbar } from "./ViewerToolbar";
+import { DetailPanel } from "./DetailPanel";
 import { IconLoader } from "@tabler/icons-react";
 
 /**
@@ -143,6 +144,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   const [showMiniMapState, setShowMiniMapState] = useState(useMiniMap);
   const [showControlsState, setShowControlsState] = useState(useControls);
   const [showBackgroundState, setShowBackgroundState] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedNode, setSelectedNode] = useState<StateNode | null>(null);
 
   // Update state when props change
   useEffect(() => {
@@ -270,11 +273,17 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
 
   const handleStateClick = useCallback(
     (state: StateNode) => {
-      setSelectedState(state);
+      setSelectedNode(state);
+      setSelectedState(state); // Keep for compatibility if needed elsewhere
       onStateClick?.(state);
     },
     [onStateClick],
   );
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedNode(null);
+    setSelectedState(null);
+  }, []);
 
   const hasErrors =
     errors.some((error) => error.severity === "error") || loadError;
@@ -405,6 +414,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
             onToggleBackground={() =>
               setShowBackgroundState(!showBackgroundState)
             }
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
         )}
         <ReactFlowRenderer
@@ -424,391 +435,19 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
           useZoom={useZoom}
           useFitView={useFitView}
           layoutDirection={layoutDirection}
+          searchTerm={searchTerm}
+          onNodeClick={handleStateClick}
         />
       </div>
 
       {/* State details panel */}
-      {selectedState && (
-        <div
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50px",
-            width: "250px",
-            maxHeight: height - 60,
-            background: viewerTheme.background,
-            border: `1px solid ${viewerTheme.borderColor}`,
-            borderRadius: "4px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-            overflow: "auto",
-            zIndex: 10,
-          }}
-        >
-          <div
-            style={{
-              padding: "8px 12px",
-              borderBottom: `1px solid ${viewerTheme.borderColor}`,
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: viewerTheme.textColor,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            State Details
-            <button
-              onClick={() => setSelectedState(null)}
-              style={{
-                background: "none",
-                border: "none",
-                fontSize: "16px",
-                cursor: "pointer",
-                color: viewerTheme.textColor,
-                padding: "0 4px",
-              }}
-            >
-              ×
-            </button>
-          </div>
-          <div style={{ padding: "12px" }}>
-            <StateDetails state={selectedState} theme={viewerTheme} />
-          </div>
-        </div>
+      {selectedNode && (
+        <DetailPanel
+          node={selectedNode}
+          theme={viewerTheme}
+          onClose={handleCloseDetail}
+        />
       )}
-    </div>
-  );
-};
-
-const DetailSection: React.FC<{
-  title: string;
-  children: React.ReactNode;
-  theme: any;
-}> = ({ title, children, theme }) => (
-  <div style={{ marginBottom: "16px" }}>
-    <div
-      style={{
-        fontSize: "11px",
-        fontWeight: "bold",
-        textTransform: "uppercase",
-        color: theme.textColorSecondary,
-        marginBottom: "8px",
-        borderBottom: `1px solid ${theme.borderColor}`,
-        paddingBottom: "4px",
-        letterSpacing: "0.5px",
-      }}
-    >
-      {title}
-    </div>
-    <div style={{ fontSize: "12px" }}>{children}</div>
-  </div>
-);
-
-const DetailRow: React.FC<{
-  label: string;
-  value: React.ReactNode;
-  theme: any;
-}> = ({ label, value, theme }) => (
-  <div
-    style={{ marginBottom: "6px", display: "flex", flexDirection: "column" }}
-  >
-    <span
-      style={{
-        fontWeight: 600,
-        color: theme.textColorSecondary,
-        fontSize: "11px",
-        marginBottom: "2px",
-      }}
-    >
-      {label}:
-    </span>
-    <span
-      style={{
-        color: theme.textColor,
-        wordBreak: "break-word",
-        lineHeight: "1.4",
-      }}
-    >
-      {value}
-    </span>
-  </div>
-);
-
-const JsonView: React.FC<{ data: any; theme: any }> = ({ data, theme }) => (
-  <pre
-    style={{
-      background: theme.background === "#ffffff" ? "#f8f9fa" : "#1e1e1e",
-      padding: "8px",
-      borderRadius: "4px",
-      fontSize: "10px",
-      overflowX: "auto",
-      border: `1px solid ${theme.borderColor}`,
-      margin: "4px 0 0 0",
-      fontFamily: "monospace",
-    }}
-  >
-    {JSON.stringify(data, null, 2)}
-  </pre>
-);
-
-const StateDetails: React.FC<{ state: StateNode; theme: any }> = ({
-  state,
-  theme,
-}) => {
-  const def = state.definition;
-
-  return (
-    <div style={{ color: theme.textColor, fontSize: "12px" }}>
-      {/* Header Info */}
-      <div
-        style={{
-          marginBottom: "16px",
-          paddingBottom: "12px",
-          borderBottom: `1px solid ${theme.borderColor}`,
-        }}
-      >
-        <div
-          style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "8px" }}
-        >
-          {state.name}
-        </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <div
-            style={{
-              display: "inline-block",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "10px",
-              fontWeight: "bold",
-              backgroundColor:
-                theme.nodeBorderColors[state.type.toLowerCase()] ||
-                theme.borderColor,
-              color: "#fff",
-            }}
-          >
-            {state.type.toUpperCase()}
-          </div>
-          {state.isStartState && (
-            <span
-              style={{
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "10px",
-                fontWeight: "bold",
-                backgroundColor: theme.successColor,
-                color: "#fff",
-              }}
-            >
-              START
-            </span>
-          )}
-          {state.isEndState && (
-            <span
-              style={{
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "10px",
-                fontWeight: "bold",
-                backgroundColor:
-                  state.type === "Succeed"
-                    ? theme.successColor
-                    : theme.errorColor,
-                color: "#fff",
-              }}
-            >
-              END
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* General */}
-      {def.Comment && (
-        <DetailSection title="Description" theme={theme}>
-          <div style={{ fontStyle: "italic", lineHeight: "1.4" }}>
-            {def.Comment}
-          </div>
-        </DetailSection>
-      )}
-
-      {/* Configuration */}
-      {(def.Resource ||
-        def.TimeoutSeconds !== undefined ||
-        def.HeartbeatSeconds !== undefined) && (
-        <DetailSection title="Configuration" theme={theme}>
-          {def.Resource && (
-            <DetailRow label="Resource" value={def.Resource} theme={theme} />
-          )}
-          {def.TimeoutSeconds !== undefined && (
-            <DetailRow
-              label="Timeout"
-              value={`${def.TimeoutSeconds}s`}
-              theme={theme}
-            />
-          )}
-          {def.HeartbeatSeconds !== undefined && (
-            <DetailRow
-              label="Heartbeat"
-              value={`${def.HeartbeatSeconds}s`}
-              theme={theme}
-            />
-          )}
-        </DetailSection>
-      )}
-
-      {/* Type Specific */}
-      {(state.type === "Wait" ||
-        state.type === "Map" ||
-        state.type === "Fail") && (
-        <DetailSection title={`${state.type} Details`} theme={theme}>
-          {/* Wait */}
-          {def.Seconds !== undefined && (
-            <DetailRow label="Seconds" value={def.Seconds} theme={theme} />
-          )}
-          {def.Timestamp && (
-            <DetailRow label="Timestamp" value={def.Timestamp} theme={theme} />
-          )}
-          {def.SecondsPath && (
-            <DetailRow
-              label="SecondsPath"
-              value={def.SecondsPath}
-              theme={theme}
-            />
-          )}
-          {def.TimestampPath && (
-            <DetailRow
-              label="TimestampPath"
-              value={def.TimestampPath}
-              theme={theme}
-            />
-          )}
-
-          {/* Map */}
-          {def.ItemsPath && (
-            <DetailRow label="ItemsPath" value={def.ItemsPath} theme={theme} />
-          )}
-          {def.MaxConcurrency !== undefined && (
-            <DetailRow
-              label="MaxConcurrency"
-              value={def.MaxConcurrency}
-              theme={theme}
-            />
-          )}
-
-          {/* Fail */}
-          {def.Error && (
-            <DetailRow label="Error" value={def.Error} theme={theme} />
-          )}
-          {def.Cause && (
-            <DetailRow label="Cause" value={def.Cause} theme={theme} />
-          )}
-        </DetailSection>
-      )}
-
-      {/* Data Flow */}
-      {(def.InputPath ||
-        def.OutputPath ||
-        def.ResultPath ||
-        def.Parameters ||
-        def.ResultSelector ||
-        def.Result) && (
-        <DetailSection title="Data Flow" theme={theme}>
-          {def.InputPath && (
-            <DetailRow label="InputPath" value={def.InputPath} theme={theme} />
-          )}
-          {def.Parameters && (
-            <div style={{ marginBottom: "8px" }}>
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: theme.textColorSecondary,
-                  fontSize: "11px",
-                }}
-              >
-                Parameters:
-              </span>
-              <JsonView data={def.Parameters} theme={theme} />
-            </div>
-          )}
-          {def.ResultSelector && (
-            <div style={{ marginBottom: "8px" }}>
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: theme.textColorSecondary,
-                  fontSize: "11px",
-                }}
-              >
-                ResultSelector:
-              </span>
-              <JsonView data={def.ResultSelector} theme={theme} />
-            </div>
-          )}
-          {def.Result && (
-            <div style={{ marginBottom: "8px" }}>
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: theme.textColorSecondary,
-                  fontSize: "11px",
-                }}
-              >
-                Result:
-              </span>
-              <JsonView data={def.Result} theme={theme} />
-            </div>
-          )}
-          {def.ResultPath && (
-            <DetailRow
-              label="ResultPath"
-              value={def.ResultPath}
-              theme={theme}
-            />
-          )}
-          {def.OutputPath && (
-            <DetailRow
-              label="OutputPath"
-              value={def.OutputPath}
-              theme={theme}
-            />
-          )}
-        </DetailSection>
-      )}
-
-      {/* Error Handling */}
-      {(def.Retry || def.Catch) && (
-        <DetailSection title="Error Handling" theme={theme}>
-          {def.Retry && (
-            <div style={{ marginBottom: "4px" }}>
-              <span
-                style={{ fontWeight: 600, color: theme.textColorSecondary }}
-              >
-                Retries:
-              </span>{" "}
-              {def.Retry.length} defined
-            </div>
-          )}
-          {def.Catch && (
-            <div>
-              <span
-                style={{ fontWeight: 600, color: theme.textColorSecondary }}
-              >
-                Catchers:
-              </span>{" "}
-              {def.Catch.length} defined
-            </div>
-          )}
-        </DetailSection>
-      )}
-
-      {/* Flow */}
-      <DetailSection title="Flow Control" theme={theme}>
-        {def.Next && <DetailRow label="Next" value={def.Next} theme={theme} />}
-        {def.Default && (
-          <DetailRow label="Default" value={def.Default} theme={theme} />
-        )}
-        {def.End && <DetailRow label="End" value="True" theme={theme} />}
-      </DetailSection>
     </div>
   );
 };

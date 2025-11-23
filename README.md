@@ -61,7 +61,10 @@ require("asl-viewer/dist/index.css");
 ### HTML (if using a CDN)
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asl-viewer@1.0.8/dist/index.css" />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/asl-viewer@1.0.8/dist/index.css"
+/>
 ```
 
 ### CSS-in-JS / Styled Components
@@ -310,33 +313,33 @@ States:
 
 ### WorkflowViewer Props
 
-| Prop                | Type                               | Default   | Description                                |
-| ------------------- | ---------------------------------- | --------- | ------------------------------------------ |
-| `definition`        | `ASLDefinition \| string`          | -         | The ASL workflow definition (JSON or YAML) |
-| `url`               | `string`                           | -         | URL to load the ASL definition from        |
-| `file`              | `File`                             | -         | File object containing the ASL definition  |
-| `theme`             | `'light' \| 'dark'`                | `'light'` | Visual theme                               |
-| `layoutDirection`   | `'TB' \| 'LR'`                     | `'TB'`    | Layout direction (Top-Bottom or Left-Right)|
-| `width`             | `number`                           | `800`     | Viewer width in pixels                     |
-| `height`            | `number`                           | `600`     | Viewer height in pixels                    |
-| `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only            |
-| `isConnectable`     | `boolean`                          | `true`    | Whether nodes can be connected             |
-| `isDraggable`       | `boolean`                          | `false`   | Whether nodes can be dragged               |
-| `isSelectable`      | `boolean`                          | `true`    | Whether nodes can be selected              |
-| `isMultiSelect`     | `boolean`                          | `false`   | Whether multiple nodes can be selected     |
-| `useMiniMap`        | `boolean`                          | `false`   | Whether to show navigation minimap         |
-| `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls          |
-| `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                 |
-| `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes |
-| `showToolbar`       | `boolean`                          | `false`   | Whether to show the toolbar                |
-| `hideComment`       | `boolean`                          | `false`   | Whether to hide the workflow comment       |
-| `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked           |
-| `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors             |
-| `onLoadStart`       | `() => void`                       | -         | Callback when loading starts               |
-| `onLoadEnd`         | `() => void`                       | -         | Callback when loading completes            |
-| `onLoadError`       | `(error: Error) => void`           | -         | Callback when loading fails                |
-| `className`         | `string`                           | -         | Additional CSS class names                 |
-| `style`             | `React.CSSProperties`              | -         | Inline styles for the root container       |
+| Prop                | Type                               | Default   | Description                                 |
+| ------------------- | ---------------------------------- | --------- | ------------------------------------------- |
+| `definition`        | `ASLDefinition \| string`          | -         | The ASL workflow definition (JSON or YAML)  |
+| `url`               | `string`                           | -         | URL to load the ASL definition from         |
+| `file`              | `File`                             | -         | File object containing the ASL definition   |
+| `theme`             | `'light' \| 'dark'`                | `'light'` | Visual theme                                |
+| `layoutDirection`   | `'TB' \| 'LR'`                     | `'TB'`    | Layout direction (Top-Bottom or Left-Right) |
+| `width`             | `number`                           | `800`     | Viewer width in pixels                      |
+| `height`            | `number`                           | `600`     | Viewer height in pixels                     |
+| `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only             |
+| `isConnectable`     | `boolean`                          | `true`    | Whether nodes can be connected              |
+| `isDraggable`       | `boolean`                          | `false`   | Whether nodes can be dragged                |
+| `isSelectable`      | `boolean`                          | `true`    | Whether nodes can be selected               |
+| `isMultiSelect`     | `boolean`                          | `false`   | Whether multiple nodes can be selected      |
+| `useMiniMap`        | `boolean`                          | `false`   | Whether to show navigation minimap          |
+| `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls           |
+| `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                  |
+| `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes  |
+| `showToolbar`       | `boolean`                          | `false`   | Whether to show the toolbar                 |
+| `hideComment`       | `boolean`                          | `false`   | Whether to hide the workflow comment        |
+| `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked            |
+| `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors              |
+| `onLoadStart`       | `() => void`                       | -         | Callback when loading starts                |
+| `onLoadEnd`         | `() => void`                       | -         | Callback when loading completes             |
+| `onLoadError`       | `(error: Error) => void`           | -         | Callback when loading fails                 |
+| `className`         | `string`                           | -         | Additional CSS class names                  |
+| `style`             | `React.CSSProperties`              | -         | Inline styles for the root container        |
 
 **Note:** You must provide exactly one of `definition`, `url`, or `file`.
 

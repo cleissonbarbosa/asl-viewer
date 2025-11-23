@@ -9,7 +9,7 @@ import {
 } from "./workflow-definitions";
 import { WorkflowViewerProps } from "../../types";
 
-const meta: Meta<typeof WorkflowViewer> = {
+const meta: Meta<WorkflowViewerProps> = {
   title: "Components/WorkflowViewer/Features",
   component: WorkflowViewer,
   parameters: {
@@ -22,6 +22,73 @@ const meta: Meta<typeof WorkflowViewer> = {
     },
   },
   tags: ["autodocs", "features"],
+  argTypes: {
+    theme: {
+      control: { type: "select" },
+      options: ["light", "dark"],
+      description: "Visual theme for the workflow viewer",
+    },
+    width: {
+      control: { type: "number", min: 400, max: 1200, step: 50 },
+      description: "Width of the viewer in pixels",
+    },
+    height: {
+      control: { type: "number", min: 300, max: 800, step: 50 },
+      description: "Height of the viewer in pixels",
+    },
+    readonly: {
+      control: { type: "boolean" },
+      description: "Whether the workflow is read-only or interactive",
+    },
+    isConnectable: {
+      control: { type: "boolean" },
+      description: "Whether nodes can be connected",
+    },
+    isDraggable: {
+      control: { type: "boolean" },
+      description: "Whether nodes can be dragged",
+    },
+    isSelectable: {
+      control: { type: "boolean" },
+      description: "Whether nodes can be selected",
+    },
+    isMultiSelect: {
+      control: { type: "boolean" },
+      description: "Whether multiple nodes can be selected",
+    },
+    useMiniMap: {
+      control: { type: "boolean" },
+      description: "Whether to display the MiniMap for navigation",
+    },
+    useControls: {
+      control: { type: "boolean" },
+      description: "Whether to display the viewer controls toolbar",
+    },
+    useZoom: {
+      control: { type: "boolean" },
+      description: "Whether zooming functionality is enabled",
+    },
+    useFitView: {
+      control: { type: "boolean" },
+      description: "Whether to fit the workflow to view on load",
+    },
+    showToolbar: {
+      control: { type: "boolean" },
+      description: "Whether to show the toolbar",
+    },
+    url: {
+      control: { type: "text" },
+      description: "URL to load the workflow definition from",
+    },
+    file: {
+      control: { type: "file" },
+      description: "File object to load the workflow definition from",
+    },
+    hideComment: {
+      control: { type: "boolean" },
+      description: "Whether to hide comments/header in the workflow definition",
+    },
+  },
 };
 
 export default meta;

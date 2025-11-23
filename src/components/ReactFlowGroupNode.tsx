@@ -21,12 +21,14 @@ interface ReactFlowGroupNodeProps {
     theme: ViewerTheme;
     onStateClick?: (state: StateNode) => void;
     onToggleExpand?: (nodeId: string) => void;
+    isHighlighted?: boolean;
   };
 }
 
 export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
   ({ data }) => {
-    const { stateNode, theme, onStateClick, onToggleExpand } = data;
+    const { stateNode, theme, onStateClick, onToggleExpand, isHighlighted } =
+      data;
 
     const handleClick = useCallback(() => {
       onStateClick?.(stateNode);
@@ -128,7 +130,9 @@ export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
             background: `${getNodeColor()}80`, // More transparent background
             border: `2px dashed ${getBorderColor()}`, // Dashed border for group
             borderRadius: "8px",
-            boxShadow: "none", // Remove shadow for cleaner look
+            boxShadow: isHighlighted
+              ? `0 0 0 4px ${theme.nodeBorderColors.parallel}40, 0 4px 6px -1px rgba(0, 0, 0, 0.1)`
+              : "none",
             padding: "12px",
             position: "relative",
             cursor: "pointer",

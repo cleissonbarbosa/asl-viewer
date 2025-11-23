@@ -7,6 +7,7 @@ import {
   IconMap,
   IconZoomIn,
   IconGridDots,
+  IconSearch,
 } from "@tabler/icons-react";
 import { ThemeName, ViewerTheme } from "../types";
 
@@ -22,6 +23,9 @@ interface ViewerToolbarProps {
   onToggleControls: () => void;
   showBackground: boolean;
   onToggleBackground: () => void;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
+  onSearchNext?: () => void;
 }
 
 export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
@@ -36,6 +40,9 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   onToggleControls,
   showBackground,
   onToggleBackground,
+  searchTerm,
+  onSearchChange,
+  onSearchNext,
 }) => {
   const buttonStyle: React.CSSProperties = {
     background: theme.surfaceColor,
@@ -53,23 +60,62 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
 
   const activeButtonStyle: React.CSSProperties = {
     ...buttonStyle,
-    background: theme.selectedNodeColor,
+    background: theme.nodeBorderColors.task, // Use a nice blue
     color: "#ffffff",
-    borderColor: theme.selectedNodeColor,
+    borderColor: theme.nodeBorderColors.task,
   };
 
   return (
     <div
       style={{
         position: "absolute",
-        top: "10px",
-        left: "10px",
+        top: "16px",
+        right: "16px",
         zIndex: 10,
         display: "flex",
-        flexDirection: "column",
         gap: "8px",
+        backgroundColor: theme.overlayColor,
+        padding: "8px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        backdropFilter: "blur(8px)",
+        alignItems: "center",
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          backgroundColor: theme.surfaceColor,
+          border: `1px solid ${theme.borderColor}`,
+          borderRadius: "4px",
+          padding: "0 8px",
+          marginRight: "8px",
+        }}
+      >
+        <IconSearch size={16} color={theme.textColorSecondary} />
+        <input
+          type="text"
+          placeholder="Search states..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onSearchNext) {
+              onSearchNext();
+            }
+          }}
+          style={{
+            border: "none",
+            background: "none",
+            padding: "8px",
+            color: theme.textColor,
+            outline: "none",
+            width: "150px",
+            fontSize: "14px",
+          }}
+        />
+      </div>
+
       {/* Theme Switcher */}
       <button
         style={buttonStyle}

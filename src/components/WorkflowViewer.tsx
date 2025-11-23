@@ -135,8 +135,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   const [loadError, setLoadError] = useState<Error | null>(null);
 
   // Toolbar state
-  const [currentThemeName, setCurrentThemeName] = useState<ThemeName>(
-    typeof theme === "string" ? (theme as ThemeName) : "light",
+  const [currentThemeName, setCurrentThemeName] = useState<ThemeName | null>(
+    typeof theme === "string" ? (theme as ThemeName) : null,
   );
   const [layoutDirection, setLayoutDirection] = useState<"TB" | "LR">(
     initialLayoutDirection,
@@ -161,6 +161,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   useEffect(() => {
     if (typeof theme === "string") {
       setCurrentThemeName(theme as ThemeName);
+    } else {
+      setCurrentThemeName(null);
     }
   }, [theme]);
 
@@ -412,7 +414,7 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
         {showToolbar && (
           <ViewerToolbar
             theme={viewerTheme}
-            currentThemeName={currentThemeName}
+            currentThemeName={currentThemeName || "light"}
             onThemeChange={setCurrentThemeName}
             layoutDirection={layoutDirection}
             onLayoutDirectionChange={setLayoutDirection}

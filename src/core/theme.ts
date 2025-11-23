@@ -12,6 +12,7 @@ export const lightTheme: ViewerTheme = {
   nodeColors: {
     pass: "#ffffff",
     task: "#ffffff",
+    stepFunction: "#ffffff",
     choice: "#ffffff",
     wait: "#ffffff",
     succeed: "#f0fdf4", // Subtle green tint
@@ -22,7 +23,8 @@ export const lightTheme: ViewerTheme = {
 
   nodeBorderColors: {
     pass: "#e2e8f0", // Slate 200
-    task: "#3b82f6", // Blue 500
+    task: "#ED7100", // Blue 500
+    stepFunction: "#E7157B",
     choice: "#f59e0b", // Amber 500
     wait: "#8b5cf6", // Violet 500
     succeed: "#22c55e", // Green 500
@@ -35,6 +37,7 @@ export const lightTheme: ViewerTheme = {
     pass: "#f8fafc",
     task: "#eff6ff",
     choice: "#fffbeb",
+    stepFunction: "#fff0f6",
     wait: "#f5f3ff",
     succeed: "#dcfce7",
     fail: "#fee2e2",
@@ -83,6 +86,7 @@ export const darkTheme: ViewerTheme = {
   nodeColors: {
     pass: "#1e293b",
     task: "#1e293b",
+    stepFunction: "#1e293b",
     choice: "#1e293b",
     wait: "#1e293b",
     succeed: "#064e3b", // Dark green
@@ -93,7 +97,8 @@ export const darkTheme: ViewerTheme = {
 
   nodeBorderColors: {
     pass: "#334155", // Slate 700
-    task: "#3b82f6",
+    task: "#ED7100",
+    stepFunction: "#E7157B",
     choice: "#f59e0b",
     wait: "#8b5cf6",
     succeed: "#22c55e",
@@ -104,7 +109,8 @@ export const darkTheme: ViewerTheme = {
 
   nodeHoverColors: {
     pass: "#334155",
-    task: "#1e3a8a",
+    task: "#c76000ff",
+    stepFunction: "#c20d64ff",
     choice: "#451a03",
     wait: "#4c1d95",
     succeed: "#065f46",
@@ -154,6 +160,7 @@ export const highContrastTheme: ViewerTheme = {
   nodeColors: {
     pass: "#000080",
     task: "#008000",
+    stepFunction: "#c20d64ff",
     choice: "#ff8c00",
     wait: "#8b008b",
     succeed: "#228b22",
@@ -165,6 +172,7 @@ export const highContrastTheme: ViewerTheme = {
   nodeBorderColors: {
     pass: "#0000ff",
     task: "#00ff00",
+    stepFunction: "#c20d64ff",
     choice: "#ffa500",
     wait: "#ff00ff",
     succeed: "#00ff00",
@@ -176,6 +184,7 @@ export const highContrastTheme: ViewerTheme = {
   nodeHoverColors: {
     pass: "#191970",
     task: "#006400",
+    stepFunction: "#c20d64ff",
     choice: "#ff7f50",
     wait: "#9932cc",
     succeed: "#228b22",
@@ -225,6 +234,7 @@ export const softTheme: ViewerTheme = {
   nodeColors: {
     pass: "#e3f2fd",
     task: "#e8f5e8",
+    stepFunction: "#fff0f6",
     choice: "#fff3e0",
     wait: "#f3e5f5",
     succeed: "#e0f2f1",
@@ -236,6 +246,7 @@ export const softTheme: ViewerTheme = {
   nodeBorderColors: {
     pass: "#90caf9",
     task: "#a5d6a7",
+    stepFunction: "#f48fb1",
     choice: "#ffb74d",
     wait: "#ce93d8",
     succeed: "#81c784",
@@ -247,6 +258,7 @@ export const softTheme: ViewerTheme = {
   nodeHoverColors: {
     pass: "#bbdefb",
     task: "#c8e6c9",
+    stepFunction: "#f8bbd0",
     choice: "#ffe0b2",
     wait: "#e1bee7",
     succeed: "#b2dfdb",

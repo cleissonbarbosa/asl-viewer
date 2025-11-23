@@ -10,11 +10,12 @@ import {
   IconX,
   IconLambda,
   IconListDetails,
-  IconLocationQuestion,
+  IconProgressHelp,
   IconStopwatch,
   IconRosetteDiscountCheckFilled,
   IconVectorBezier,
   IconSitemap,
+  IconJumpRope,
 } from "@tabler/icons-react";
 
 interface ReactFlowStateNodeProps {
@@ -36,7 +37,6 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
 
     const getStateIcon = (type: string): React.ReactElement => {
       const iconSize = stateNode.parentId ? "18px" : "24px";
-      const iconColor = theme.textColor;
 
       if (stateNode.id === "__start__") {
         return <IconPlayerPlay size={iconSize} color={theme.successColor} />;
@@ -50,10 +50,27 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
         case "Pass":
           return <IconListDetails color={theme.infoColor} size={iconSize} />;
         case "Task":
-          return <IconLambda color={theme.infoColor} size={iconSize} />;
+          if (
+            stateNode.definition.Resource &&
+            typeof stateNode.definition.Resource === "string" &&
+            stateNode.definition.Resource.includes("states:startExecution.")
+          ) {
+            return (
+              <IconJumpRope
+                color={theme.nodeBorderColors.stepFunction}
+                size={iconSize}
+              />
+            );
+          }
+          return (
+            <IconLambda color={theme.nodeBorderColors.task} size={iconSize} />
+          );
         case "Choice":
           return (
-            <IconLocationQuestion color={theme.warningColor} size={iconSize} />
+            <IconProgressHelp
+              color={theme.nodeBorderColors.choice}
+              size={iconSize}
+            />
           );
         case "Wait":
           return (
@@ -106,6 +123,15 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
     const getBorderColor = (): string => {
       if (stateNode.id === "__start__") return theme.successColor;
       if (stateNode.id === "__end__") return theme.errorColor;
+
+      if (
+        stateNode.type === "Task" &&
+        stateNode.definition.Resource &&
+        typeof stateNode.definition.Resource === "string" &&
+        stateNode.definition.Resource.includes("states:startExecution.")
+      ) {
+        return theme.nodeBorderColors.stepFunction;
+      }
 
       return (
         theme.nodeBorderColors[
@@ -253,7 +279,15 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
               width: "100%",
             }}
           >
-            <span>{stateNode.type}</span>
+            <span>
+              {stateNode.type}
+              {stateNode.type === "Task" &&
+              stateNode.definition.Resource &&
+              typeof stateNode.definition.Resource === "string" &&
+              stateNode.definition.Resource.includes("states:startExecution.")
+                ? " - Step Function"
+                : ""}
+            </span>
             {stateNode.definition.End && <span>END</span>}
           </div>
         )}

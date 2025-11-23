@@ -38,7 +38,11 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see 
 
 ```bash
 npm install asl-viewer
-# or
+```
+
+or with Yarn:
+
+```bash
 yarn add asl-viewer
 ```
 
@@ -63,7 +67,7 @@ require("asl-viewer/dist/index.css");
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/asl-viewer@1.0.8/dist/index.css"
+  href="https://cdn.jsdelivr.net/npm/asl-viewer@latest/dist/index.css"
 />
 ```
 

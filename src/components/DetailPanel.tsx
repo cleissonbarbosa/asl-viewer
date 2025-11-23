@@ -57,7 +57,7 @@ const DetailRow: React.FC<{
         lineHeight: "1.4",
       }}
     >
-      {value}
+      {typeof value === "object" ? JSON.stringify(value, null, 2) : value}
     </span>
   </div>
 );
@@ -255,6 +255,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
         {/* Type Specific */}
         {(node.type === "Wait" ||
           node.type === "Map" ||
+          node.type === "Parallel" ||
           node.type === "Fail") && (
           <DetailSection title={`${node.type} Details`} theme={theme}>
             {/* Wait */}
@@ -305,6 +306,13 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             )}
             {def.Cause && (
               <DetailRow label="Cause" value={def.Cause} theme={theme} />
+            )}
+            {def.Branches && (
+              <DetailRow
+                label="Branches"
+                value={def.Branches.length}
+                theme={theme}
+              />
             )}
           </DetailSection>
         )}

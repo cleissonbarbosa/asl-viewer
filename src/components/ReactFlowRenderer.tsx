@@ -13,6 +13,7 @@ import ReactFlow, {
   useEdgesState,
   ConnectionMode,
   BackgroundVariant,
+  ReactFlowInstance,
 } from "reactflow";
 import { Controls } from "@reactflow/controls";
 import { Background } from "@reactflow/background";
@@ -46,6 +47,9 @@ interface ReactFlowRendererProps {
   useZoom?: boolean;
   useFitView?: boolean;
   layoutDirection?: "TB" | "LR";
+  searchTerm?: string;
+  searchMatchIndex?: number;
+  onNodeClick?: (state: StateNode) => void;
 }
 
 const nodeTypes = {
@@ -70,6 +74,9 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
   useZoom = true,
   useFitView = true,
   layoutDirection = "TB",
+  searchTerm = "",
+  searchMatchIndex = 0,
+  onNodeClick,
 }) => {
   // State to track which group nodes are expanded
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -86,7 +93,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
       originalPositions: new Map(),
       expandedNodes: new Set(),
     };
-    previousLayoutRef.current = [];
+
+    // Only clear previous layout if we are loading a different workflow (different node count)
+    // This allows animation when switching layout direction
+    if (stateNodes.length !== previousLayoutRef.current.length) {
+      previousLayoutRef.current = [];
+    }
+
     setExpandedNodes(new Set());
   }, [stateNodes.length, layoutDirection]);
 
@@ -100,9 +113,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
     Map<string, { x: number; y: number }>
   >(new Map());
   const [isAnimating, setIsAnimating] = useState(false);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
   // Store previous layout to detect changes for animation
   const previousLayoutRef = useRef<StateNode[]>([]);
+
+  // Store previous search term to detect when search is cleared
+  const prevSearchTermRef = useRef(searchTerm);
 
   // Function to toggle the expanded state of a group node with animation
   const handleToggleExpand = useCallback((nodeId: string) => {
@@ -224,9 +241,12 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
       data: {
         stateNode,
         theme,
-        onStateClick,
+        onStateClick: onNodeClick || onStateClick,
         onToggleExpand: handleToggleExpand,
         children: stateNode.children || [],
+        isHighlighted:
+          searchTerm &&
+          stateNode.name.toLowerCase().includes(searchTerm.toLowerCase()),
       },
       // Use width and height properties directly instead of style
       width: stateNode.size.width,
@@ -248,6 +268,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
     onStateClick,
     expandedNodes,
     handleToggleExpand,
+    searchTerm,
   ]);
 
   // Convert Connection[] to ReactFlow Edge[]
@@ -314,6 +335,40 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
     setEdges(reactFlowEdges);
   }, [reactFlowEdges, setEdges]);
 
+  // Center on found node when search term changes
+  useEffect(() => {
+    if (!rfInstance || nodes.length === 0) return;
+
+    if (searchTerm) {
+      const matchingNodes = nodes.filter(
+        (n) =>
+          n.data.stateNode.name &&
+          n.data.stateNode.name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
+      );
+
+      if (matchingNodes.length > 0) {
+        const index = searchMatchIndex % matchingNodes.length;
+        const matchingNode = matchingNodes[index];
+
+        rfInstance.fitView({
+          nodes: [{ id: matchingNode.id }],
+          padding: 0.5,
+          duration: 800,
+        });
+      }
+    } else if (prevSearchTermRef.current) {
+      // Reset zoom when search is cleared
+      rfInstance.fitView({
+        padding: 0.2,
+        duration: 800,
+      });
+    }
+
+    prevSearchTermRef.current = searchTerm;
+  }, [searchTerm, rfInstance, nodes, searchMatchIndex]);
+
   // Cleanup animation on unmount
   React.useEffect(() => {
     return () => {
@@ -342,6 +397,7 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onInit={setRfInstance}
         nodeTypes={nodeTypes}
         nodesDraggable={isDraggable}
         connectionMode={ConnectionMode.Strict}

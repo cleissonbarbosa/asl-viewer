@@ -60,27 +60,27 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Comment on PR with Storybook link
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer/';
+      # - name: Comment on PR with Storybook link
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   uses: actions/github-script@v8
+      #   with:
+      #     script: |
+      #       const { owner, repo } = context.repo;
+      #       const deploymentUrl = 'https://cleissonbarbosa.github.io/asl-viewer/';
 
-            // Get recent PRs that might be related to this push
-            const { data: prs } = await github.rest.pulls.list({
-              owner,
-              repo,
-              state: 'open',
-              per_page: 5
-            });
+      #       // Get recent PRs that might be related to this push
+      #       const { data: prs } = await github.rest.pulls.list({
+      #         owner,
+      #         repo,
+      #         state: 'open',
+      #         per_page: 5
+      #       });
 
-            for (const pr of prs) {
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: pr.number,
-                body: `🚀 Storybook has been updated and deployed to: ${deploymentUrl}\n\nYou can now preview the latest changes in the interactive documentation.`
-              });
-            }
+      #       for (const pr of prs) {
+      #         await github.rest.issues.createComment({
+      #           owner,
+      #           repo,
+      #           issue_number: pr.number,
+      #           body: `🚀 Storybook has been updated and deployed to: ${deploymentUrl}\n\nYou can now preview the latest changes in the interactive documentation.`
+      #         });
+      #       }

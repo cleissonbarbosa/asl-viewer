@@ -17,6 +17,33 @@ const meta: Meta<typeof WorkflowViewer> = {
     },
   },
   tags: ["autodocs", "loading"],
+  argTypes: {
+    theme: {
+      control: { type: "select" },
+      options: ["light", "dark"],
+      description: "Visual theme for the workflow viewer",
+    },
+    width: {
+      control: { type: "number", min: 400, max: 1200, step: 50 },
+      description: "Width of the viewer in pixels",
+    },
+    height: {
+      control: { type: "number", min: 300, max: 800, step: 50 },
+      description: "Height of the viewer in pixels",
+    },
+    readonly: {
+      control: { type: "boolean" },
+      description: "Whether the workflow is read-only or interactive",
+    },
+    useMiniMap: {
+      control: { type: "boolean" },
+      description: "Whether to display a MiniMap in the viewer",
+    },
+    useControls: {
+      control: { type: "boolean" },
+      description: "Whether to display viewer controls (zoom, fit view, etc.)",
+    },
+  },
 };
 
 export default meta;

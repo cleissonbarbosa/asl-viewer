@@ -121,7 +121,7 @@ export const darkTheme: ViewerTheme = {
 
   textColor: "#f8fafc", // Slate 50
   textColorSecondary: "#cbd5e1", // Slate 300
-  textColorMuted: "#64748b", // Slate 500
+  textColorMuted: "#cee1ffff", // Slate 500
 
   borderColor: "#334155",
   borderColorHover: "#475569",

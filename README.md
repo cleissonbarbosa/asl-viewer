@@ -13,9 +13,11 @@ A React library for visualizing AWS Step Functions workflows (Amazon States Lang
 Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see interactive examples and explore all available components and features.
 
 <details>
-<summary>GIF Example</summary>
+<summary>GIF Examples</summary>
 
-![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif)
+<!-- ![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif) -->
+
+![ASL Viewer Demo 2](./assets/screenshot-with-toolbar.gif)
 
 </details>
 

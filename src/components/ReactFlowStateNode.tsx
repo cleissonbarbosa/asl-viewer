@@ -22,12 +22,13 @@ interface ReactFlowStateNodeProps {
     stateNode: StateNode;
     theme: ViewerTheme;
     onStateClick?: (state: StateNode) => void;
+    isHighlighted?: boolean;
   };
 }
 
 export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
   ({ data }) => {
-    const { stateNode, theme, onStateClick } = data;
+    const { stateNode, theme, onStateClick, isHighlighted } = data;
 
     const handleClick = useCallback(() => {
       onStateClick?.(stateNode);
@@ -114,6 +115,9 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
     };
 
     const getBoxShadow = (): string => {
+      if (isHighlighted) {
+        return `0 0 0 4px ${theme.nodeBorderColors.task}60, 0 8px 16px ${theme.shadowColor}`;
+      }
       if (stateNode.id === "__start__")
         return `0 4px 12px ${theme.successColor}40`;
       if (stateNode.id === "__end__") return `0 4px 12px ${theme.errorColor}40`;

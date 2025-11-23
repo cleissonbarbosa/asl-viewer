@@ -10,12 +10,14 @@ import {
   IconX,
   IconLambda,
   IconListDetails,
-  IconLocationQuestion,
+  IconProgressHelp,
   IconStopwatch,
   IconRosetteDiscountCheckFilled,
   IconVectorBezier,
   IconSitemap,
+  IconJumpRope,
 } from "@tabler/icons-react";
+import { getBorderColor, getStateIcon } from "./utils";
 
 interface ReactFlowStateNodeProps {
   data: {
@@ -34,59 +36,6 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
       onStateClick?.(stateNode);
     }, [onStateClick, stateNode]);
 
-    const getStateIcon = (type: string): React.ReactElement => {
-      const iconSize = stateNode.parentId ? "18px" : "24px";
-      const iconColor = theme.textColor;
-
-      if (stateNode.id === "__start__") {
-        return <IconPlayerPlay size={iconSize} color={theme.successColor} />;
-      }
-
-      if (stateNode.id === "__end__") {
-        return <IconCheck size={iconSize} color={theme.surfaceColor} />;
-      }
-
-      switch (type) {
-        case "Pass":
-          return <IconListDetails color={theme.infoColor} size={iconSize} />;
-        case "Task":
-          return <IconLambda color={theme.infoColor} size={iconSize} />;
-        case "Choice":
-          return (
-            <IconLocationQuestion color={theme.warningColor} size={iconSize} />
-          );
-        case "Wait":
-          return (
-            <IconStopwatch
-              color={theme.nodeBorderColors.wait}
-              size={iconSize}
-            />
-          );
-        case "Succeed":
-          return (
-            <IconRosetteDiscountCheckFilled
-              size={iconSize}
-              color={theme.successColor}
-            />
-          );
-        case "Fail":
-          return <IconX size={iconSize} color={theme.errorColor} />;
-        case "Parallel":
-          return (
-            <IconVectorBezier
-              color={theme.nodeBorderColors.parallel}
-              size={iconSize}
-            />
-          );
-        case "Map":
-          return (
-            <IconSitemap color={theme.nodeBorderColors.map} size={iconSize} />
-          );
-        default:
-          return <IconLambda color={theme.infoColor} size={iconSize} />;
-      }
-    };
-
     const getNodeColor = (): string => {
       if (stateNode.id === "__start__") {
         return theme.surfaceColor;
@@ -100,17 +49,6 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
         theme.nodeColors[
           stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
         ] || theme.nodeColors.pass
-      );
-    };
-
-    const getBorderColor = (): string => {
-      if (stateNode.id === "__start__") return theme.successColor;
-      if (stateNode.id === "__end__") return theme.errorColor;
-
-      return (
-        theme.nodeBorderColors[
-          stateNode.type.toLowerCase() as keyof typeof theme.nodeBorderColors
-        ] || theme.borderColor
       );
     };
 
@@ -136,11 +74,11 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
           borderRadius: isArtificial ? "50%" : "12px",
           background: getNodeColor(),
           border: isArtificial
-            ? `2px solid ${getBorderColor()}`
+            ? `2px solid ${getBorderColor(stateNode, theme)}`
             : `1px solid ${theme.borderColor}`,
           borderLeft: isArtificial
             ? undefined
-            : `4px solid ${getBorderColor()}`,
+            : `4px solid ${getBorderColor(stateNode, theme)}`,
           color: isEnd ? theme.surfaceColor : theme.textColor,
           minWidth: isArtificial ? "auto" : "180px",
           maxWidth: isArtificial ? "auto" : "280px",
@@ -203,7 +141,7 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
               justifyContent: "center",
             }}
           >
-            {getStateIcon(stateNode.type)}
+            {getStateIcon(stateNode, theme)}
           </div>
 
           {!isArtificial && (
@@ -253,7 +191,15 @@ export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
               width: "100%",
             }}
           >
-            <span>{stateNode.type}</span>
+            <span>
+              {stateNode.type}
+              {stateNode.type === "Task" &&
+              stateNode.definition.Resource &&
+              typeof stateNode.definition.Resource === "string" &&
+              stateNode.definition.Resource.includes("states:startExecution.")
+                ? " - Step Function"
+                : ""}
+            </span>
             {stateNode.definition.End && <span>END</span>}
           </div>
         )}

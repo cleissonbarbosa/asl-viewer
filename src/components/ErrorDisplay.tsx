@@ -60,8 +60,17 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         boxShadow: `0 4px 12px rgba(0, 0, 0, 0.1)`,
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        animation: "fadeIn 0.5s ease-out",
       }}
     >
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
       <div
         style={{
           fontSize: "20px",

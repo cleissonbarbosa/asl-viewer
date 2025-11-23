@@ -93,7 +93,13 @@ export const ReactFlowRenderer: React.FC<ReactFlowRendererProps> = ({
       originalPositions: new Map(),
       expandedNodes: new Set(),
     };
-    previousLayoutRef.current = [];
+
+    // Only clear previous layout if we are loading a different workflow (different node count)
+    // This allows animation when switching layout direction
+    if (stateNodes.length !== previousLayoutRef.current.length) {
+      previousLayoutRef.current = [];
+    }
+
     setExpandedNodes(new Set());
   }, [stateNodes.length, layoutDirection]);
 

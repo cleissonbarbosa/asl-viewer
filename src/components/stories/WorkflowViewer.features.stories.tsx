@@ -213,6 +213,7 @@ export const FullyInteractive: Story = {
     isSelectable: true,
     isMultiSelect: true,
     isConnectable: true,
+    showToolbar: true,
     readonly: false,
     onStateClick: (state) => {
       console.log("State clicked:", state);

@@ -14,6 +14,7 @@ import {
   IconChevronDown,
   IconChevronRight,
 } from "@tabler/icons-react";
+import { getBorderColor, getStateIcon } from "./utils";
 
 interface ReactFlowGroupNodeProps {
   data: {
@@ -42,69 +43,12 @@ export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
       [onToggleExpand, stateNode.id],
     );
 
-    const getStateIcon = (type: string): React.ReactElement => {
-      const iconSize = "20px";
-      const iconColor = theme.textColor;
-
-      switch (type) {
-        case "Pass":
-          return <IconListDetails color={theme.infoColor} size={iconSize} />;
-        case "Task":
-          return <IconLambda color={theme.infoColor} size={iconSize} />;
-        case "Choice":
-          return (
-            <IconLocationQuestion color={theme.warningColor} size={iconSize} />
-          );
-        case "Wait":
-          return (
-            <IconStopwatch
-              color={theme.nodeBorderColors.wait}
-              size={iconSize}
-            />
-          );
-        case "Succeed":
-          return (
-            <IconRosetteDiscountCheckFilled
-              size={iconSize}
-              color={theme.successColor}
-            />
-          );
-        case "Fail":
-          return <IconX size={iconSize} color={theme.errorColor} />;
-        case "Parallel":
-          return (
-            <IconVectorBezier
-              color={theme.nodeBorderColors.parallel}
-              size={iconSize}
-            />
-          );
-        case "Map":
-          return (
-            <IconSitemap color={theme.nodeBorderColors.map} size={iconSize} />
-          );
-        default:
-          return <IconLambda color={theme.infoColor} size={iconSize} />;
-      }
-    };
-
     const getNodeColor = (): string => {
       return (
         theme.nodeColors[
           stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
         ] || theme.nodeColors.pass
       );
-    };
-
-    const getBorderColor = (): string => {
-      return (
-        theme.nodeBorderColors[
-          stateNode.type.toLowerCase() as keyof typeof theme.nodeBorderColors
-        ] || theme.borderColor
-      );
-    };
-
-    const getBoxShadow = (): string => {
-      return `0 4px 12px ${theme.shadowColor}, 0 1px 2px ${theme.shadowColor}`;
     };
 
     return (
@@ -128,7 +72,7 @@ export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
             minWidth: "260px",
             minHeight: "80px",
             background: `${getNodeColor()}80`, // More transparent background
-            border: `2px dashed ${getBorderColor()}`, // Dashed border for group
+            border: `2px dashed ${getBorderColor(stateNode, theme)}`, // Dashed border for group
             borderRadius: "8px",
             boxShadow: isHighlighted
               ? `0 0 0 4px ${theme.nodeBorderColors.parallel}40, 0 4px 6px -1px rgba(0, 0, 0, 0.1)`
@@ -162,7 +106,7 @@ export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
           >
             <div style={{ display: "flex", alignItems: "center" }}>
               <div style={{ marginRight: "8px" }}>
-                {getStateIcon(stateNode.type)}
+                {getStateIcon(stateNode, theme)}
               </div>
               <div
                 style={{

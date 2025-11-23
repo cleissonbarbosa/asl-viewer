@@ -57,7 +57,11 @@ const DetailRow: React.FC<{
         lineHeight: "1.4",
       }}
     >
-      {typeof value === "object" ? JSON.stringify(value, null, 2) : value}
+      {value === null || value === undefined
+        ? "null"
+        : typeof value === "object"
+          ? JSON.stringify(value, null, 2)
+          : value}
     </span>
   </div>
 );
@@ -65,23 +69,24 @@ const DetailRow: React.FC<{
 const JsonView: React.FC<{ data: any; theme: ViewerTheme }> = ({
   data,
   theme,
-}) => (
-  <pre
-    style={{
-      background: theme.background === "#ffffff" ? "#f8f9fa" : "#1e1e1e",
-      padding: "8px",
-      borderRadius: "4px",
-      fontSize: "10px",
-      overflowX: "auto",
-      border: `1px solid ${theme.borderColor}`,
-      margin: "4px 0 0 0",
-      fontFamily: "monospace",
-      color: theme.textColor,
-    }}
-  >
-    {JSON.stringify(data, null, 2)}
-  </pre>
-);
+}) =>
+  data ? (
+    <pre
+      style={{
+        background: theme.background,
+        padding: "8px",
+        borderRadius: "4px",
+        fontSize: "10px",
+        overflowX: "auto",
+        border: `1px solid ${theme.borderColor}`,
+        margin: "4px 0 0 0",
+        fontFamily: "monospace",
+        color: theme.textColor,
+      }}
+    >
+      {JSON.stringify(data, null, 2)}
+    </pre>
+  ) : null;
 
 export const DetailPanel: React.FC<DetailPanelProps> = ({
   node,
@@ -149,6 +154,24 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             >
               {node.type}
             </span>
+            {node.type === "Task" &&
+              node.definition.Resource &&
+              typeof node.definition.Resource === "string" &&
+              node.definition.Resource.includes("states:startExecution.") && (
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    backgroundColor: theme.nodeBorderColors.stepFunction,
+                    color: "#fff",
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Step Function
+                </span>
+              )}
             {node.isStartState && (
               <span
                 style={{
@@ -418,15 +441,17 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
         )}
 
         {/* Flow */}
-        <DetailSection title="Flow Control" theme={theme}>
-          {def.Next && (
-            <DetailRow label="Next" value={def.Next} theme={theme} />
-          )}
-          {def.Default && (
-            <DetailRow label="Default" value={def.Default} theme={theme} />
-          )}
-          {def.End && <DetailRow label="End" value="True" theme={theme} />}
-        </DetailSection>
+        {(def.Next || def.Default || def.End) && (
+          <DetailSection title="Flow Control" theme={theme}>
+            {def.Next && (
+              <DetailRow label="Next" value={def.Next} theme={theme} />
+            )}
+            {def.Default && (
+              <DetailRow label="Default" value={def.Default} theme={theme} />
+            )}
+            {def.End && <DetailRow label="End" value="True" theme={theme} />}
+          </DetailSection>
+        )}
 
         {/* Raw JSON */}
         <div style={{ marginTop: "24px" }}>

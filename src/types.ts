@@ -177,6 +177,7 @@ export interface ViewerTheme {
   nodeColors: {
     pass: string;
     task: string;
+    stepFunction: string;
     choice: string;
     wait: string;
     succeed: string;
@@ -187,6 +188,7 @@ export interface ViewerTheme {
   nodeBorderColors: {
     pass: string;
     task: string;
+    stepFunction: string;
     choice: string;
     wait: string;
     succeed: string;
@@ -197,6 +199,7 @@ export interface ViewerTheme {
   nodeHoverColors: {
     pass: string;
     task: string;
+    stepFunction: string;
     choice: string;
     wait: string;
     succeed: string;

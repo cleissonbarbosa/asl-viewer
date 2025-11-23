@@ -13,9 +13,11 @@ A React library for visualizing AWS Step Functions workflows (Amazon States Lang
 Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see interactive examples and explore all available components and features.
 
 <details>
-<summary>GIF Example</summary>
+<summary>GIF Examples</summary>
 
-![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif)
+<!-- ![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif) -->
+
+![ASL Viewer Demo 2](./assets/screenshot-with-toolbar.gif)
 
 </details>
 
@@ -38,7 +40,11 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see 
 
 ```bash
 npm install asl-viewer
-# or
+```
+
+or with Yarn:
+
+```bash
 yarn add asl-viewer
 ```
 
@@ -63,7 +69,7 @@ require("asl-viewer/dist/index.css");
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/asl-viewer@1.0.8/dist/index.css"
+  href="https://cdn.jsdelivr.net/npm/asl-viewer@latest/dist/index.css"
 />
 ```
 

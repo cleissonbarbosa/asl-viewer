@@ -109,7 +109,7 @@ export const darkTheme: ViewerTheme = {
 
   nodeHoverColors: {
     pass: "#334155",
-    task: "#c76000ff",
+    task: "#743902ff",
     stepFunction: "#c20d64ff",
     choice: "#451a03",
     wait: "#4c1d95",

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   IconSun,
   IconMoon,
@@ -28,6 +28,43 @@ interface ViewerToolbarProps {
   onSearchNext?: () => void;
 }
 
+const ToolbarButton: React.FC<{
+  onClick: () => void;
+  isActive?: boolean;
+  theme: ViewerTheme;
+  title: string;
+  children: React.ReactNode;
+}> = ({ onClick, isActive, theme, title, children }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const baseStyle: React.CSSProperties = {
+    background: isActive ? theme.nodeBorderColors.task : theme.surfaceColor,
+    border: `1px solid ${isActive ? theme.nodeBorderColors.task : theme.borderColor}`,
+    color: isActive ? "#ffffff" : theme.textColor,
+    padding: "8px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    boxShadow: theme.shadowColor ? `0 2px 4px ${theme.shadowColor}` : "none",
+    transform: isHovered ? "scale(1.05)" : "scale(1)",
+  };
+
+  return (
+    <button
+      style={baseStyle}
+      onClick={onClick}
+      title={title}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+};
+
 export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   theme,
   currentThemeName,
@@ -44,27 +81,6 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   onSearchChange,
   onSearchNext,
 }) => {
-  const buttonStyle: React.CSSProperties = {
-    background: theme.surfaceColor,
-    border: `1px solid ${theme.borderColor}`,
-    color: theme.textColor,
-    padding: "8px",
-    borderRadius: "4px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "all 0.2s ease",
-    boxShadow: theme.shadowColor ? `0 2px 4px ${theme.shadowColor}` : "none",
-  };
-
-  const activeButtonStyle: React.CSSProperties = {
-    ...buttonStyle,
-    background: theme.nodeBorderColors.task, // Use a nice blue
-    color: "#ffffff",
-    borderColor: theme.nodeBorderColors.task,
-  };
-
   return (
     <div
       style={{
@@ -80,6 +96,8 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
         backdropFilter: "blur(8px)",
         alignItems: "center",
+        transition: "all 0.3s ease",
+        opacity: 0.9,
       }}
     >
       <div
@@ -91,6 +109,7 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
           borderRadius: "4px",
           padding: "0 8px",
           marginRight: "8px",
+          transition: "border-color 0.2s ease",
         }}
       >
         <IconSearch size={16} color={theme.textColorSecondary} />
@@ -117,8 +136,8 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
       </div>
 
       {/* Theme Switcher */}
-      <button
-        style={buttonStyle}
+      <ToolbarButton
+        theme={theme}
         onClick={() =>
           onThemeChange(currentThemeName === "light" ? "dark" : "light")
         }
@@ -129,11 +148,11 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
         ) : (
           <IconSun size={20} />
         )}
-      </button>
+      </ToolbarButton>
 
       {/* Layout Direction */}
-      <button
-        style={buttonStyle}
+      <ToolbarButton
+        theme={theme}
         onClick={() =>
           onLayoutDirectionChange(layoutDirection === "TB" ? "LR" : "TB")
         }
@@ -144,34 +163,37 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
         ) : (
           <IconLayoutDistributeHorizontal size={20} />
         )}
-      </button>
+      </ToolbarButton>
 
       {/* MiniMap Toggle */}
-      <button
-        style={showMiniMap ? activeButtonStyle : buttonStyle}
+      <ToolbarButton
+        theme={theme}
+        isActive={showMiniMap}
         onClick={onToggleMiniMap}
         title="Toggle MiniMap"
       >
         <IconMap size={20} />
-      </button>
+      </ToolbarButton>
 
       {/* Controls Toggle */}
-      <button
-        style={showControls ? activeButtonStyle : buttonStyle}
+      <ToolbarButton
+        theme={theme}
+        isActive={showControls}
         onClick={onToggleControls}
         title="Toggle Controls"
       >
         <IconZoomIn size={20} />
-      </button>
+      </ToolbarButton>
 
       {/* Background Toggle */}
-      <button
-        style={showBackground ? activeButtonStyle : buttonStyle}
+      <ToolbarButton
+        theme={theme}
+        isActive={showBackground}
         onClick={onToggleBackground}
         title="Toggle Background"
       >
         <IconGridDots size={20} />
-      </button>
+      </ToolbarButton>
     </div>
   );
 };

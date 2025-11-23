@@ -21,6 +21,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   className,
   style,
 }) => {
+  const [isDragOver, setIsDragOver] = React.useState(false);
+
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -34,6 +36,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const handleDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+      setIsDragOver(false);
       const file = event.dataTransfer.files[0];
       if (file && !disabled) {
         onFileSelect(file);
@@ -45,36 +48,48 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const handleDragOver = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+      if (!disabled) {
+        setIsDragOver(true);
+      }
     },
-    [],
+    [disabled],
   );
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
 
   return (
     <div
       className={className}
       style={{
-        border: `2px dashed ${theme.borderColor}`,
+        border: `2px dashed ${isDragOver ? theme.infoColor : theme.borderColor}`,
         borderRadius: "12px",
         padding: "32px",
         textAlign: "center",
-        background: theme.background,
+        background: isDragOver ? `${theme.infoColor}10` : theme.background,
         color: theme.textColor,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.6 : 1,
-        transition: "all 0.2s ease",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         fontFamily: "'Inter', sans-serif",
+        transform: isDragOver ? "scale(1.02)" : "scale(1)",
+        boxShadow: isDragOver
+          ? `0 8px 24px ${theme.shadowColor || "rgba(0,0,0,0.1)"}`
+          : "none",
         ...style,
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onMouseEnter={(e) => {
-        if (!disabled) {
+        if (!disabled && !isDragOver) {
           e.currentTarget.style.borderColor = theme.infoColor;
           e.currentTarget.style.background = `${theme.infoColor}05`;
         }
       }}
       onMouseLeave={(e) => {
-        if (!disabled) {
+        if (!disabled && !isDragOver) {
           e.currentTarget.style.borderColor = theme.borderColor;
           e.currentTarget.style.background = theme.background;
         }

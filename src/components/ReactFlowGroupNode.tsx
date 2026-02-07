@@ -90,7 +90,10 @@ export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
             e.currentTarget.style.background = getNodeColor();
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = getBorderColor();
+            e.currentTarget.style.borderColor = getBorderColor(
+              stateNode,
+              theme,
+            );
             e.currentTarget.style.background = `${getNodeColor()}80`;
           }}
         >

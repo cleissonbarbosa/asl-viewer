@@ -6,4 +6,5 @@ export * from "./WorkflowViewer.themes.stories";
 export * from "./WorkflowViewer.examples.stories";
 export * from "./WorkflowViewer.features.stories";
 export * from "./WorkflowViewer.loading.stories";
+export * from "./WorkflowViewer.advanced.stories";
 export * from "./workflow-definitions";

@@ -62,6 +62,16 @@ export function validateASLDefinition(
     }
   }
 
+  // Detect circular references (cycles)
+  const cycles = detectCircularReferences(definition);
+  for (const cycle of cycles) {
+    errors.push({
+      message: `Circular reference detected: ${cycle.join(" → ")}`,
+      path: `States.${cycle[0]}`,
+      severity: "warning",
+    });
+  }
+
   return errors;
 }
 
@@ -344,6 +354,68 @@ function findReachableStates(definition: ASLDefinition): Set<string> {
   }
 
   return reachable;
+}
+
+/**
+ * Detects circular references (cycles) in the workflow
+ */
+export function detectCircularReferences(
+  definition: ASLDefinition,
+): string[][] {
+  if (!definition.StartAt || !definition.States) {
+    return [];
+  }
+
+  const states = definition.States;
+  const cycles: string[][] = [];
+  const globalVisited = new Set<string>();
+
+  function getNextStates(state: StateDefinition): string[] {
+    const nexts: string[] = [];
+    if (state.Next) nexts.push(state.Next);
+    if (state.Choices) {
+      for (const choice of state.Choices) {
+        if (choice.Next) nexts.push(choice.Next);
+      }
+    }
+    if (state.Default) nexts.push(state.Default);
+    return nexts;
+  }
+
+  function dfs(stateName: string, path: string[], recStack: Set<string>): void {
+    if (!states[stateName]) return;
+
+    if (recStack.has(stateName)) {
+      const cycleStart = path.indexOf(stateName);
+      if (cycleStart !== -1) {
+        const cyclePath = [...path.slice(cycleStart), stateName];
+        const cycleKey = cyclePath.join("→");
+        const alreadyFound = cycles.some((p) => p.join("→") === cycleKey);
+        if (!alreadyFound) {
+          cycles.push(cyclePath);
+        }
+      }
+      return;
+    }
+
+    if (globalVisited.has(stateName)) return;
+
+    recStack.add(stateName);
+    path.push(stateName);
+
+    const state = states[stateName];
+    const nextStates = getNextStates(state);
+
+    for (const next of nextStates) {
+      dfs(next, [...path], new Set(recStack));
+    }
+
+    globalVisited.add(stateName);
+  }
+
+  dfs(definition.StartAt, [], new Set<string>());
+
+  return cycles;
 }
 
 /**

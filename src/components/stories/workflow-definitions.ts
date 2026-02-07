@@ -335,3 +335,161 @@ States:
     Type: "Pass"
     Result: "Hello World from YAML!"
     End: true`;
+
+// Cyclic workflow (contains loops) for cycle detection demo
+export const cyclicWorkflowDefinition: ASLDefinition = {
+  Comment: "Workflow with retry loop (cyclic reference)",
+  StartAt: "CheckStatus",
+  States: {
+    CheckStatus: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:CheckStatus",
+      Next: "EvaluateResult",
+    },
+    EvaluateResult: {
+      Type: "Choice",
+      Choices: [
+        {
+          Variable: "$.status",
+          StringEquals: "COMPLETE",
+          Next: "ProcessComplete",
+        },
+        {
+          Variable: "$.status",
+          StringEquals: "FAILED",
+          Next: "HandleFailure",
+        },
+      ],
+      Default: "WaitAndRetry",
+    },
+    WaitAndRetry: {
+      Type: "Wait",
+      Seconds: 30,
+      Next: "CheckStatus", // <-- Creates a cycle back to CheckStatus
+    },
+    ProcessComplete: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:ProcessComplete",
+      Next: "Done",
+    },
+    HandleFailure: {
+      Type: "Fail",
+      Cause: "Processing failed after retries",
+      Error: "ProcessingError",
+    },
+    Done: {
+      Type: "Succeed",
+    },
+  },
+};
+
+// Error handling workflow for demonstrating Retry + Catch patterns
+export const errorHandlingWorkflowDefinition: ASLDefinition = {
+  Comment: "Workflow with comprehensive error handling",
+  StartAt: "FetchData",
+  States: {
+    FetchData: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:FetchData",
+      Retry: [
+        {
+          ErrorEquals: ["States.TaskFailed"],
+          IntervalSeconds: 2,
+          MaxAttempts: 3,
+          BackoffRate: 2.0,
+        },
+        {
+          ErrorEquals: ["States.Timeout"],
+          IntervalSeconds: 5,
+          MaxAttempts: 2,
+          BackoffRate: 1.5,
+        },
+      ],
+      Catch: [
+        {
+          ErrorEquals: ["CustomError"],
+          Next: "HandleCustomError",
+          ResultPath: "$.error",
+        },
+        {
+          ErrorEquals: ["States.ALL"],
+          Next: "HandleGenericError",
+          ResultPath: "$.error",
+        },
+      ],
+      Next: "TransformData",
+    },
+    TransformData: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:TransformData",
+      Retry: [
+        {
+          ErrorEquals: ["States.ALL"],
+          IntervalSeconds: 1,
+          MaxAttempts: 2,
+          BackoffRate: 2.0,
+        },
+      ],
+      Catch: [
+        {
+          ErrorEquals: ["States.ALL"],
+          Next: "HandleGenericError",
+          ResultPath: "$.error",
+        },
+      ],
+      Next: "ValidateOutput",
+    },
+    ValidateOutput: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:ValidateOutput",
+      Next: "StoreResult",
+    },
+    StoreResult: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:StoreResult",
+      Catch: [
+        {
+          ErrorEquals: ["DynamoDB.AmazonDynamoDBException"],
+          Next: "HandleStorageError",
+        },
+      ],
+      Next: "NotifySuccess",
+    },
+    NotifySuccess: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:NotifySuccess",
+      Next: "PipelineComplete",
+    },
+    HandleCustomError: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:HandleCustomError",
+      Next: "NotifyFailure",
+    },
+    HandleGenericError: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:us-east-1:123456789012:function:HandleGenericError",
+      Next: "NotifyFailure",
+    },
+    HandleStorageError: {
+      Type: "Wait",
+      Seconds: 10,
+      Next: "StoreResult",
+    },
+    NotifyFailure: {
+      Type: "Task",
+      Resource: "arn:aws:lambda:us-east-1:123456789012:function:NotifyFailure",
+      Next: "PipelineFailed",
+    },
+    PipelineComplete: {
+      Type: "Succeed",
+    },
+    PipelineFailed: {
+      Type: "Fail",
+      Cause: "Pipeline encountered an error",
+      Error: "PipelineError",
+    },
+  },
+};

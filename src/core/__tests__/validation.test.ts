@@ -1,4 +1,8 @@
-import { validateASLDefinition, parseASLDefinition } from "../validation";
+import {
+  validateASLDefinition,
+  parseASLDefinition,
+  detectCircularReferences,
+} from "../validation";
 import { ASLDefinition, StateDefinition } from "../../types";
 
 describe("validateASLDefinition", () => {
@@ -829,5 +833,77 @@ describe("parseASLDefinition", () => {
     const malformedJson = '{ "StartAt": ';
 
     expect(() => parseASLDefinition(malformedJson)).toThrow("Invalid JSON");
+  });
+});
+
+describe("detectCircularReferences", () => {
+  it("should detect a simple A -> B -> A cycle", () => {
+    const definition: ASLDefinition = {
+      StartAt: "A",
+      States: {
+        A: { Type: "Pass", Next: "B" },
+        B: { Type: "Pass", Next: "A" },
+      },
+    };
+
+    const cycles = detectCircularReferences(definition);
+
+    expect(cycles.length).toBeGreaterThan(0);
+    const flat = cycles.flat();
+    expect(flat).toContain("A");
+    expect(flat).toContain("B");
+  });
+
+  it("should detect a cycle through Choice default", () => {
+    const definition: ASLDefinition = {
+      StartAt: "Check",
+      States: {
+        Check: {
+          Type: "Choice",
+          Choices: [{ Variable: "$.done", BooleanEquals: true, Next: "Done" }],
+          Default: "Process",
+        },
+        Process: {
+          Type: "Task",
+          Resource: "arn:aws:lambda:us-east-1:123456:function:P",
+          Next: "Check",
+        },
+        Done: { Type: "Succeed" },
+      },
+    };
+
+    const cycles = detectCircularReferences(definition);
+    expect(cycles.length).toBeGreaterThan(0);
+  });
+
+  it("should return empty for DAG workflows", () => {
+    const definition: ASLDefinition = {
+      StartAt: "A",
+      States: {
+        A: { Type: "Pass", Next: "B" },
+        B: { Type: "Pass", Next: "C" },
+        C: { Type: "Succeed" },
+      },
+    };
+
+    const cycles = detectCircularReferences(definition);
+    expect(cycles).toHaveLength(0);
+  });
+
+  it("should report circular references as warnings in validateASLDefinition", () => {
+    const definition: ASLDefinition = {
+      StartAt: "A",
+      States: {
+        A: { Type: "Pass", Next: "B" },
+        B: { Type: "Pass", Next: "A" },
+      },
+    };
+
+    const errors = validateASLDefinition(definition);
+    const circularWarnings = errors.filter(
+      (e) =>
+        e.severity === "warning" && e.message.includes("Circular reference"),
+    );
+    expect(circularWarnings.length).toBeGreaterThan(0);
   });
 });

@@ -4,6 +4,8 @@ export { ReactFlowRenderer } from "./components/ReactFlowRenderer";
 export { ReactFlowStateNode } from "./components/ReactFlowStateNode";
 export { ErrorDisplay } from "./components/ErrorDisplay";
 export { FileUploader, URLInput } from "./components/FileUploader";
+export { WorkflowStats } from "./components/WorkflowStats";
+export { WorkflowErrorBoundary } from "./components/WorkflowErrorBoundary";
 
 // Type exports
 export type {
@@ -24,7 +26,11 @@ export type {
 } from "./types";
 
 // Utility exports
-export { validateASLDefinition, parseASLDefinition } from "./core/validation";
+export {
+  validateASLDefinition,
+  parseASLDefinition,
+  detectCircularReferences,
+} from "./core/validation";
 export { createGraphLayout, createSimpleLayout } from "./core/layout";
 export {
   getTheme,
@@ -41,3 +47,5 @@ export {
   loadFromFile,
   parseDefinitionString,
 } from "./core/loader";
+export { getWorkflowStatistics, detectCycles } from "./core/statistics";
+export type { WorkflowStatistics } from "./core/statistics";

@@ -16,8 +16,10 @@ import {
 } from "../core/loader";
 import { ReactFlowRenderer } from "./ReactFlowRenderer";
 import { ErrorDisplay } from "./ErrorDisplay";
-import { ViewerToolbar } from "./ViewerToolbar";
+import { ViewerToolbar, SearchFilter } from "./ViewerToolbar";
 import { DetailPanel } from "./DetailPanel";
+import { WorkflowStats } from "./WorkflowStats";
+import { WorkflowErrorBoundary } from "./WorkflowErrorBoundary";
 import { IconLoader } from "@tabler/icons-react";
 
 /**
@@ -146,7 +148,9 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   const [showBackgroundState, setShowBackgroundState] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchMatchIndex, setSearchMatchIndex] = useState(0);
+  const [searchFilter, setSearchFilter] = useState<SearchFilter>("all");
   const [selectedNode, setSelectedNode] = useState<StateNode | null>(null);
+  const [showStatsPanel, setShowStatsPanel] = useState(false);
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -271,6 +275,49 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
     }
   }, [parsedDefinition, layoutDirection]);
 
+  /**
+   * Applies search filter to compute the effective search term.
+   * For type/comment/resource filters, find matching node names.
+   */
+  const effectiveSearchTerm = useMemo(() => {
+    if (!searchTerm || searchFilter === "all" || searchFilter === "name") {
+      return searchTerm;
+    }
+    if (!layout) return searchTerm;
+    const matchingNames = layout.nodes
+      .filter((node) => {
+        const term = searchTerm.toLowerCase();
+        switch (searchFilter) {
+          case "type":
+            return node.type.toLowerCase().includes(term);
+          case "comment":
+            return (node.definition.Comment || "").toLowerCase().includes(term);
+          case "resource":
+            return (node.definition.Resource || "")
+              .toLowerCase()
+              .includes(term);
+          default:
+            return false;
+        }
+      })
+      .map((node) => node.name);
+    return matchingNames.length > 0 ? matchingNames.join("|") : searchTerm;
+  }, [searchTerm, searchFilter, layout]);
+
+  const handleExportJSON = useCallback(() => {
+    if (!parsedDefinition) return;
+    const json = JSON.stringify(parsedDefinition, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = "workflow-definition.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+  }, [parsedDefinition]);
+
   const viewerTheme = useMemo(() => {
     // If user is using toolbar to switch themes, use that
     if (currentThemeName) {
@@ -376,92 +423,112 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({
   }
 
   return (
-    <div
-      className={className}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width,
-        height,
-        ...style,
-      }}
-    >
-      {/* Header with workflow info */}
-      {!hideComment && (
-        <div
-          style={{
-            padding: "8px 12px",
-            background: viewerTheme.background,
-            borderBottom: `1px solid ${viewerTheme.borderColor}`,
-            fontSize: "14px",
-            fontWeight: "bold",
-            color: viewerTheme.textColor,
-          }}
-        >
-          Step Functions Workflow
-          {parsedDefinition.Comment && (
-            <span
-              style={{ fontWeight: "normal", marginLeft: "8px", opacity: 0.7 }}
-            >
-              - {parsedDefinition.Comment}
-            </span>
+    <WorkflowErrorBoundary theme={viewerTheme}>
+      <div
+        className={className}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width,
+          height,
+          ...style,
+        }}
+      >
+        {/* Header with workflow info */}
+        {!hideComment && (
+          <div
+            style={{
+              padding: "8px 12px",
+              background: viewerTheme.background,
+              borderBottom: `1px solid ${viewerTheme.borderColor}`,
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: viewerTheme.textColor,
+            }}
+          >
+            Step Functions Workflow
+            {parsedDefinition.Comment && (
+              <span
+                style={{
+                  fontWeight: "normal",
+                  marginLeft: "8px",
+                  opacity: 0.7,
+                }}
+              >
+                - {parsedDefinition.Comment}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Main graph area */}
+        <div style={{ flex: 1, position: "relative" }}>
+          {showToolbar && (
+            <ViewerToolbar
+              theme={viewerTheme}
+              currentThemeName={currentThemeName || "light"}
+              onThemeChange={setCurrentThemeName}
+              layoutDirection={layoutDirection}
+              onLayoutDirectionChange={setLayoutDirection}
+              showMiniMap={showMiniMapState}
+              onToggleMiniMap={() => setShowMiniMapState(!showMiniMapState)}
+              showControls={showControlsState}
+              onToggleControls={() => setShowControlsState(!showControlsState)}
+              showBackground={showBackgroundState}
+              onToggleBackground={() =>
+                setShowBackgroundState(!showBackgroundState)
+              }
+              searchTerm={searchTerm}
+              onSearchChange={handleSearchChange}
+              onSearchNext={handleSearchNext}
+              searchFilter={searchFilter}
+              onSearchFilterChange={setSearchFilter}
+              showStats={showStatsPanel}
+              onToggleStats={() => setShowStatsPanel(!showStatsPanel)}
+              onExportJSON={handleExportJSON}
+            />
+          )}
+          <ReactFlowRenderer
+            nodes={layout.nodes}
+            edges={layout.edges}
+            width={width}
+            height={height - 40} // Account for header
+            theme={viewerTheme}
+            onStateClick={handleStateClick}
+            isConnectable={isConnectable || readonly}
+            isDraggable={isDraggable}
+            isSelectable={isSelectable}
+            isMultiSelect={isMultiSelect}
+            useMiniMap={showMiniMapState}
+            useControls={showControlsState}
+            useBackground={showBackgroundState}
+            useZoom={useZoom}
+            useFitView={useFitView}
+            layoutDirection={layoutDirection}
+            searchTerm={effectiveSearchTerm}
+            searchMatchIndex={searchMatchIndex}
+            onNodeClick={handleStateClick}
+          />
+
+          {/* Statistics panel */}
+          {showStatsPanel && parsedDefinition && (
+            <WorkflowStats
+              definition={parsedDefinition}
+              theme={viewerTheme}
+              onClose={() => setShowStatsPanel(false)}
+            />
           )}
         </div>
-      )}
 
-      {/* Main graph area */}
-      <div style={{ flex: 1, position: "relative" }}>
-        {showToolbar && (
-          <ViewerToolbar
+        {/* State details panel */}
+        {selectedNode && (
+          <DetailPanel
+            node={selectedNode}
             theme={viewerTheme}
-            currentThemeName={currentThemeName || "light"}
-            onThemeChange={setCurrentThemeName}
-            layoutDirection={layoutDirection}
-            onLayoutDirectionChange={setLayoutDirection}
-            showMiniMap={showMiniMapState}
-            onToggleMiniMap={() => setShowMiniMapState(!showMiniMapState)}
-            showControls={showControlsState}
-            onToggleControls={() => setShowControlsState(!showControlsState)}
-            showBackground={showBackgroundState}
-            onToggleBackground={() =>
-              setShowBackgroundState(!showBackgroundState)
-            }
-            searchTerm={searchTerm}
-            onSearchChange={handleSearchChange}
-            onSearchNext={handleSearchNext}
+            onClose={handleCloseDetail}
           />
         )}
-        <ReactFlowRenderer
-          nodes={layout.nodes}
-          edges={layout.edges}
-          width={width}
-          height={height - 40} // Account for header
-          theme={viewerTheme}
-          onStateClick={handleStateClick}
-          isConnectable={isConnectable || readonly}
-          isDraggable={isDraggable}
-          isSelectable={isSelectable}
-          isMultiSelect={isMultiSelect}
-          useMiniMap={showMiniMapState}
-          useControls={showControlsState}
-          useBackground={showBackgroundState}
-          useZoom={useZoom}
-          useFitView={useFitView}
-          layoutDirection={layoutDirection}
-          searchTerm={searchTerm}
-          searchMatchIndex={searchMatchIndex}
-          onNodeClick={handleStateClick}
-        />
       </div>
-
-      {/* State details panel */}
-      {selectedNode && (
-        <DetailPanel
-          node={selectedNode}
-          theme={viewerTheme}
-          onClose={handleCloseDetail}
-        />
-      )}
-    </div>
+    </WorkflowErrorBoundary>
   );
 };

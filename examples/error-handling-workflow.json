@@ -1,0 +1,106 @@
+{
+  "Comment": "Workflow with comprehensive error handling (Retry + Catch)",
+  "StartAt": "FetchData",
+  "States": {
+    "FetchData": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:FetchData",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        },
+        {
+          "ErrorEquals": ["States.Timeout"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 2,
+          "BackoffRate": 1.5
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["CustomError"],
+          "Next": "HandleCustomError",
+          "ResultPath": "$.error"
+        },
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "HandleGenericError",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "TransformData"
+    },
+    "TransformData": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:TransformData",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "HandleGenericError",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "ValidateOutput"
+    },
+    "ValidateOutput": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ValidateOutput",
+      "Next": "StoreResult"
+    },
+    "StoreResult": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:StoreResult",
+      "Catch": [
+        {
+          "ErrorEquals": ["DynamoDB.AmazonDynamoDBException"],
+          "Next": "HandleStorageError"
+        }
+      ],
+      "Next": "NotifySuccess"
+    },
+    "NotifySuccess": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:NotifySuccess",
+      "Next": "PipelineComplete"
+    },
+    "HandleCustomError": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:HandleCustomError",
+      "Next": "NotifyFailure"
+    },
+    "HandleGenericError": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:HandleGenericError",
+      "Next": "NotifyFailure"
+    },
+    "HandleStorageError": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "StoreResult"
+    },
+    "NotifyFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:NotifyFailure",
+      "Next": "PipelineFailed"
+    },
+    "PipelineComplete": {
+      "Type": "Succeed"
+    },
+    "PipelineFailed": {
+      "Type": "Fail",
+      "Cause": "Pipeline encountered an error",
+      "Error": "PipelineError"
+    }
+  }
+}

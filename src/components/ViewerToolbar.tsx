@@ -8,8 +8,12 @@ import {
   IconZoomIn,
   IconGridDots,
   IconSearch,
+  IconChartBar,
+  IconDownload,
 } from "@tabler/icons-react";
 import { ThemeName, ViewerTheme } from "../types";
+
+export type SearchFilter = "all" | "name" | "type" | "comment" | "resource";
 
 interface ViewerToolbarProps {
   theme: ViewerTheme;
@@ -26,6 +30,11 @@ interface ViewerToolbarProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onSearchNext?: () => void;
+  searchFilter?: SearchFilter;
+  onSearchFilterChange?: (filter: SearchFilter) => void;
+  showStats?: boolean;
+  onToggleStats?: () => void;
+  onExportJSON?: () => void;
 }
 
 const ToolbarButton: React.FC<{
@@ -80,6 +89,11 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   searchTerm,
   onSearchChange,
   onSearchNext,
+  searchFilter = "all",
+  onSearchFilterChange,
+  showStats,
+  onToggleStats,
+  onExportJSON,
 }) => {
   return (
     <div
@@ -129,11 +143,59 @@ export const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
             padding: "8px",
             color: theme.textColor,
             outline: "none",
-            width: "150px",
+            width: "120px",
             fontSize: "14px",
           }}
         />
+        {onSearchFilterChange && (
+          <select
+            value={searchFilter}
+            onChange={(e) =>
+              onSearchFilterChange(e.target.value as SearchFilter)
+            }
+            style={{
+              border: "none",
+              background: theme.background,
+              color: theme.textColorSecondary,
+              fontSize: "11px",
+              padding: "4px",
+              borderRadius: "3px",
+              cursor: "pointer",
+              outline: "none",
+            }}
+            title="Search filter"
+          >
+            <option value="all">All</option>
+            <option value="name">Name</option>
+            <option value="type">Type</option>
+            <option value="comment">Comment</option>
+            <option value="resource">Resource</option>
+          </select>
+        )}
       </div>
+
+      {/* Stats Toggle */}
+      {onToggleStats && (
+        <ToolbarButton
+          theme={theme}
+          isActive={showStats}
+          onClick={onToggleStats}
+          title="Toggle Statistics"
+        >
+          <IconChartBar size={20} />
+        </ToolbarButton>
+      )}
+
+      {/* Export JSON */}
+      {onExportJSON && (
+        <ToolbarButton
+          theme={theme}
+          onClick={onExportJSON}
+          title="Export Definition (JSON)"
+        >
+          <IconDownload size={20} />
+        </ToolbarButton>
+      )}
 
       {/* Theme Switcher */}
       <ToolbarButton

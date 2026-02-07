@@ -1,0 +1,45 @@
+{
+  "Comment": "Workflow with retry loop (cyclic reference)",
+  "StartAt": "CheckStatus",
+  "States": {
+    "CheckStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:CheckStatus",
+      "Next": "EvaluateResult"
+    },
+    "EvaluateResult": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "COMPLETE",
+          "Next": "ProcessComplete"
+        },
+        {
+          "Variable": "$.status",
+          "StringEquals": "FAILED",
+          "Next": "HandleFailure"
+        }
+      ],
+      "Default": "WaitAndRetry"
+    },
+    "WaitAndRetry": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "CheckStatus"
+    },
+    "ProcessComplete": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ProcessComplete",
+      "Next": "Done"
+    },
+    "HandleFailure": {
+      "Type": "Fail",
+      "Cause": "Processing failed after retries",
+      "Error": "ProcessingError"
+    },
+    "Done": {
+      "Type": "Succeed"
+    }
+  }
+}

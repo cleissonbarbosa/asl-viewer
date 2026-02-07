@@ -222,10 +222,23 @@ function extractASLFromCloudFormation(template: any): ASLDefinition {
 
 /**
  * Load ASL definition from a URL
+ * @param url - The URL to load from
+ * @param timeoutMs - Request timeout in milliseconds (default: 30000)
  */
-export async function loadFromURL(url: string): Promise<ASLDefinition> {
+export async function loadFromURL(
+  url: string,
+  timeoutMs: number = 30000,
+): Promise<ASLDefinition> {
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -2,7 +2,7 @@ import { parseDefinitionString, loadFromFile } from "../loader";
 
 // Mock FileReader for Node.js test environment
 class MockFileReader {
-  onload: ((event: any) => void) | null = null;
+  onload: ((event: { target: { result: string } }) => void) | null = null;
   onerror: (() => void) | null = null;
   result: string | ArrayBuffer | null = null;
 
@@ -155,6 +155,68 @@ States:
       });
 
       await expect(loadFromFile(file)).rejects.toThrow();
+    });
+  });
+
+  describe("CloudFormation DefinitionString", () => {
+    const definition = {
+      StartAt: "Invoke",
+      States: {
+        Invoke: {
+          Type: "Task",
+          Resource: "${ProcessFunctionArn}",
+          End: true,
+        },
+      },
+    };
+
+    it("parses a plain JSON DefinitionString", () => {
+      const template = JSON.stringify({
+        Resources: {
+          Machine: {
+            Type: "AWS::StepFunctions::StateMachine",
+            Properties: { DefinitionString: JSON.stringify(definition) },
+          },
+        },
+      });
+      expect(parseDefinitionString(template)).toEqual(definition);
+    });
+
+    it("parses !Sub DefinitionString from YAML templates", () => {
+      const yamlTemplate = `
+Resources:
+  Machine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: !Sub |
+        ${JSON.stringify(definition)}
+`;
+      expect(parseDefinitionString(yamlTemplate)).toEqual(definition);
+    });
+
+    it("parses Fn::Join DefinitionString with references", () => {
+      const template = JSON.stringify({
+        Resources: {
+          Machine: {
+            Type: "AWS::StepFunctions::StateMachine",
+            Properties: {
+              DefinitionString: {
+                "Fn::Join": [
+                  "",
+                  [
+                    '{"StartAt":"Invoke","States":{"Invoke":{"Type":"Task","Resource":"',
+                    { "Fn::GetAtt": ["ProcessFunction", "Arn"] },
+                    '","End":true}}}',
+                  ],
+                ],
+              },
+            },
+          },
+        },
+      });
+      expect(parseDefinitionString(template).States.Invoke.Resource).toBe(
+        "${ProcessFunction.Arn}",
+      );
     });
   });
 });

@@ -1,494 +1,470 @@
-import React from "react";
-import { IconX, IconCopy } from "@tabler/icons-react";
-import { StateNode, ViewerTheme } from "../types";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  IconArrowRight,
+  IconCheck,
+  IconCopy,
+  IconX,
+} from "@tabler/icons-react";
+import {
+  CatchDefinition,
+  RetryDefinition,
+  StateDefinition,
+  StateNode,
+  ViewerTheme,
+} from "../types";
+import {
+  describeResource,
+  formatChoiceCondition,
+  getItemProcessor,
+  getNodeKind,
+  isDistributedMap,
+  isNestedExecution,
+} from "../core/asl-utils";
+import { StateIcon } from "./utils";
+import { JsonView } from "./JsonView";
+import { themeToCssVars } from "./theme-vars";
+import { classNames } from "./flow-types";
 
-interface DetailPanelProps {
+export interface DetailPanelProps {
   node: StateNode;
   theme: ViewerTheme;
   onClose: () => void;
+  /** Called with a state name when a transition target is clicked. */
+  onNavigate?: (stateName: string) => void;
+  className?: string;
 }
 
-const DetailSection: React.FC<{
-  title: string;
-  children: React.ReactNode;
-  theme: ViewerTheme;
-}> = ({ title, children, theme }) => (
-  <div style={{ marginBottom: "16px" }}>
-    <div
-      style={{
-        fontSize: "11px",
-        fontWeight: "bold",
-        textTransform: "uppercase",
-        color: theme.textColorSecondary,
-        marginBottom: "8px",
-        borderBottom: `1px solid ${theme.borderColor}`,
-        paddingBottom: "4px",
-        letterSpacing: "0.5px",
-      }}
-    >
-      {title}
-    </div>
-    <div style={{ fontSize: "12px" }}>{children}</div>
-  </div>
+const RAW_JSON_COLLAPSE_THRESHOLD = 4000;
+
+const Section: React.FC<{ title: string; children: React.ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <section className="asl-section">
+    <h4 className="asl-section__title">{title}</h4>
+    {children}
+  </section>
 );
 
-const DetailRow: React.FC<{
-  label: string;
-  value: React.ReactNode;
-  theme: ViewerTheme;
-}> = ({ label, value, theme }) => (
-  <div
-    style={{ marginBottom: "6px", display: "flex", flexDirection: "column" }}
+type Row = [label: string, value: React.ReactNode, mono?: boolean];
+
+const KeyValues: React.FC<{ rows: Row[] }> = ({ rows }) => {
+  const visible = rows.filter(
+    ([, value]) => value !== undefined && value !== null && value !== "",
+  );
+  if (visible.length === 0) return null;
+  return (
+    <dl className="asl-kv">
+      {visible.map(([label, value, mono]) => (
+        <React.Fragment key={label}>
+          <dt>{label}</dt>
+          <dd className={mono ? "asl-mono" : undefined}>
+            {typeof value === "object" && !React.isValidElement(value)
+              ? JSON.stringify(value)
+              : value}
+          </dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+};
+
+const StateLink: React.FC<{
+  name: string;
+  onNavigate?: (stateName: string) => void;
+}> = ({ name, onNavigate }) => (
+  <button
+    type="button"
+    className="asl-link"
+    onClick={() => onNavigate?.(name)}
+    disabled={!onNavigate}
+    title={onNavigate ? `Go to ${name}` : undefined}
   >
-    <span
-      style={{
-        fontWeight: 600,
-        color: theme.textColorSecondary,
-        fontSize: "11px",
-        marginBottom: "2px",
-      }}
-    >
-      {label}:
-    </span>
-    <span
-      style={{
-        color: theme.textColor,
-        wordBreak: "break-word",
-        lineHeight: "1.4",
-      }}
-    >
-      {value === null || value === undefined
-        ? "null"
-        : typeof value === "object"
-          ? JSON.stringify(value, null, 2)
-          : value}
-    </span>
-  </div>
+    <IconArrowRight size={13} aria-hidden />
+    {name}
+  </button>
 );
 
-const JsonView: React.FC<{ data: any; theme: ViewerTheme }> = ({
-  data,
-  theme,
-}) =>
-  data ? (
-    <pre
-      style={{
-        background: theme.background,
-        padding: "8px",
-        borderRadius: "4px",
-        fontSize: "10px",
-        overflowX: "auto",
-        border: `1px solid ${theme.borderColor}`,
-        margin: "4px 0 0 0",
-        fontFamily: "monospace",
-        color: theme.textColor,
-      }}
-    >
-      {JSON.stringify(data, null, 2)}
-    </pre>
+const Chips: React.FC<{ values?: string[] }> = ({ values }) =>
+  values && values.length > 0 ? (
+    <div>
+      {values.map((value) => (
+        <span key={value} className="asl-chip" title={value}>
+          {value}
+        </span>
+      ))}
+    </div>
   ) : null;
 
+function seconds(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  return typeof value === "number" ? `${value}s` : String(value);
+}
+
+function retrySummary(retry: RetryDefinition): string {
+  const parts: string[] = [];
+  parts.push(`${retry.MaxAttempts ?? 3} attempts`);
+  parts.push(`${retry.IntervalSeconds ?? 1}s interval`);
+  parts.push(`×${retry.BackoffRate ?? 2} backoff`);
+  if (retry.MaxDelaySeconds !== undefined)
+    parts.push(`max delay ${retry.MaxDelaySeconds}s`);
+  if (retry.JitterStrategy) parts.push(`jitter ${retry.JitterStrategy}`);
+  return parts.join(" · ");
+}
+
+function getOverviewRows(def: StateDefinition): Row[] {
+  const rows: Row[] = [];
+  switch (def.Type) {
+    case "Task": {
+      const resource = describeResource(def.Resource);
+      if (resource) {
+        rows.push([
+          "Service",
+          [resource.service, resource.action].filter(Boolean).join(" · "),
+        ]);
+        if (resource.pattern) rows.push(["Pattern", resource.pattern]);
+      }
+      rows.push(["Resource", def.Resource, true]);
+      break;
+    }
+    case "Wait":
+      rows.push(["Seconds", seconds(def.Seconds)]);
+      rows.push(["Seconds path", def.SecondsPath, true]);
+      rows.push(["Timestamp", def.Timestamp, true]);
+      rows.push(["Timestamp path", def.TimestampPath, true]);
+      break;
+    case "Map": {
+      const processor = getItemProcessor(def);
+      const config = def.ItemProcessor?.ProcessorConfig;
+      rows.push([
+        "Mode",
+        isDistributedMap(def)
+          ? `Distributed${config?.ExecutionType ? ` · ${config.ExecutionType}` : ""}`
+          : "Inline",
+      ]);
+      rows.push(["Items path", def.ItemsPath, true]);
+      rows.push(["Max concurrency", def.MaxConcurrency]);
+      rows.push(["Max concurrency path", def.MaxConcurrencyPath, true]);
+      rows.push(["Tolerated failures", def.ToleratedFailurePercentage]);
+      rows.push(["Tolerated failure count", def.ToleratedFailureCount]);
+      rows.push(["Label", def.Label]);
+      if (processor?.States) {
+        rows.push(["States", Object.keys(processor.States).length]);
+      }
+      break;
+    }
+    case "Parallel":
+      rows.push(["Branches", def.Branches?.length ?? 0]);
+      rows.push([
+        "States",
+        (def.Branches ?? []).reduce(
+          (total, branch) => total + Object.keys(branch?.States ?? {}).length,
+          0,
+        ),
+      ]);
+      break;
+    case "Fail":
+      rows.push(["Error", def.Error, true]);
+      rows.push(["Error path", def.ErrorPath, true]);
+      rows.push(["Cause", def.Cause]);
+      rows.push(["Cause path", def.CausePath, true]);
+      break;
+  }
+  rows.push(["Timeout", seconds(def.TimeoutSeconds)]);
+  rows.push(["Timeout path", def.TimeoutSecondsPath, true]);
+  rows.push(["Heartbeat", seconds(def.HeartbeatSeconds)]);
+  rows.push(["Heartbeat path", def.HeartbeatSecondsPath, true]);
+  rows.push(["Query language", def.QueryLanguage]);
+  return rows;
+}
+
+const DATA_FIELDS: Array<keyof StateDefinition> = [
+  "InputPath",
+  "Parameters",
+  "Arguments",
+  "ItemSelector",
+  "ItemReader",
+  "ItemBatcher",
+  "Result",
+  "ResultSelector",
+  "ResultPath",
+  "ResultWriter",
+  "OutputPath",
+  "Output",
+  "Assign",
+  "Items",
+  "Credentials",
+];
+
+/**
+ * Side panel with the details of the selected state.
+ */
 export const DetailPanel: React.FC<DetailPanelProps> = ({
   node,
   theme,
   onClose,
+  onNavigate,
+  className,
 }) => {
   const def = node.definition;
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(node.definition, null, 2));
-  };
+  useEffect(() => {
+    setCopied(false);
+    return () => clearTimeout(timer.current);
+  }, [node]);
+
+  const handleCopy = useCallback(() => {
+    const text = JSON.stringify(def, null, 2);
+    const done = () => {
+      setCopied(true);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1500);
+    };
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(done, () => undefined);
+    }
+  }, [def]);
+
+  const kind = getNodeKind(node);
+  const resource = def.Type === "Task" ? describeResource(def.Resource) : null;
+  const dataFields = DATA_FIELDS.filter((field) => def[field] !== undefined);
+  const rawJson = JSON.stringify(def, null, 2) ?? "";
+  const retries: RetryDefinition[] = Array.isArray(def.Retry) ? def.Retry : [];
+  const catchers: CatchDefinition[] = Array.isArray(def.Catch) ? def.Catch : [];
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: "350px",
-        backgroundColor: theme.surfaceColor,
-        borderLeft: `1px solid ${theme.borderColor}`,
-        boxShadow: "-2px 0 8px rgba(0,0,0,0.1)",
-        zIndex: 10,
-        display: "flex",
-        flexDirection: "column",
-        transition: "transform 0.3s ease-in-out",
-      }}
+    <aside
+      className={classNames("asl-panel", className)}
+      style={themeToCssVars(theme)}
+      aria-label={`Details of ${node.name}`}
     >
-      <div
-        style={{
-          padding: "16px",
-          borderBottom: `1px solid ${theme.borderColor}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          backgroundColor: theme.background,
-        }}
-      >
-        <div>
-          <h3
-            style={{
-              margin: 0,
-              fontSize: "1.1rem",
-              fontWeight: 600,
-              color: theme.textColor,
-            }}
-          >
-            {node.name}
-          </h3>
-          <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+      <header className={classNames("asl-panel__header", `asl-kind-${kind}`)}>
+        <span className="asl-node__icon">
+          <StateIcon stateNode={node} size={20} />
+        </span>
+        <div className="asl-panel__heading">
+          <h3 className="asl-panel__title">{node.name}</h3>
+          <div className="asl-panel__tags">
             <span
-              style={{
-                fontSize: "0.7rem",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                backgroundColor:
-                  theme.nodeBorderColors[
-                    node.type.toLowerCase() as keyof typeof theme.nodeBorderColors
-                  ] || theme.borderColor,
-                color: "#fff",
-                fontWeight: "bold",
-                textTransform: "uppercase",
-              }}
+              className="asl-tag"
+              style={
+                { "--asl-tag": "var(--asl-accent)" } as React.CSSProperties
+              }
             >
               {node.type}
             </span>
-            {node.type === "Task" &&
-              node.definition.Resource &&
-              typeof node.definition.Resource === "string" &&
-              node.definition.Resource.includes("states:startExecution.") && (
-                <span
-                  style={{
-                    fontSize: "0.7rem",
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    backgroundColor: theme.nodeBorderColors.stepFunction,
-                    color: "#fff",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Step Function
-                </span>
-              )}
+            {isNestedExecution(def) && (
+              <span
+                className="asl-tag"
+                style={
+                  {
+                    "--asl-tag": "var(--asl-stepfn-border)",
+                  } as React.CSSProperties
+                }
+              >
+                Step Function
+              </span>
+            )}
+            {resource && !isNestedExecution(def) && (
+              <span className="asl-tag">{resource.service}</span>
+            )}
+            {isDistributedMap(def) && (
+              <span className="asl-tag">Distributed</span>
+            )}
             {node.isStartState && (
               <span
-                style={{
-                  fontSize: "0.7rem",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  backgroundColor: theme.successColor,
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
+                className="asl-tag"
+                style={
+                  { "--asl-tag": "var(--asl-start)" } as React.CSSProperties
+                }
               >
-                START
+                Start
               </span>
             )}
             {node.isEndState && (
               <span
-                style={{
-                  fontSize: "0.7rem",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  backgroundColor:
-                    node.type === "Succeed"
-                      ? theme.successColor
-                      : theme.errorColor,
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
+                className="asl-tag"
+                style={
+                  {
+                    "--asl-tag":
+                      def.Type === "Fail"
+                        ? "var(--asl-error)"
+                        : "var(--asl-success)",
+                  } as React.CSSProperties
+                }
               >
-                END
+                End
               </span>
             )}
           </div>
         </div>
-        <div style={{ display: "flex", gap: "4px" }}>
+        <div className="asl-panel__actions">
           <button
+            type="button"
+            className="asl-icon-btn"
             onClick={handleCopy}
-            title="Copy JSON"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: theme.textColorSecondary,
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            title={copied ? "Copied" : "Copy state definition"}
+            aria-label="Copy state definition as JSON"
           >
-            <IconCopy size={20} />
+            {copied ? (
+              <IconCheck size={17} aria-hidden />
+            ) : (
+              <IconCopy size={17} aria-hidden />
+            )}
           </button>
           <button
+            type="button"
+            className="asl-icon-btn"
             onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: theme.textColorSecondary,
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            title="Close (Esc)"
+            aria-label="Close details"
           >
-            <IconX size={20} />
+            <IconX size={17} aria-hidden />
           </button>
         </div>
-      </div>
+      </header>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
-        {/* General */}
+      <div className="asl-panel__body">
         {def.Comment && (
-          <DetailSection title="Description" theme={theme}>
-            <div style={{ fontStyle: "italic", lineHeight: "1.4" }}>
-              {def.Comment}
-            </div>
-          </DetailSection>
+          <Section title="Description">
+            <p className="asl-description">{def.Comment}</p>
+          </Section>
         )}
 
-        {/* Configuration */}
-        {(def.Resource ||
-          def.TimeoutSeconds !== undefined ||
-          def.HeartbeatSeconds !== undefined) && (
-          <DetailSection title="Configuration" theme={theme}>
-            {def.Resource && (
-              <DetailRow label="Resource" value={def.Resource} theme={theme} />
-            )}
-            {def.TimeoutSeconds !== undefined && (
-              <DetailRow
-                label="Timeout"
-                value={`${def.TimeoutSeconds}s`}
-                theme={theme}
-              />
-            )}
-            {def.HeartbeatSeconds !== undefined && (
-              <DetailRow
-                label="Heartbeat"
-                value={`${def.HeartbeatSeconds}s`}
-                theme={theme}
-              />
-            )}
-          </DetailSection>
+        {getOverviewRows(def).some(([, value]) => value !== undefined) && (
+          <Section title="Overview">
+            <KeyValues rows={getOverviewRows(def)} />
+          </Section>
         )}
 
-        {/* Type Specific */}
-        {(node.type === "Wait" ||
-          node.type === "Map" ||
-          node.type === "Parallel" ||
-          node.type === "Fail") && (
-          <DetailSection title={`${node.type} Details`} theme={theme}>
-            {/* Wait */}
-            {def.Seconds !== undefined && (
-              <DetailRow label="Seconds" value={def.Seconds} theme={theme} />
-            )}
-            {def.Timestamp && (
-              <DetailRow
-                label="Timestamp"
-                value={def.Timestamp}
-                theme={theme}
-              />
-            )}
-            {def.SecondsPath && (
-              <DetailRow
-                label="SecondsPath"
-                value={def.SecondsPath}
-                theme={theme}
-              />
-            )}
-            {def.TimestampPath && (
-              <DetailRow
-                label="TimestampPath"
-                value={def.TimestampPath}
-                theme={theme}
-              />
-            )}
-
-            {/* Map */}
-            {def.ItemsPath && (
-              <DetailRow
-                label="ItemsPath"
-                value={def.ItemsPath}
-                theme={theme}
-              />
-            )}
-            {def.MaxConcurrency !== undefined && (
-              <DetailRow
-                label="MaxConcurrency"
-                value={def.MaxConcurrency}
-                theme={theme}
-              />
-            )}
-
-            {/* Fail */}
-            {def.Error && (
-              <DetailRow label="Error" value={def.Error} theme={theme} />
-            )}
-            {def.Cause && (
-              <DetailRow label="Cause" value={def.Cause} theme={theme} />
-            )}
-            {def.Branches && (
-              <DetailRow
-                label="Branches"
-                value={def.Branches.length}
-                theme={theme}
-              />
-            )}
-          </DetailSection>
+        {def.Type === "Choice" && (
+          <Section title="Rules">
+            <ol className="asl-list">
+              {(def.Choices ?? []).map((choice, index) => (
+                <li key={index} className="asl-list__item">
+                  <div className="asl-list__head">
+                    <span>Rule {index + 1}</span>
+                    {choice?.Next && (
+                      <StateLink name={choice.Next} onNavigate={onNavigate} />
+                    )}
+                  </div>
+                  <div className="asl-list__condition">
+                    {formatChoiceCondition(choice)}
+                  </div>
+                  {choice?.Comment && (
+                    <div className="asl-list__meta">{choice.Comment}</div>
+                  )}
+                </li>
+              ))}
+              {def.Default && (
+                <li className="asl-list__item">
+                  <div className="asl-list__head" style={{ marginBottom: 0 }}>
+                    <span>Default</span>
+                    <StateLink name={def.Default} onNavigate={onNavigate} />
+                  </div>
+                </li>
+              )}
+            </ol>
+          </Section>
         )}
 
-        {/* Data Flow */}
-        {(def.InputPath ||
-          def.OutputPath ||
-          def.ResultPath ||
-          def.Parameters ||
-          def.ResultSelector ||
-          def.Result) && (
-          <DetailSection title="Data Flow" theme={theme}>
-            {def.InputPath && (
-              <DetailRow
-                label="InputPath"
-                value={def.InputPath}
-                theme={theme}
+        {def.Type !== "Choice" && (
+          <Section title="Transition">
+            {def.Next ? (
+              <KeyValues
+                rows={[
+                  [
+                    "Next",
+                    <StateLink
+                      key="next"
+                      name={def.Next}
+                      onNavigate={onNavigate}
+                    />,
+                  ],
+                ]}
               />
+            ) : (
+              <p className="asl-description">
+                {def.Type === "Fail"
+                  ? "Fails the execution."
+                  : def.Type === "Succeed"
+                    ? "Completes the execution successfully."
+                    : def.End
+                      ? "Ends the execution."
+                      : "No transition defined."}
+              </p>
             )}
-            {def.Parameters && (
-              <div style={{ marginBottom: "8px" }}>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: theme.textColorSecondary,
-                    fontSize: "11px",
-                  }}
-                >
-                  Parameters:
-                </span>
-                <JsonView data={def.Parameters} theme={theme} />
-              </div>
-            )}
-            {def.ResultSelector && (
-              <div style={{ marginBottom: "8px" }}>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: theme.textColorSecondary,
-                    fontSize: "11px",
-                  }}
-                >
-                  ResultSelector:
-                </span>
-                <JsonView data={def.ResultSelector} theme={theme} />
-              </div>
-            )}
-            {def.Result && (
-              <div style={{ marginBottom: "8px" }}>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: theme.textColorSecondary,
-                    fontSize: "11px",
-                  }}
-                >
-                  Result:
-                </span>
-                <JsonView data={def.Result} theme={theme} />
-              </div>
-            )}
-            {def.ResultPath && (
-              <DetailRow
-                label="ResultPath"
-                value={def.ResultPath}
-                theme={theme}
-              />
-            )}
-            {def.OutputPath && (
-              <DetailRow
-                label="OutputPath"
-                value={def.OutputPath}
-                theme={theme}
-              />
-            )}
-          </DetailSection>
+          </Section>
         )}
 
-        {/* Error Handling */}
-        {(def.Retry || def.Catch) && (
-          <DetailSection title="Error Handling" theme={theme}>
-            {def.Retry && (
-              <div style={{ marginBottom: "4px" }}>
-                <span
-                  style={{ fontWeight: 600, color: theme.textColorSecondary }}
-                >
-                  Retries:
-                </span>{" "}
-                {def.Retry.length} defined
-              </div>
-            )}
-            {def.Catch && (
-              <div>
-                <span
-                  style={{ fontWeight: 600, color: theme.textColorSecondary }}
-                >
-                  Catchers:
-                </span>{" "}
-                {def.Catch.length} defined
-              </div>
-            )}
-          </DetailSection>
+        {(retries.length > 0 || catchers.length > 0) && (
+          <Section title="Error handling">
+            <ul className="asl-list">
+              {retries.map((retry, index) => (
+                <li key={`retry-${index}`} className="asl-list__item">
+                  <div className="asl-list__head">
+                    <span>Retry {index + 1}</span>
+                  </div>
+                  <Chips values={retry?.ErrorEquals} />
+                  <div className="asl-list__meta">{retrySummary(retry)}</div>
+                </li>
+              ))}
+              {catchers.map((catcher, index) => (
+                <li key={`catch-${index}`} className="asl-list__item">
+                  <div className="asl-list__head">
+                    <span>Catch {index + 1}</span>
+                    {catcher?.Next && (
+                      <StateLink name={catcher.Next} onNavigate={onNavigate} />
+                    )}
+                  </div>
+                  <Chips values={catcher?.ErrorEquals} />
+                  {catcher?.ResultPath !== undefined && (
+                    <div className="asl-list__meta">
+                      Result path{" "}
+                      <span className="asl-mono">
+                        {String(catcher.ResultPath)}
+                      </span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Section>
         )}
 
-        {/* Flow */}
-        {(def.Next || def.Default || def.End) && (
-          <DetailSection title="Flow Control" theme={theme}>
-            {def.Next && (
-              <DetailRow label="Next" value={def.Next} theme={theme} />
-            )}
-            {def.Default && (
-              <DetailRow label="Default" value={def.Default} theme={theme} />
-            )}
-            {def.End && <DetailRow label="End" value="True" theme={theme} />}
-          </DetailSection>
+        {dataFields.length > 0 && (
+          <Section title="Data flow">
+            {dataFields.map((field) => {
+              const value = def[field];
+              const isScalar = typeof value !== "object" || value === null;
+              return (
+                <div key={field} className="asl-field">
+                  <span className="asl-field__label">{field}</span>
+                  {isScalar ? (
+                    <span className="asl-chip">{String(value)}</span>
+                  ) : (
+                    <JsonView value={value} />
+                  )}
+                </div>
+              );
+            })}
+          </Section>
         )}
 
-        {/* Raw JSON */}
-        <div style={{ marginTop: "24px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "8px",
-            }}
-          >
-            <h4
-              style={{
-                margin: 0,
-                fontSize: "0.9rem",
-                color: theme.textColorSecondary,
-              }}
+        <Section title="Definition">
+          <details open={rawJson.length < RAW_JSON_COLLAPSE_THRESHOLD}>
+            <summary
+              className="asl-field__label"
+              style={{ cursor: "pointer", marginBottom: 8 }}
             >
-              Raw Definition
-            </h4>
-          </div>
-          <pre
-            style={{
-              margin: 0,
-              padding: "12px",
-              backgroundColor: theme.background,
-              borderRadius: "6px",
-              fontSize: "0.85rem",
-              color: theme.textColor,
-              overflowX: "auto",
-              border: `1px solid ${theme.borderColor}`,
-            }}
-          >
-            {JSON.stringify(node.definition, null, 2)}
-          </pre>
-        </div>
+              Raw JSON · {rawJson.split("\n").length} lines
+            </summary>
+            <JsonView value={def} />
+          </details>
+        </Section>
       </div>
-    </div>
+    </aside>
   );
 };

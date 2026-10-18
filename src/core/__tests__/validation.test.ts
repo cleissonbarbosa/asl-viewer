@@ -20,7 +20,6 @@ describe("validateASLDefinition", () => {
     });
 
     it("should require StartAt field", () => {
-      // @ts-ignore
       const definition = {
         States: {
           HelloWorld: {
@@ -416,10 +415,136 @@ describe("validateASLDefinition", () => {
         const errors = validateASLDefinition(definition);
         expect(errors).toHaveLength(0);
       });
+
+      it("should validate states inside each branch with scoped paths", () => {
+        const definition: ASLDefinition = {
+          StartAt: "ParallelState",
+          States: {
+            ParallelState: {
+              Type: "Parallel",
+              Branches: [
+                {
+                  StartAt: "A",
+                  States: { A: { Type: "Pass", End: true } },
+                },
+                {
+                  StartAt: "B",
+                  States: {
+                    B: { Type: "Task", End: true } as never,
+                    Orphan: { Type: "Pass", End: true },
+                  },
+                },
+              ],
+              End: true,
+            },
+          },
+        };
+
+        const errors = validateASLDefinition(definition);
+        expect(errors).toContainEqual({
+          message: "Task states must have Resource field",
+          path: "States.ParallelState.Branches[1].States.B.Resource",
+          severity: "error",
+        });
+        expect(errors).toContainEqual({
+          message: 'State "Orphan" is unreachable',
+          path: "States.ParallelState.Branches[1].States.Orphan",
+          severity: "warning",
+        });
+      });
+    });
+
+    describe("General state rules", () => {
+      it("should reject unknown state types", () => {
+        const definition = {
+          StartAt: "Weird",
+          States: { Weird: { Type: "Lambda", End: true } },
+        } as unknown as ASLDefinition;
+
+        const errors = validateASLDefinition(definition);
+        expect(errors[0]).toMatchObject({
+          path: "States.Weird.Type",
+          severity: "error",
+        });
+      });
+
+      it("should warn when a non-terminal state has neither Next nor End", () => {
+        const definition: ASLDefinition = {
+          StartAt: "Dangling",
+          States: { Dangling: { Type: "Pass" } },
+        };
+
+        expect(validateASLDefinition(definition)).toEqual([
+          {
+            message: "Pass states should have either a Next or End field",
+            path: "States.Dangling",
+            severity: "warning",
+          },
+        ]);
+      });
+
+      it("should reject states that have both Next and End", () => {
+        const definition: ASLDefinition = {
+          StartAt: "Both",
+          States: {
+            Both: { Type: "Pass", Next: "Done", End: true },
+            Done: { Type: "Succeed" },
+          },
+        };
+
+        expect(validateASLDefinition(definition)).toContainEqual({
+          message: "States cannot have both Next and End fields",
+          path: "States.Both",
+          severity: "error",
+        });
+      });
+
+      it("should not hide unreachable top-level states that share a name with a branch state", () => {
+        const definition: ASLDefinition = {
+          StartAt: "ParallelState",
+          States: {
+            ParallelState: {
+              Type: "Parallel",
+              Branches: [
+                { StartAt: "Shared", States: { Shared: { Type: "Succeed" } } },
+              ],
+              End: true,
+            },
+            Shared: { Type: "Succeed" },
+          },
+        };
+
+        expect(validateASLDefinition(definition)).toContainEqual({
+          message: 'State "Shared" is unreachable',
+          path: "States.Shared",
+          severity: "warning",
+        });
+      });
+
+      it("should flag Catch blocks without ErrorEquals instead of crashing", () => {
+        const definition = {
+          StartAt: "T",
+          States: {
+            T: {
+              Type: "Task",
+              Resource: "arn:aws:states:::lambda:invoke",
+              Catch: [{ Next: "Done" }],
+              Next: "Done",
+            },
+            Done: { Type: "Succeed" },
+          },
+        } as unknown as ASLDefinition;
+
+        expect(validateASLDefinition(definition)).toContainEqual({
+          message: "Catch blocks must have an ErrorEquals array",
+          path: "States.T.Catch[0].ErrorEquals",
+          severity: "error",
+        });
+      });
     });
 
     describe("Map state validation", () => {
-      it("should require Iterator for Map state", () => {
+      it("should require ItemProcessor or Iterator for Map state", () => {
         const definition: ASLDefinition = {
           StartAt: "MapState",
           States: {
@@ -432,8 +557,65 @@ describe("validateASLDefinition", () => {
 
         const errors = validateASLDefinition(definition);
         expect(errors).toContainEqual({
-          message: "Map states must have Iterator field",
-          path: "States.MapState.Iterator",
+          message:
+            "Map states must have an ItemProcessor (or legacy Iterator) field",
+          path: "States.MapState.ItemProcessor",
+          severity: "error",
+        });
+      });
+
+      it("should validate Map state with ItemProcessor", () => {
+        const definition: ASLDefinition = {
+          StartAt: "MapState",
+          States: {
+            MapState: {
+              Type: "Map",
+              ItemProcessor: {
+                ProcessorConfig: {
+                  Mode: "DISTRIBUTED",
+                  ExecutionType: "EXPRESS",
+                },
+                StartAt: "ProcessItem",
+                States: {
+                  ProcessItem: {
+                    Type: "Task",
+                    Resource: "arn:aws:states:::lambda:invoke",
+                    End: true,
+                  },
+                },
+              },
+              End: true,
+            },
+          },
+        };
+
+        expect(validateASLDefinition(definition)).toHaveLength(0);
+      });
+
+      it("should validate states inside the item processor", () => {
+        const definition: ASLDefinition = {
+          StartAt: "MapState",
+          States: {
+            MapState: {
+              Type: "Map",
+              ItemProcessor: {
+                StartAt: "ProcessItem",
+                States: {
+                  ProcessItem: {
+                    Type: "Task",
+                    Resource: "arn:aws:states:::lambda:invoke",
+                    Next: "Missing",
+                  },
+                },
+              },
+              End: true,
+            },
+          },
+        };
+
+        expect(validateASLDefinition(definition)).toContainEqual({
+          message: "Next references non-existent state: Missing",
+          path: "States.MapState.ItemProcessor.States.ProcessItem.Next",
           severity: "error",
         });
       });

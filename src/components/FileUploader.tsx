@@ -1,9 +1,12 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
+import { IconFileUpload } from "@tabler/icons-react";
 import { ViewerTheme } from "../types";
+import { themeToCssVars } from "./theme-vars";
+import { classNames } from "./flow-types";
 
-interface FileUploaderProps {
+export interface FileUploaderProps {
   onFileSelect: (file: File) => void;
-  theme: ViewerTheme;
+  theme: Partial<ViewerTheme>;
   accept?: string;
   disabled?: boolean;
   className?: string;
@@ -11,7 +14,7 @@ interface FileUploaderProps {
 }
 
 /**
- * A file uploader component for selecting ASL definition files
+ * A drop zone for selecting ASL definition files (JSON / YAML).
  */
 export const FileUploader: React.FC<FileUploaderProps> = ({
   onFileSelect,
@@ -21,14 +24,20 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   className,
   style,
 }) => {
-  const [isDragOver, setIsDragOver] = React.useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dragDepth = useRef(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const openPicker = useCallback(() => {
+    if (!disabled) inputRef.current?.click();
+  }, [disabled]);
 
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (file) {
-        onFileSelect(file);
-      }
+      if (file) onFileSelect(file);
+      // Allow selecting the same file again
+      event.target.value = "";
     },
     [onFileSelect],
   );
@@ -36,117 +45,88 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const handleDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+      dragDepth.current = 0;
       setIsDragOver(false);
       const file = event.dataTransfer.files[0];
-      if (file && !disabled) {
-        onFileSelect(file);
-      }
+      if (file && !disabled) onFileSelect(file);
     },
     [onFileSelect, disabled],
   );
 
-  const handleDragOver = useCallback(
+  const handleDragEnter = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
-      if (!disabled) {
-        setIsDragOver(true);
-      }
+      if (disabled) return;
+      dragDepth.current += 1;
+      setIsDragOver(true);
     },
     [disabled],
   );
 
   const handleDragLeave = useCallback(() => {
-    setIsDragOver(false);
+    // dragleave also fires when moving over children; count the depth
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setIsDragOver(false);
   }, []);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openPicker();
+      }
+    },
+    [openPicker],
+  );
 
   return (
     <div
-      className={className}
-      style={{
-        border: `2px dashed ${isDragOver ? theme.infoColor : theme.borderColor}`,
-        borderRadius: "12px",
-        padding: "32px",
-        textAlign: "center",
-        background: isDragOver ? `${theme.infoColor}10` : theme.background,
-        color: theme.textColor,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.6 : 1,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        fontFamily: "'Inter', sans-serif",
-        transform: isDragOver ? "scale(1.02)" : "scale(1)",
-        boxShadow: isDragOver
-          ? `0 8px 24px ${theme.shadowColor || "rgba(0,0,0,0.1)"}`
-          : "none",
-        ...style,
-      }}
+      className={classNames(
+        "asl-root",
+        "asl-dropzone",
+        isDragOver && "is-dragging",
+        disabled && "is-disabled",
+        className,
+      )}
+      style={{ ...themeToCssVars(theme), ...style }}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled}
+      aria-label="Upload a workflow definition file"
+      onClick={openPicker}
+      onKeyDown={handleKeyDown}
       onDrop={handleDrop}
-      onDragOver={handleDragOver}
+      onDragOver={(event) => event.preventDefault()}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
-      onMouseEnter={(e) => {
-        if (!disabled && !isDragOver) {
-          e.currentTarget.style.borderColor = theme.infoColor;
-          e.currentTarget.style.background = `${theme.infoColor}05`;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!disabled && !isDragOver) {
-          e.currentTarget.style.borderColor = theme.borderColor;
-          e.currentTarget.style.background = theme.background;
-        }
-      }}
-      onClick={() => {
-        if (!disabled) {
-          document.getElementById("file-input")?.click();
-        }
-      }}
     >
       <input
-        id="file-input"
+        ref={inputRef}
         type="file"
         accept={accept}
         onChange={handleFileChange}
         disabled={disabled}
-        style={{ display: "none" }}
+        hidden
+        tabIndex={-1}
       />
-
-      <div
-        style={{
-          fontSize: "32px",
-          marginBottom: "16px",
-          color: theme.infoColor,
-          filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
-        }}
-      >
-        📁
-      </div>
-      <div
-        style={{
-          fontSize: "16px",
-          marginBottom: "8px",
-          fontWeight: 600,
-          color: theme.textColor,
-        }}
-      >
-        Drop a file here or click to browse
-      </div>
-      <div
-        style={{
-          fontSize: "13px",
-          color: theme.textColorSecondary,
-          maxWidth: "200px",
-          margin: "0 auto",
-          lineHeight: "1.5",
-        }}
-      >
-        Supports JSON and YAML workflow definitions
-      </div>
+      <span className="asl-dropzone__icon">
+        <IconFileUpload size={22} aria-hidden />
+      </span>
+      <span className="asl-dropzone__title">
+        {isDragOver
+          ? "Drop to load the workflow"
+          : "Drop a file or click to browse"}
+      </span>
+      <span className="asl-dropzone__hint">
+        JSON or YAML · ASL definitions and CloudFormation / SAM templates
+      </span>
     </div>
   );
 };
 
-interface URLInputProps {
+export interface URLInputProps {
   onUrlSubmit: (url: string) => void;
-  theme: ViewerTheme;
+  theme: Partial<ViewerTheme>;
   disabled?: boolean;
   defaultValue?: string;
   placeholder?: string;
@@ -155,91 +135,44 @@ interface URLInputProps {
 }
 
 /**
- * A URL input component for loading ASL definitions from URLs
+ * A URL input for loading ASL definitions from URLs
  */
 export const URLInput: React.FC<URLInputProps> = ({
   onUrlSubmit,
   theme,
   disabled = false,
   defaultValue = "",
-  placeholder = "Enter URL to ASL definition (JSON or YAML)",
+  placeholder = "https://example.com/state-machine.json",
   className,
   style,
 }) => {
-  const [url, setUrl] = React.useState(defaultValue);
+  const [url, setUrl] = useState(defaultValue);
+  const canSubmit = url.trim().length > 0 && !disabled;
 
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault();
-      if (url.trim() && !disabled) {
-        onUrlSubmit(url.trim());
-      }
+      if (canSubmit) onUrlSubmit(url.trim());
     },
-    [url, onUrlSubmit, disabled],
+    [url, onUrlSubmit, canSubmit],
   );
 
   return (
     <form
       onSubmit={handleSubmit}
-      className={className}
-      style={{
-        display: "flex",
-        gap: "12px",
-        ...style,
-      }}
+      className={classNames("asl-root", "asl-url-form", className)}
+      style={{ ...themeToCssVars(theme), ...style }}
     >
       <input
         type="url"
+        className="asl-input"
         value={url}
-        onChange={(e) => setUrl(e.target.value)}
+        onChange={(event) => setUrl(event.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        style={{
-          flex: 1,
-          padding: "10px 16px",
-          border: `1px solid ${theme.borderColor}`,
-          borderRadius: "8px",
-          background: theme.surfaceColor,
-          color: theme.textColor,
-          fontSize: "14px",
-          fontFamily: "'Inter', sans-serif",
-          outline: "none",
-          transition: "border-color 0.2s",
-        }}
-        onFocus={(e) => (e.target.style.borderColor = theme.infoColor)}
-        onBlur={(e) => (e.target.style.borderColor = theme.borderColor)}
+        aria-label="Workflow definition URL"
       />
-      <button
-        type="submit"
-        disabled={!url.trim() || disabled}
-        style={{
-          padding: "10px 20px",
-          border: "none",
-          borderRadius: "8px",
-          background:
-            url.trim() && !disabled ? theme.infoColor : theme.borderColor,
-          color: "white",
-          cursor: url.trim() && !disabled ? "pointer" : "not-allowed",
-          fontSize: "14px",
-          fontWeight: 600,
-          fontFamily: "'Inter', sans-serif",
-          transition: "all 0.2s",
-          boxShadow:
-            url.trim() && !disabled ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-        }}
-        onMouseEnter={(e) => {
-          if (url.trim() && !disabled) {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (url.trim() && !disabled) {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-          }
-        }}
-      >
+      <button type="submit" className="asl-button" disabled={!canSubmit}>
         Load
       </button>
     </form>

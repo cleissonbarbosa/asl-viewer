@@ -1,409 +1,212 @@
-import React, { useCallback } from "react";
-import { Handle, Position } from "reactflow";
-import { StateNode, ViewerTheme } from "../types";
-import { nodeTransitionStyles } from "../core/layout";
+import React, { useCallback, useMemo } from "react";
+import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+
+import { StateNode } from "../types";
+import { getNodeKind, getStateSubtitle } from "../core/asl-utils";
+import { GROUP_LAYOUT, groupChildrenByBranch } from "../core/layout";
+import { StateIcon } from "./utils";
+import { NodeHandles, useActivate } from "./ReactFlowStateNode";
 import {
-  IconX,
-  IconLambda,
-  IconListDetails,
-  IconLocationQuestion,
-  IconStopwatch,
-  IconRosetteDiscountCheckFilled,
-  IconVectorBezier,
-  IconSitemap,
-  IconChevronDown,
-  IconChevronRight,
-} from "@tabler/icons-react";
-import { getBorderColor, getStateIcon } from "./utils";
+  StateNodeComponentProps,
+  areNodePropsEqual,
+  classNames,
+} from "./flow-types";
 
-interface ReactFlowGroupNodeProps {
-  data: {
-    stateNode: StateNode;
-    theme: ViewerTheme;
-    onStateClick?: (state: StateNode) => void;
-    onToggleExpand?: (nodeId: string) => void;
-    isHighlighted?: boolean;
-  };
-}
+export type ReactFlowGroupNodeProps = StateNodeComponentProps;
 
+const ChildCard: React.FC<{
+  child: StateNode;
+  onStateClick?: (state: StateNode) => void;
+  isHighlighted: boolean;
+  isSelected: boolean;
+}> = React.memo(function ChildCard({
+  child,
+  onStateClick,
+  isHighlighted,
+  isSelected,
+}) {
+  const { onClick, onKeyDown } = useActivate(child, onStateClick);
+  return (
+    <div
+      className={classNames(
+        "asl-child",
+        `asl-kind-${getNodeKind(child)}`,
+        isHighlighted && "is-highlighted",
+        isSelected && "is-selected",
+      )}
+      style={{ height: GROUP_LAYOUT.childHeight }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${child.type} state ${child.name}`}
+      title={child.name}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+    >
+      <span className="asl-child__icon">
+        <StateIcon stateNode={child} size={14} />
+      </span>
+      <span className="asl-child__text">
+        <span className="asl-child__name">{child.name}</span>
+        <span className="asl-child__meta">
+          {getStateSubtitle(child.definition)}
+        </span>
+      </span>
+    </div>
+  );
+});
+
+/**
+ * Parallel / Map state. Collapsed it looks like a stacked card; expanded it
+ * shows its branches (or item processor) inline.
+ */
 export const ReactFlowGroupNode: React.FC<ReactFlowGroupNodeProps> = React.memo(
-  ({ data }) => {
-    const { stateNode, theme, onStateClick, onToggleExpand, isHighlighted } =
-      data;
+  function ReactFlowGroupNode({
+    data,
+    selected,
+    sourcePosition,
+    targetPosition,
+  }) {
+    const {
+      stateNode,
+      onStateClick,
+      onToggleExpand,
+      highlightedIds,
+      selectedId,
+    } = data;
+    const { onClick, onKeyDown } = useActivate(stateNode, onStateClick);
+    const isExpanded = !!stateNode.isExpanded;
+    const children = useMemo(
+      () => stateNode.children ?? [],
+      [stateNode.children],
+    );
+    const isParallel = stateNode.type === "Parallel";
 
-    const handleClick = useCallback(() => {
-      onStateClick?.(stateNode);
-    }, [onStateClick, stateNode]);
+    const columns = useMemo(
+      () =>
+        isParallel
+          ? Array.from(groupChildrenByBranch(children).entries())
+          : ([[0, children]] as Array<[number, StateNode[]]>),
+      [children, isParallel],
+    );
 
-    const handleToggleExpand = useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleToggle = useCallback(
+      (event: React.MouseEvent | React.KeyboardEvent) => {
+        event.stopPropagation();
         onToggleExpand?.(stateNode.id);
       },
       [onToggleExpand, stateNode.id],
     );
 
-    const getNodeColor = (): string => {
-      return (
-        theme.nodeColors[
-          stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
-        ] || theme.nodeColors.pass
-      );
-    };
+    const summary = isParallel
+      ? getStateSubtitle(stateNode.definition)
+      : `${getStateSubtitle(stateNode.definition)} · ${children.length} state${children.length === 1 ? "" : "s"}`;
 
     return (
-      <>
-        {/* Input handles */}
-        <Handle
-          type="target"
-          position={Position.Top}
-          style={{
-            background: "transparent",
-            border: "none",
-            width: 1,
-            height: 1,
-            top: -2,
-          }}
-        />
-
+      <div
+        className={classNames(
+          "asl-group",
+          `asl-kind-${getNodeKind(stateNode)}`,
+          isExpanded ? "is-expanded" : "is-collapsed",
+          (data.isSelected || selected) && "is-selected",
+          data.isHighlighted && "is-highlighted",
+          data.isActiveMatch && "is-active-match",
+          data.isDimmed && "is-dimmed",
+        )}
+      >
         <div
-          onClick={handleClick}
-          style={{
-            minWidth: "260px",
-            minHeight: "80px",
-            background: `${getNodeColor()}80`, // More transparent background
-            border: `2px dashed ${getBorderColor(stateNode, theme)}`, // Dashed border for group
-            borderRadius: "8px",
-            boxShadow: isHighlighted
-              ? `0 0 0 4px ${theme.nodeBorderColors.parallel}40, 0 4px 6px -1px rgba(0, 0, 0, 0.1)`
-              : "none",
-            padding: "12px",
-            position: "relative",
-            cursor: "pointer",
-            fontFamily:
-              "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            ...nodeTransitionStyles,
-          }}
-          className="react-flow-group-node-custom"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = theme.textColor;
-            e.currentTarget.style.background = getNodeColor();
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = getBorderColor();
-            e.currentTarget.style.background = `${getNodeColor()}80`;
-          }}
+          className="asl-node asl-group__header"
+          style={{ height: GROUP_LAYOUT.headerHeight }}
+          role="button"
+          tabIndex={0}
+          aria-label={`${stateNode.type} state ${stateNode.name}`}
+          title={
+            stateNode.definition.Comment
+              ? `${stateNode.name}\n${stateNode.definition.Comment}`
+              : stateNode.name
+          }
+          onClick={onClick}
+          onKeyDown={onKeyDown}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
-              paddingBottom: "8px",
-              borderBottom: `1px solid ${theme.borderColor}`,
-            }}
+          <span className="asl-node__icon">
+            <StateIcon stateNode={stateNode} />
+          </span>
+          <span className="asl-node__text">
+            <span className="asl-node__name">{stateNode.name}</span>
+            <span className="asl-node__meta">{summary}</span>
+          </span>
+          <button
+            type="button"
+            className="asl-group__toggle nodrag"
+            aria-expanded={isExpanded}
+            aria-label={`${isExpanded ? "Collapse" : "Expand"} ${stateNode.name}`}
+            title={isExpanded ? "Collapse" : "Expand"}
+            onClick={handleToggle}
+            onKeyDown={(event) => event.stopPropagation()}
           >
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <div style={{ marginRight: "8px" }}>
-                {getStateIcon(stateNode, theme)}
-              </div>
-              <div
-                style={{
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: theme.textColor,
-                }}
-              >
-                {stateNode.id}
-              </div>
-            </div>
-
-            <div
-              onClick={handleToggleExpand}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "24px",
-                height: "24px",
-                borderRadius: "4px",
-                background: theme.background,
-                cursor: "pointer",
-                color: theme.textColorSecondary,
-                transition: "background 0.2s",
-                border: `1px solid ${theme.borderColor}`,
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = theme.borderColor)
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = theme.background)
-              }
-            >
-              {stateNode.isExpanded ? (
-                <IconChevronDown size={16} />
-              ) : (
-                <IconChevronRight size={16} />
-              )}
-            </div>
-          </div>
-
-          {stateNode.definition.Comment && (
-            <div
-              style={{
-                fontSize: "12px",
-                color: theme.textColorSecondary,
-                marginBottom: "8px",
-                lineHeight: "1.4",
-                fontStyle: "italic",
-              }}
-            >
-              {stateNode.definition.Comment}
-            </div>
-          )}
-
-          {!stateNode.isExpanded && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "11px",
-                color: theme.textColorMuted,
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                padding: "4px",
-                background: theme.background,
-                borderRadius: "4px",
-              }}
-            >
-              <span>{stateNode.children?.length || 0} Steps Inside</span>
-            </div>
-          )}
-
-          {/* Children container (only visible when expanded) */}
-          {stateNode.isExpanded && stateNode.children && (
-            <div
-              style={{
-                marginTop: "12px",
-                display: "flex",
-                flexDirection: stateNode.type === "Parallel" ? "row" : "column",
-                gap: "12px",
-                padding: "8px",
-                background: theme.background,
-                borderRadius: "6px",
-                border: `1px solid ${theme.borderColor}`,
-                minHeight: "60px",
-                alignItems:
-                  stateNode.type === "Parallel" ? "flex-start" : "stretch",
-                justifyContent:
-                  stateNode.type === "Parallel" ? "space-around" : "flex-start",
-              }}
-            >
-              {stateNode.type === "Parallel"
-                ? // Group children by branch for Parallel
-                  (() => {
-                    const branches = new Map<
-                      number,
-                      typeof stateNode.children
-                    >();
-                    stateNode.children.forEach((child) => {
-                      const branchIndex = child.branchIndex ?? 0;
-                      if (!branches.has(branchIndex)) {
-                        branches.set(branchIndex, []);
-                      }
-                      branches.get(branchIndex)!.push(child);
-                    });
-
-                    return Array.from(branches.entries()).map(
-                      ([branchIndex, branchChildren]) => (
-                        <div
-                          key={branchIndex}
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "8px",
-                            flex: 1,
-                            minWidth: "140px",
-                            position: "relative",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: "bold",
-                              color: theme.textColorMuted,
-                              marginBottom: "4px",
-                              textAlign: "center",
-                              textTransform: "uppercase",
-                              borderBottom: `1px dashed ${theme.borderColor}`,
-                              paddingBottom: "2px",
-                            }}
-                          >
-                            Branch {branchIndex + 1}
-                          </div>
-                          {branchChildren.map((child, index) => (
-                            <React.Fragment key={child.id}>
-                              <ChildNodeDisplay
-                                child={child}
-                                theme={theme}
-                                onStateClick={onStateClick}
-                              />
-                              {index < branchChildren.length - 1 && (
-                                <div
-                                  style={{
-                                    height: "12px",
-                                    width: "2px",
-                                    background: theme.borderColor,
-                                    margin: "0 auto",
-                                  }}
-                                />
-                              )}
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      ),
-                    );
-                  })()
-                : // Simple list for Map
-                  stateNode.children.map((child, index) => (
-                    <React.Fragment key={child.id}>
-                      <ChildNodeDisplay
-                        child={child}
-                        theme={theme}
-                        onStateClick={onStateClick}
-                      />
-                      {index < (stateNode.children?.length || 0) - 1 && (
-                        <div
-                          style={{
-                            height: "12px",
-                            width: "2px",
-                            background: theme.borderColor,
-                            margin: "0 auto",
-                          }}
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
-            </div>
-          )}
+            {isExpanded ? (
+              <IconChevronDown size={16} aria-hidden />
+            ) : (
+              <IconChevronRight size={16} aria-hidden />
+            )}
+          </button>
         </div>
 
-        {/* Output handles */}
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          style={{
-            background: "transparent",
-            border: "none",
-            width: 1,
-            height: 1,
-            bottom: -2,
-          }}
+        {isExpanded && (
+          <div
+            className="asl-group__body"
+            style={{
+              padding: GROUP_LAYOUT.padding,
+              gap: GROUP_LAYOUT.columnGap,
+            }}
+          >
+            {children.length === 0 ? (
+              <div className="asl-group__empty">No states</div>
+            ) : (
+              columns.map(([branchIndex, branchChildren]) => (
+                <div
+                  key={branchIndex}
+                  className="asl-group__column"
+                  style={{ width: GROUP_LAYOUT.columnWidth }}
+                >
+                  <div
+                    className="asl-group__label"
+                    style={{ height: GROUP_LAYOUT.columnLabelHeight }}
+                  >
+                    {isParallel
+                      ? `Branch ${branchIndex + 1}`
+                      : "Item processor"}
+                  </div>
+                  {branchChildren.map((child, index) => (
+                    <React.Fragment key={child.id}>
+                      {index > 0 && (
+                        <div
+                          className="asl-group__connector"
+                          style={{ height: GROUP_LAYOUT.childGap }}
+                          aria-hidden
+                        />
+                      )}
+                      <ChildCard
+                        child={child}
+                        onStateClick={onStateClick}
+                        isHighlighted={!!highlightedIds?.has(child.id)}
+                        isSelected={selectedId === child.id}
+                      />
+                    </React.Fragment>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        <NodeHandles
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
         />
-      </>
+      </div>
     );
   },
+  areNodePropsEqual,
 );
 
 ReactFlowGroupNode.displayName = "ReactFlowGroupNode";
-
-// Component for displaying child nodes
-const ChildNodeDisplay: React.FC<{
-  child: StateNode;
-  theme: ViewerTheme;
-  onStateClick?: (state: StateNode) => void;
-}> = ({ child, theme, onStateClick }) => {
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onStateClick?.(child);
-    },
-    [onStateClick, child],
-  );
-
-  const getChildIcon = (type: string): React.ReactElement => {
-    const iconSize = "16px";
-    const iconColor = theme.textColor;
-
-    switch (type) {
-      case "Pass":
-        return <IconListDetails color={theme.infoColor} size={iconSize} />;
-      case "Task":
-        return <IconLambda color={"#ed7100"} size={iconSize} />;
-      case "Choice":
-        return <IconLocationQuestion color={iconColor} size={iconSize} />;
-      case "Wait":
-        return <IconStopwatch color={iconColor} size={iconSize} />;
-      case "Succeed":
-        return (
-          <IconRosetteDiscountCheckFilled size={iconSize} color="#16a34a" />
-        );
-      case "Fail":
-        return <IconX size={iconSize} color="#dc2626" />;
-      default:
-        return <IconLambda color={"#ed7100"} size={iconSize} />;
-    }
-  };
-
-  return (
-    <div
-      onClick={handleClick}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "6px 8px",
-        background:
-          theme.nodeColors[
-            child.type.toLowerCase() as keyof typeof theme.nodeColors
-          ] || theme.nodeColors.pass,
-        border: `1px solid ${theme.borderColor}`,
-        borderRadius: "6px",
-        cursor: onStateClick ? "pointer" : "default",
-        transition: "all 0.2s ease",
-        fontSize: "12px",
-      }}
-      onMouseEnter={(e) => {
-        if (onStateClick) {
-          e.currentTarget.style.transform = "scale(1.05)";
-          e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (onStateClick) {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "none";
-        }
-      }}
-    >
-      {getChildIcon(child.type)}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontWeight: "bold",
-            color: theme.textColor,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-          title={child.name}
-        >
-          {child.name}
-        </div>
-        <div
-          style={{
-            fontSize: "10px",
-            color: theme.textColor,
-            opacity: 0.7,
-            textTransform: "uppercase",
-          }}
-        >
-          {child.type}
-        </div>
-      </div>
-    </div>
-  );
-};

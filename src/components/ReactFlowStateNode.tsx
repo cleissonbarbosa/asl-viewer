@@ -1,223 +1,179 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Handle, Position } from "reactflow";
+import { IconRepeat, IconShieldX } from "@tabler/icons-react";
 
-import { StateNode, ViewerTheme } from "../types";
-import { nodeTransitionStyles } from "../core/layout";
-// Import specific icons instead of the whole package
+import { StateNode } from "../types";
 import {
-  IconCheck,
-  IconPlayerPlay,
-  IconX,
-  IconLambda,
-  IconListDetails,
-  IconProgressHelp,
-  IconStopwatch,
-  IconRosetteDiscountCheckFilled,
-  IconVectorBezier,
-  IconSitemap,
-  IconJumpRope,
-} from "@tabler/icons-react";
-import { getBorderColor, getStateIcon } from "./utils";
+  END_NODE_ID,
+  START_NODE_ID,
+  getNodeKind,
+  getStateSubtitle,
+} from "../core/asl-utils";
+import { StateIcon } from "./utils";
+import {
+  StateNodeComponentProps,
+  areNodePropsEqual,
+  classNames,
+} from "./flow-types";
 
-interface ReactFlowStateNodeProps {
-  data: {
-    stateNode: StateNode;
-    theme: ViewerTheme;
-    onStateClick?: (state: StateNode) => void;
-    isHighlighted?: boolean;
-  };
+export type ReactFlowStateNodeProps = StateNodeComponentProps;
+
+/**
+ * Keyboard + mouse activation shared by every clickable state element.
+ */
+export function useActivate(
+  stateNode: StateNode,
+  onStateClick?: (state: StateNode) => void,
+) {
+  const onClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onStateClick?.(stateNode);
+    },
+    [onStateClick, stateNode],
+  );
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        onStateClick?.(stateNode);
+      }
+    },
+    [onStateClick, stateNode],
+  );
+  return { onClick, onKeyDown };
 }
 
+/**
+ * Invisible handles used as edge anchors.
+ */
+export const NodeHandles: React.FC<{
+  sourcePosition?: Position;
+  targetPosition?: Position;
+}> = ({ sourcePosition = Position.Bottom, targetPosition = Position.Top }) => (
+  <>
+    <Handle
+      type="target"
+      position={targetPosition}
+      className="asl-handle"
+      isConnectable={false}
+    />
+    <Handle
+      type="source"
+      position={sourcePosition}
+      className="asl-handle"
+      isConnectable={false}
+    />
+  </>
+);
+
+const TerminalNode: React.FC<StateNodeComponentProps> = ({
+  data,
+  sourcePosition,
+  targetPosition,
+}) => {
+  const isStart = data.stateNode.id === START_NODE_ID;
+  return (
+    <div
+      className={classNames(
+        "asl-terminal",
+        isStart ? "asl-terminal--start" : "asl-terminal--end",
+        data.isDimmed && "is-dimmed",
+      )}
+      role="img"
+      aria-label={isStart ? "Workflow start" : "Workflow end"}
+    >
+      <StateIcon stateNode={data.stateNode} size={12} />
+      <span>{isStart ? "Start" : "End"}</span>
+      <NodeHandles
+        sourcePosition={sourcePosition}
+        targetPosition={targetPosition}
+      />
+    </div>
+  );
+};
+
+/**
+ * Card used to render a single state in the graph.
+ */
 export const ReactFlowStateNode: React.FC<ReactFlowStateNodeProps> = React.memo(
-  ({ data }) => {
-    const { stateNode, theme, onStateClick, isHighlighted } = data;
+  function ReactFlowStateNode(props) {
+    const { data, selected, sourcePosition, targetPosition } = props;
+    const { stateNode, onStateClick } = data;
+    const { onClick, onKeyDown } = useActivate(stateNode, onStateClick);
+    const definition = stateNode.definition;
+    const subtitle = useMemo(() => getStateSubtitle(definition), [definition]);
 
-    const handleClick = useCallback(() => {
-      onStateClick?.(stateNode);
-    }, [onStateClick, stateNode]);
+    if (stateNode.id === START_NODE_ID || stateNode.id === END_NODE_ID) {
+      return <TerminalNode {...props} />;
+    }
 
-    const getNodeColor = (): string => {
-      if (stateNode.id === "__start__") {
-        return theme.surfaceColor;
-      }
-
-      if (stateNode.id === "__end__") {
-        return theme.errorColor;
-      }
-
-      return (
-        theme.nodeColors[
-          stateNode.type.toLowerCase() as keyof typeof theme.nodeColors
-        ] || theme.nodeColors.pass
-      );
-    };
-
-    const getBoxShadow = (): string => {
-      if (isHighlighted) {
-        return `0 0 0 4px ${theme.nodeBorderColors.task}60, 0 8px 16px ${theme.shadowColor}`;
-      }
-      if (stateNode.id === "__start__")
-        return `0 4px 12px ${theme.successColor}40`;
-      if (stateNode.id === "__end__") return `0 4px 12px ${theme.errorColor}40`;
-      return `0 2px 8px ${theme.shadowColor}, 0 1px 2px ${theme.shadowColor}`;
-    };
-
-    const isArtificial =
-      stateNode.id === "__start__" || stateNode.id === "__end__";
-    const isEnd = stateNode.id === "__end__";
+    const retries = Array.isArray(definition.Retry)
+      ? definition.Retry.length
+      : 0;
+    const catches = Array.isArray(definition.Catch)
+      ? definition.Catch.length
+      : 0;
+    const tooltip = definition.Comment
+      ? `${stateNode.name}\n${definition.Comment}`
+      : stateNode.name;
 
     return (
       <div
-        onClick={handleClick}
-        style={{
-          padding: isArtificial ? "8px" : "12px 16px",
-          borderRadius: isArtificial ? "50%" : "12px",
-          background: getNodeColor(),
-          border: isArtificial
-            ? `2px solid ${getBorderColor(stateNode, theme)}`
-            : `1px solid ${theme.borderColor}`,
-          borderLeft: isArtificial
-            ? undefined
-            : `4px solid ${getBorderColor(stateNode, theme)}`,
-          color: isEnd ? theme.surfaceColor : theme.textColor,
-          minWidth: isArtificial ? "auto" : "180px",
-          maxWidth: isArtificial ? "auto" : "280px",
-          boxShadow: getBoxShadow(),
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: isArtificial ? "center" : "flex-start",
-          justifyContent: "center",
-          fontSize: "14px",
-          fontFamily:
-            "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-          position: "relative",
-          ...nodeTransitionStyles,
-        }}
-        className="react-flow-node-custom"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.boxShadow = `0 8px 16px ${theme.shadowColor}, 0 4px 8px ${theme.shadowColor}`;
-          if (!isArtificial) {
-            e.currentTarget.style.background =
-              theme.nodeHoverColors[
-                stateNode.type.toLowerCase() as keyof typeof theme.nodeHoverColors
-              ] || theme.nodeHoverColors.pass;
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = getBoxShadow();
-          if (!isArtificial) {
-            e.currentTarget.style.background = getNodeColor();
-          }
-        }}
+        className={classNames(
+          "asl-node",
+          `asl-kind-${getNodeKind(stateNode)}`,
+          (data.isSelected || selected) && "is-selected",
+          data.isHighlighted && "is-highlighted",
+          data.isActiveMatch && "is-active-match",
+          data.isDimmed && "is-dimmed",
+        )}
+        role="button"
+        tabIndex={0}
+        aria-label={`${stateNode.type} state ${stateNode.name}`}
+        aria-pressed={data.isSelected ? true : undefined}
+        title={tooltip}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
       >
-        <Handle
-          type="target"
-          position={Position.Top}
-          style={{
-            background: "transparent",
-            border: "none",
-            width: 1,
-            height: 1,
-            top: -2,
-          }}
-        />
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            marginBottom: isArtificial ? 0 : "4px",
-          }}
-        >
-          <div
-            style={{
-              marginRight: isArtificial ? 0 : "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {getStateIcon(stateNode, theme)}
-          </div>
-
-          {!isArtificial && (
-            <div
-              style={{
-                fontWeight: 600,
-                fontSize: "14px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                flex: 1,
-              }}
-            >
-              {stateNode.id}
-            </div>
-          )}
-        </div>
-
-        {!isArtificial && stateNode.definition.Comment && (
-          <div
-            style={{
-              fontSize: "12px",
-              color: theme.textColorSecondary,
-              marginTop: "4px",
-              lineHeight: "1.4",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {stateNode.definition.Comment}
-          </div>
+        <span className="asl-node__icon">
+          <StateIcon stateNode={stateNode} />
+        </span>
+        <span className="asl-node__text">
+          <span className="asl-node__name">{stateNode.name}</span>
+          <span className="asl-node__meta">{subtitle}</span>
+        </span>
+        {(retries > 0 || catches > 0) && (
+          <span className="asl-node__badges">
+            {retries > 0 && (
+              <span
+                className="asl-badge asl-badge--retry"
+                title={`${retries} retry polic${retries === 1 ? "y" : "ies"}`}
+              >
+                <IconRepeat size={11} stroke={2.2} aria-hidden />
+                {retries}
+              </span>
+            )}
+            {catches > 0 && (
+              <span
+                className="asl-badge asl-badge--catch"
+                title={`${catches} catcher${catches === 1 ? "" : "s"}`}
+              >
+                <IconShieldX size={11} stroke={2.2} aria-hidden />
+                {catches}
+              </span>
+            )}
+          </span>
         )}
-
-        {!isArtificial && (
-          <div
-            style={{
-              marginTop: "8px",
-              fontSize: "10px",
-              color: theme.textColorMuted,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              fontWeight: 600,
-              display: "flex",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            <span>
-              {stateNode.type}
-              {stateNode.type === "Task" &&
-              stateNode.definition.Resource &&
-              typeof stateNode.definition.Resource === "string" &&
-              stateNode.definition.Resource.includes("states:startExecution.")
-                ? " - Step Function"
-                : ""}
-            </span>
-            {stateNode.definition.End && <span>END</span>}
-          </div>
-        )}
-
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          style={{
-            background: "transparent",
-            border: "none",
-            width: 1,
-            height: 1,
-            bottom: -2,
-          }}
+        <NodeHandles
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
         />
       </div>
     );
   },
+  areNodePropsEqual,
 );
 
 ReactFlowStateNode.displayName = "ReactFlowStateNode";

@@ -1,29 +1,30 @@
-export { createGraphLayout, createSimpleLayout } from "./graph-layout";
+export {
+  createGraphLayout,
+  createSimpleLayout,
+  type GraphLayoutOptions,
+} from "./graph-layout";
 export {
   createStateNode,
   createGroupNode,
   createArtificialNodes,
 } from "./node-factory";
 export { createConnections } from "./connections";
-export { calculateHierarchicalLayout } from "./hierarchical-layout";
 export {
-  createParallelChildNodes,
-  createMapChildNodes,
-  positionChildNodes,
-} from "./group-nodes";
-export { getStateSize, calculateGroupBounds } from "./sizing";
+  calculateHierarchicalLayout,
+  type HierarchicalLayoutOptions,
+  type HierarchicalLayoutResult,
+} from "./hierarchical-layout";
+export { createParallelChildNodes, createMapChildNodes } from "./group-nodes";
 export {
-  calculateReactiveLayout,
-  calculateImprovedSpacing,
-  type LayoutCache,
-} from "./reactive-layout";
+  getStateSize,
+  calculateGroupBounds,
+  groupChildrenByBranch,
+  GROUP_LAYOUT,
+  TERMINAL_NODE_SIZE,
+} from "./sizing";
+export { calculateImprovedSpacing } from "./spacing";
 export {
-  nodeTransitionStyles,
-  calculateAnimationDelays,
-  getNodeTransform,
-  easingFunctions,
-  NodeAnimationManager,
   ANIMATION_DURATION,
-  STAGGER_DELAY,
-  type AnimationState,
+  easingFunctions,
+  prefersReducedMotion,
 } from "./animations";

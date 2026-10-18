@@ -46,14 +46,21 @@ jobs:
       - name: Check build artifacts
         run: |
           ls -la dist/
-          if [ ! -f "dist/index.js" ]; then
-            echo "Build failed: dist/index.js not found"
-            exit 1
-          fi
-          if [ ! -f "dist/index.d.ts" ]; then
-            echo "Build failed: dist/index.d.ts not found"
-            exit 1
-          fi
+          # Every file published through package.json "files" must exist
+          node -e "
+            const fs = require('fs');
+            const { files } = require('./package.json');
+            const missing = files.filter((file) => !fs.existsSync(file));
+            if (missing.length) {
+              console.error('Build failed, missing: ' + missing.join(', '));
+              process.exit(1);
+            }
+          "
+
+      - name: Smoke test package entry points
+        run: |
+          node -e "const lib = require('./dist/index.cjs'); if (typeof lib.WorkflowViewer !== 'function') { console.error('CommonJS entry is broken'); process.exit(1); }"
+          node --input-type=module -e "const lib = await import('asl-viewer'); if (typeof lib.WorkflowViewer !== 'function') { console.error('ESM entry is broken'); process.exit(1); }"
 
   build-storybook:
     runs-on: ubuntu-latest

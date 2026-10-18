@@ -1,4 +1,5 @@
 import { ASLDefinition, StateNode, Connection, GraphLayout } from "../../types";
+import { END_NODE_ID, START_NODE_ID, getItemProcessor } from "../asl-utils";
 import {
   createStateNode,
   createGroupNode,
@@ -7,15 +8,71 @@ import {
 import { createConnections } from "./connections";
 import { calculateHierarchicalLayout } from "./hierarchical-layout";
 import { createParallelChildNodes, createMapChildNodes } from "./group-nodes";
-import { calculateImprovedSpacing } from "./reactive-layout";
+import { calculateImprovedSpacing } from "./spacing";
+
+export interface GraphLayoutOptions {
+  /** Ids of Parallel / Map states that should be laid out expanded. */
+  expandedGroups?: Iterable<string>;
+}
 
 /**
- * Converts ASL definition to graph layout using a hierarchical approach optimized for React Flow
+ * Creates the node for a state: a group node for Parallel / Map states,
+ * a regular node otherwise.
+ */
+function createNode(
+  stateName: string,
+  definition: ASLDefinition,
+  expandedGroups: ReadonlySet<string>,
+): StateNode {
+  const state = definition.States[stateName];
+  const expanded = expandedGroups.has(stateName);
+
+  if (state.Type === "Parallel" && Array.isArray(state.Branches)) {
+    const children = createParallelChildNodes(stateName, state.Branches);
+    return createGroupNode(
+      stateName,
+      state,
+      definition.StartAt,
+      children,
+      expanded,
+    );
+  }
+
+  const processor = state.Type === "Map" ? getItemProcessor(state) : undefined;
+  if (processor) {
+    const children = createMapChildNodes(stateName, processor);
+    return createGroupNode(
+      stateName,
+      state,
+      definition.StartAt,
+      children,
+      expanded,
+    );
+  }
+
+  return createStateNode(stateName, state, definition.StartAt);
+}
+
+function isValidState(definition: ASLDefinition, stateName: string): boolean {
+  const state = definition.States[stateName];
+  return !!state && typeof state === "object";
+}
+
+/**
+ * Converts ASL definition to graph layout using a layered approach optimized
+ * for React Flow. Edges include bend points for orthogonal routing.
  */
 export function createGraphLayout(
   definition: ASLDefinition,
   direction: "TB" | "LR" = "TB",
+  options: GraphLayoutOptions = {},
 ): GraphLayout {
+  const expandedGroups = new Set(options.expandedGroups ?? []);
+  const states = definition.States ?? {};
+  const stateNames = Object.keys(states).filter((name) =>
+    isValidState(definition, name),
+  );
+
   const nodes: StateNode[] = [];
   const edges: Connection[] = [];
 
@@ -25,69 +82,40 @@ export function createGraphLayout(
 
   // Create connection from artificial start to actual start state
   edges.push({
-    from: "__start__",
+    from: START_NODE_ID,
     to: definition.StartAt,
     type: "next",
   });
 
-  // Find end states and create connections to artificial end node
-  const endStates = findEndStates(definition);
-
   // Create nodes for all states
-  Object.entries(definition.States).forEach(([stateName, state]) => {
-    if (state.Type === "Parallel" && state.Branches) {
-      // Create a group node for Parallel state
-      const childNodes = createParallelChildNodes(stateName, state.Branches);
-      const groupNode = createGroupNode(
-        stateName,
-        state,
-        definition.StartAt,
-        childNodes,
-      );
-      nodes.push(groupNode);
-    } else if (state.Type === "Map" && state.Iterator) {
-      // Create a group node for Map state
-      const childNodes = createMapChildNodes(stateName, state.Iterator);
-      const groupNode = createGroupNode(
-        stateName,
-        state,
-        definition.StartAt,
-        childNodes,
-      );
-      nodes.push(groupNode);
-    } else {
-      // Regular state node
-      const node = createStateNode(stateName, state, definition.StartAt);
-      nodes.push(node);
-    }
-  });
+  for (const stateName of stateNames) {
+    nodes.push(createNode(stateName, definition, expandedGroups));
+  }
 
   // Create edges between states
-  Object.entries(definition.States).forEach(([stateName, state]) => {
-    const connections = createConnections(stateName, state);
-    edges.push(...connections);
-  });
+  for (const stateName of stateNames) {
+    edges.push(...createConnections(stateName, states[stateName]));
+  }
 
   // Add connections from end states to artificial end node
-  endStates.forEach((endState) => {
+  for (const endState of findEndStates(definition)) {
     edges.push({
       from: endState,
-      to: "__end__",
+      to: END_NODE_ID,
       type: "next",
     });
-  });
+  }
 
-  // Calculate hierarchical layout
   const layout = calculateHierarchicalLayout(
     nodes,
     edges,
-    "__start__",
+    START_NODE_ID,
     direction,
   );
 
   return {
     nodes: layout.nodes,
-    edges,
+    edges: layout.edges,
     width: layout.width,
     height: layout.height,
   };
@@ -97,22 +125,21 @@ export function createGraphLayout(
  * Creates a simplified layout for basic use cases without complex dependencies
  */
 export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
+  const states = definition.States ?? {};
+  const stateEntries = Object.keys(states)
+    .filter((name) => isValidState(definition, name))
+    .map((name) => [name, states[name]] as const);
   const nodes: StateNode[] = [];
   const edges: Connection[] = [];
+  const noExpandedGroups = new Set<string>();
 
-  // Calculate improved spacing first
-  const tempNodes = Object.entries(definition.States).map(
-    ([stateName, state]) =>
-      createStateNode(stateName, state, definition.StartAt),
+  // Calculate spacing first
+  const tempNodes = stateEntries.map(([stateName, state]) =>
+    createStateNode(stateName, state, definition.StartAt),
   );
-
-  // Create temporary edges to analyze spacing needs
-  const tempEdges: Connection[] = [];
-  Object.entries(definition.States).forEach(([stateName, state]) => {
-    const connections = createConnections(stateName, state);
-    tempEdges.push(...connections);
-  });
-
+  const tempEdges = stateEntries.flatMap(([stateName, state]) =>
+    createConnections(stateName, state),
+  );
   const spacingConfig = calculateImprovedSpacing(tempNodes, tempEdges);
 
   let currentY = 50;
@@ -122,137 +149,56 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
 
   // Create artificial start node
   const { start: startNode, end: endNode } = createArtificialNodes();
-  startNode.position = { x: centerX - 40, y: currentY };
-  startNode.size = { width: 40, height: 40 };
+  startNode.position = { x: centerX - startNode.size.width / 2, y: currentY };
   nodes.push(startNode);
 
   // Create connection from artificial start to actual start state
   edges.push({
-    from: "__start__",
+    from: START_NODE_ID,
     to: definition.StartAt,
     type: "next",
   });
 
-  // Find end states
-  const endStates = findEndStates(definition);
-
-  // Create edges between states first to check for labels
-  Object.entries(definition.States).forEach(([stateName, state]) => {
-    const connections = createConnections(stateName, state);
-    edges.push(...connections);
-  });
+  // Create edges between states
+  edges.push(...tempEdges);
 
   // Add connections from end states to artificial end node
-  endStates.forEach((endState) => {
+  for (const endState of findEndStates(definition)) {
     edges.push({
       from: endState,
-      to: "__end__",
+      to: END_NODE_ID,
       type: "next",
     });
-  });
-
-  // Helper function to check if there are labeled edges from a specific node
-  const hasLabeledEdgesFrom = (nodeId: string): boolean => {
-    return edges.some(
-      (edge) =>
-        edge.from === nodeId && edge.label && edge.label.trim().length > 0,
-    );
-  };
-
-  // Position start node
-  currentY += baseSpacing;
-  if (hasLabeledEdgesFrom("__start__")) {
-    currentY += labeledEdgeSpacing;
   }
 
+  const labeledSources = new Set(
+    edges.filter((edge) => edge.label?.trim()).map((edge) => edge.from),
+  );
+
+  currentY += startNode.size.height + baseSpacing;
+
   // Create nodes in simple vertical layout with dynamic spacing
-  const stateEntries = Object.entries(definition.States);
-  stateEntries.forEach(([stateName, state], index) => {
-    let currentNodeHeight = 0;
+  for (const [stateName] of stateEntries) {
+    const node = createNode(stateName, definition, noExpandedGroups);
+    node.position = { x: centerX - node.size.width / 2, y: currentY };
+    nodes.push(node);
 
-    if (state.Type === "Parallel" && state.Branches) {
-      // Create a group node for Parallel state
-      const childNodes = createParallelChildNodes(stateName, state.Branches);
-      const groupNode = createGroupNode(
-        stateName,
-        state,
-        definition.StartAt,
-        childNodes,
-      );
-      groupNode.position = {
-        x: centerX - groupNode.size.width / 2,
-        y: currentY,
-      };
-      nodes.push(groupNode);
-      currentNodeHeight = groupNode.size.height;
-    } else if (state.Type === "Map" && state.Iterator) {
-      // Create a group node for Map state
-      const childNodes = createMapChildNodes(stateName, state.Iterator);
-      const groupNode = createGroupNode(
-        stateName,
-        state,
-        definition.StartAt,
-        childNodes,
-      );
-      groupNode.position = {
-        x: centerX - groupNode.size.width / 2,
-        y: currentY,
-      };
-      nodes.push(groupNode);
-      currentNodeHeight = groupNode.size.height;
-    } else {
-      // Regular state node
-      const node = createStateNode(stateName, state, definition.StartAt);
-      node.position = { x: centerX - node.size.width / 2, y: currentY };
-      nodes.push(node);
-      currentNodeHeight = node.size.height;
-    }
+    let spacingToNext = baseSpacing;
+    if (labeledSources.has(stateName)) spacingToNext += labeledEdgeSpacing;
+    if (node.isGroup) spacingToNext += 20; // Extra space for group nodes
 
-    // Calculate spacing for next node
-    if (index < stateEntries.length - 1) {
-      let spacingToNext = baseSpacing;
-      if (hasLabeledEdgesFrom(stateName)) {
-        spacingToNext += labeledEdgeSpacing;
-      }
-
-      // Add extra space for group nodes
-      if (
-        (state.Type === "Parallel" && state.Branches) ||
-        (state.Type === "Map" && state.Iterator)
-      ) {
-        spacingToNext += 20;
-      }
-
-      currentY += currentNodeHeight + spacingToNext;
-    } else {
-      // For the last state, check if it has labeled edges to end
-      let spacingToEnd = baseSpacing;
-      if (hasLabeledEdgesFrom(stateName)) {
-        spacingToEnd += labeledEdgeSpacing;
-      }
-
-      // Add extra space for group nodes
-      if (
-        (state.Type === "Parallel" && state.Branches) ||
-        (state.Type === "Map" && state.Iterator)
-      ) {
-        spacingToEnd += 20;
-      }
-
-      currentY += currentNodeHeight + spacingToEnd;
-    }
-  });
+    currentY += node.size.height + spacingToNext;
+  }
 
   // Create artificial end node
-  endNode.position = { x: centerX - 40, y: currentY };
-  endNode.size = { width: 40, height: 40 };
+  endNode.position = { x: centerX - endNode.size.width / 2, y: currentY };
   nodes.push(endNode);
 
   return {
     nodes,
     edges,
     width: 400,
-    height: currentY + 100,
+    height: currentY + endNode.size.height + 50,
   };
 }
 
@@ -261,11 +207,10 @@ export function createSimpleLayout(definition: ASLDefinition): GraphLayout {
  */
 function findEndStates(definition: ASLDefinition): string[] {
   const endStates: string[] = [];
-  Object.entries(definition.States).forEach(([stateName, state]) => {
+  Object.entries(definition.States ?? {}).forEach(([stateName, state]) => {
     if (
-      state.End === true ||
-      state.Type === "Succeed" ||
-      state.Type === "Fail"
+      state &&
+      (state.End === true || state.Type === "Succeed" || state.Type === "Fail")
     ) {
       endStates.push(stateName);
     }

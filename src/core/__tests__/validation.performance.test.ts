@@ -1,10 +1,10 @@
 import { validateASLDefinition } from "../validation";
-import { ASLDefinition } from "../../types";
+import { ASLDefinition, StateDefinition } from "../../types";
 
 describe("Performance tests for validateASLDefinition", () => {
   // Helper function to create a large workflow for performance testing
   function createLargeWorkflow(numStates: number): ASLDefinition {
-    const states: Record<string, any> = {};
+    const states: Record<string, StateDefinition> = {};
 
     // Create a chain of states
     for (let i = 0; i < numStates; i++) {
@@ -26,7 +26,7 @@ describe("Performance tests for validateASLDefinition", () => {
   }
 
   function createComplexWorkflow(numStates: number): ASLDefinition {
-    const states: Record<string, any> = {};
+    const states: Record<string, StateDefinition> = {};
 
     // Create a workflow with choice states that branch and merge
     states["Start"] = {

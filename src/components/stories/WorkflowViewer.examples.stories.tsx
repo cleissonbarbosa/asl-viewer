@@ -3,6 +3,7 @@ import { WorkflowViewer } from "../WorkflowViewer";
 import {
   ecommerceWorkflowDefinition,
   dataProcessingWorkflowDefinition,
+  modernWorkflowDefinition,
   yamlDefinition,
 } from "./workflow-definitions";
 import { WorkflowViewerProps } from "../../types";
@@ -191,14 +192,57 @@ export const DataProcessingHorizontal: Story = {
     height: 600,
     layoutDirection: "LR",
     showToolbar: true,
-    showControls: true,
-    showMiniMap: true,
+    useControls: true,
+    useMiniMap: true,
   } as WorkflowViewerProps,
   parameters: {
     docs: {
       description: {
         story:
           "Data processing pipeline displayed in a horizontal (Left-to-Right) layout",
+      },
+    },
+  },
+};
+
+/**
+ * Modern ASL features: JSONata, Distributed Map, SDK integrations
+ */
+export const ModernASL: Story = {
+  args: {
+    definition: modernWorkflowDefinition,
+    width: 1000,
+    height: 760,
+    theme: "light",
+    showToolbar: true,
+    useMiniMap: true,
+  } as WorkflowViewerProps,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "JSONata conditions, a Distributed Map with `ItemProcessor`, AWS SDK integrations, a callback task, a polling loop and nested executions. Each Task shows the integrated service.",
+      },
+    },
+  },
+};
+
+/**
+ * Fills its container
+ */
+export const Responsive: Story = {
+  args: {
+    definition: ecommerceWorkflowDefinition,
+    width: "100%",
+    height: 640,
+    showToolbar: true,
+  } as WorkflowViewerProps,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`width` and `height` accept any CSS length, so the viewer can fill its container.",
       },
     },
   },

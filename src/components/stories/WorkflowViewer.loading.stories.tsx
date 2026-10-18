@@ -60,7 +60,10 @@ export const LoadFromURL: Story = {
 
     return (
       <div
-        style={{ width: args.width || 800, height: (args.height || 600) + 100 }}
+        style={{
+          width: args.width || 800,
+          height: Number(args.height || 600) + 100,
+        }}
       >
         <div style={{ marginBottom: "16px" }}>
           <URLInput
@@ -107,7 +110,10 @@ export const LoadFromFile: Story = {
 
     return (
       <div
-        style={{ width: args.width || 800, height: (args.height || 600) + 200 }}
+        style={{
+          width: args.width || 800,
+          height: Number(args.height || 600) + 200,
+        }}
       >
         <div style={{ marginBottom: "16px" }}>
           <FileUploader
@@ -163,7 +169,7 @@ export const URLLoadingDarkTheme: Story = {
       <div
         style={{
           width: args.width || 800,
-          height: (args.height || 600) + 100,
+          height: Number(args.height || 600) + 100,
           backgroundColor: "#1a1a1a",
           padding: "20px",
           borderRadius: "8px",
@@ -223,7 +229,10 @@ export const InteractiveFileLoading: Story = {
 
     return (
       <div
-        style={{ width: args.width || 800, height: (args.height || 600) + 200 }}
+        style={{
+          width: args.width || 800,
+          height: Number(args.height || 600) + 200,
+        }}
       >
         <div style={{ marginBottom: "16px" }}>
           <FileUploader

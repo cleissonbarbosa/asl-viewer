@@ -8,18 +8,28 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.esm.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
-    "./package.json": "./package.json",
+    "./style.css": "./dist/index.css",
     "./dist/index.css": "./dist/index.css",
-    "./dist/index.esm.css": "./dist/index.esm.css"
+    "./dist/index.esm.css": "./dist/index.esm.css",
+    "./package.json": "./package.json"
   },
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist/index.cjs",
     "dist/index.esm.js",
     "dist/index.d.ts",
+    "dist/index.d.cts",
     "dist/index.css",
     "dist/index.esm.css"
   ],
@@ -47,7 +57,11 @@
     "workflow",
     "react",
     "visualization",
-    "asl"
+    "asl",
+    "amazon-states-language",
+    "state-machine",
+    "diagram",
+    "aws-step-functions"
   ],
   "author": "Cleisson Barbosa",
   "license": "Apache-2.0",
@@ -105,9 +119,6 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@reactflow/background": "^11.0.0",
-    "@reactflow/controls": "^11.0.0",
-    "@reactflow/core": "^11.0.0",
     "@tabler/icons-react": "^3.33.0",
     "js-yaml": "^4.1.0",
     "reactflow": "^11.0.0"

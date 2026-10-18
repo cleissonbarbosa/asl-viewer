@@ -146,7 +146,7 @@ function parseYAML(yamlContent: string): any {
           console.warn("YAML parsing warning:", warning);
         },
       });
-    } catch (fallbackError) {
+    } catch {
       // Last resort: try to handle unknown tags by replacing them
       try {
         // Replace CloudFormation intrinsic functions with placeholders
@@ -157,7 +157,7 @@ function parseYAML(yamlContent: string): any {
         return yaml.load(sanitizedYaml, {
           schema: yaml.DEFAULT_SCHEMA,
         });
-      } catch (lastError) {
+      } catch {
         throw new Error(
           `Failed to parse YAML: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
@@ -169,6 +169,7 @@ function parseYAML(yamlContent: string): any {
 /**
  * Check if the content appears to be a CloudFormation template
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isCloudFormationTemplate(content: any): boolean {
   return (
     typeof content === "object" &&
@@ -180,8 +181,60 @@ function isCloudFormationTemplate(content: any): boolean {
 }
 
 /**
+ * Resolves a CloudFormation `DefinitionString`: a plain JSON string,
+ * `!Sub` / `Fn::Sub` (string or [string, variables]) or `Fn::Join`.
+ * Unresolvable references are kept as `${...}` placeholders.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseDefinitionStringProperty(value: any): unknown {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const placeholder = (ref: any): string => {
+    const getAtt = ref?.["Fn::GetAtt"];
+    const name =
+      typeof ref?.Ref === "string"
+        ? ref.Ref
+        : Array.isArray(getAtt)
+          ? getAtt.join(".")
+          : typeof getAtt === "string"
+            ? getAtt
+            : "Reference";
+    return `\${${name}}`;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toText = (part: any): string | null => {
+    if (typeof part === "string") return part;
+    if (!part || typeof part !== "object") return null;
+    if ("Fn::Sub" in part) {
+      const sub = part["Fn::Sub"];
+      return typeof sub === "string"
+        ? sub
+        : Array.isArray(sub) && typeof sub[0] === "string"
+          ? sub[0]
+          : null;
+    }
+    if ("Fn::Join" in part && Array.isArray(part["Fn::Join"])) {
+      const [separator, parts] = part["Fn::Join"];
+      if (!Array.isArray(parts)) return null;
+      return parts
+        .map((p: unknown) => (typeof p === "string" ? p : placeholder(p)))
+        .join(typeof separator === "string" ? separator : "");
+    }
+    return null;
+  };
+
+  const text = toText(value);
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Extract ASL definition from CloudFormation template
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractASLFromCloudFormation(template: any): ASLDefinition {
   if (!isCloudFormationTemplate(template)) {
     throw new Error("Not a CloudFormation template");
@@ -193,23 +246,25 @@ function extractASLFromCloudFormation(template: any): ASLDefinition {
   }
 
   // Look for AWS::StepFunctions::StateMachine or AWS::Serverless::StateMachine
-  for (const [resourceName, resource] of Object.entries(resources)) {
+  for (const resource of Object.values(resources)) {
     const res = resource as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (
-      res.Type === "AWS::StepFunctions::StateMachine" ||
-      res.Type === "AWS::Serverless::StateMachine"
+      res?.Type === "AWS::StepFunctions::StateMachine" ||
+      res?.Type === "AWS::Serverless::StateMachine"
     ) {
-      if (res.Properties && res.Properties.Definition) {
-        const definition = res.Properties.Definition;
+      const properties = res.Properties ?? {};
+      const definition =
+        properties.Definition ??
+        parseDefinitionStringProperty(properties.DefinitionString);
 
-        // Check if it's a valid ASL definition
-        if (
-          typeof definition === "object" &&
-          definition.StartAt &&
-          definition.States
-        ) {
-          return definition as ASLDefinition;
-        }
+      // Check if it's a valid ASL definition
+      if (
+        definition &&
+        typeof definition === "object" &&
+        definition.StartAt &&
+        definition.States
+      ) {
+        return definition as ASLDefinition;
       }
     }
   }
@@ -221,11 +276,15 @@ function extractASLFromCloudFormation(template: any): ASLDefinition {
 }
 
 /**
- * Load ASL definition from a URL
+ * Load ASL definition from a URL. `init` is forwarded to `fetch`, e.g. to
+ * pass headers or an `AbortSignal`.
  */
-export async function loadFromURL(url: string): Promise<ASLDefinition> {
+export async function loadFromURL(
+  url: string,
+  init?: Parameters<typeof fetch>[1],
+): Promise<ASLDefinition> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, init);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -269,6 +328,7 @@ export async function loadFromURL(url: string): Promise<ASLDefinition> {
         "or a CloudFormation template containing a Step Functions state machine.",
     );
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
     throw new Error(
       `Failed to load from URL: ${error instanceof Error ? error.message : "Unknown error"}`,
     );

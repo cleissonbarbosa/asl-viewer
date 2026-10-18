@@ -1,5 +1,16 @@
 import { StateDefinition, StateNode } from "../../types";
-import { getStateSize, calculateGroupBounds } from "./sizing";
+import { END_NODE_ID, START_NODE_ID } from "../asl-utils";
+import {
+  getStateSize,
+  calculateGroupBounds,
+  TERMINAL_NODE_SIZE,
+} from "./sizing";
+
+function isTerminal(state: StateDefinition): boolean {
+  return (
+    state.End === true || state.Type === "Succeed" || state.Type === "Fail"
+  );
+}
 
 /**
  * Creates a regular state node
@@ -9,42 +20,32 @@ export function createStateNode(
   state: StateDefinition,
   startAt: string,
 ): StateNode {
-  const isStartState = stateName === startAt;
-  const isEndState =
-    state.End === true || state.Type === "Succeed" || state.Type === "Fail";
-  const size = getStateSize(state.Type, isStartState, isEndState);
-
   return {
     id: stateName,
     name: stateName,
     type: state.Type,
     definition: state,
     position: { x: 0, y: 0 }, // Will be set by layout algorithm
-    size,
+    size: getStateSize(state.Type),
     connections: [],
-    isStartState,
-    isEndState,
+    isStartState: stateName === startAt,
+    isEndState: isTerminal(state),
   };
 }
 
 /**
- * Creates a group node that contains parent and child nodes
+ * Creates a group node (Parallel / Map) that renders its children inline
+ * when expanded.
  */
 export function createGroupNode(
   stateName: string,
   state: StateDefinition,
   startAt: string,
   children: StateNode[],
+  isExpanded = false,
 ): StateNode {
-  const isStartState = stateName === startAt;
-  const isEndState =
-    state.End === true || state.Type === "Succeed" || state.Type === "Fail";
-
-  // Calculate group bounds based on children (for expanded state)
+  // Size of the container when expanded
   const groupBounds = calculateGroupBounds(state.Type, children);
-
-  // Start with collapsed size (same as regular node)
-  const collapsedSize = getStateSize(state.Type, isStartState, isEndState);
 
   return {
     id: stateName,
@@ -52,14 +53,14 @@ export function createGroupNode(
     type: state.Type,
     definition: state,
     position: { x: 0, y: 0 }, // Will be set by layout algorithm
-    size: collapsedSize, // Start collapsed
+    size: isExpanded ? { ...groupBounds } : getStateSize(state.Type),
     connections: [],
-    isStartState,
-    isEndState,
+    isStartState: stateName === startAt,
+    isEndState: isTerminal(state),
     isGroup: true,
     groupBounds,
     children,
-    isExpanded: false, // Start collapsed
+    isExpanded,
   };
 }
 
@@ -68,24 +69,24 @@ export function createGroupNode(
  */
 export function createArtificialNodes(): { start: StateNode; end: StateNode } {
   const startNode: StateNode = {
-    id: "__start__",
+    id: START_NODE_ID,
     name: "START",
     type: "Pass", // Using Pass as a placeholder type
     definition: { Type: "Pass" },
     position: { x: 0, y: 0 },
-    size: { width: 80, height: 80 }, // Circular node
+    size: { ...TERMINAL_NODE_SIZE },
     connections: [],
     isStartState: false,
     isEndState: false,
   };
 
   const endNode: StateNode = {
-    id: "__end__",
+    id: END_NODE_ID,
     name: "END",
     type: "Pass", // Using Pass as a placeholder type
     definition: { Type: "Pass" },
     position: { x: 0, y: 0 },
-    size: { width: 80, height: 80 }, // Circular node
+    size: { ...TERMINAL_NODE_SIZE },
     connections: [],
     isStartState: false,
     isEndState: false,

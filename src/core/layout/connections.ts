@@ -1,4 +1,5 @@
 import { StateDefinition, Connection } from "../../types";
+import { formatChoiceCondition } from "../asl-utils";
 
 /**
  * Creates connections between states based on state definition
@@ -8,6 +9,7 @@ export function createConnections(
   state: StateDefinition,
 ): Connection[] {
   const connections: Connection[] = [];
+  if (!state || typeof state !== "object") return connections;
 
   // Next connection
   if (state.Next) {
@@ -19,8 +21,9 @@ export function createConnections(
   }
 
   // Choice connections
-  if (state.Choices) {
+  if (Array.isArray(state.Choices)) {
     state.Choices.forEach((choice, index) => {
+      if (!choice?.Next) return;
       connections.push({
         from: stateName,
         to: choice.Next,
@@ -42,55 +45,20 @@ export function createConnections(
   }
 
   // Catch connections
-  if (state.Catch) {
+  if (Array.isArray(state.Catch)) {
     state.Catch.forEach((catchDef, index) => {
+      if (!catchDef?.Next) return;
       connections.push({
         from: stateName,
         to: catchDef.Next,
         type: "error",
         label: `Catch ${index + 1}`,
-        condition: catchDef.ErrorEquals.join(", "),
+        condition: Array.isArray(catchDef.ErrorEquals)
+          ? catchDef.ErrorEquals.join(", ")
+          : "",
       });
     });
   }
 
   return connections;
-}
-
-type ChoiceRule = {
-  Variable?: string;
-  StringEquals?: string;
-  StringLessThan?: string;
-  StringGreaterThan?: string;
-  NumericEquals?: number;
-  NumericLessThan?: number;
-  NumericGreaterThan?: number;
-  BooleanEquals?: boolean;
-};
-
-/**
- * Formats choice condition into human-readable string
- */
-function formatChoiceCondition(choice: ChoiceRule): string {
-  // Create a human-readable condition string
-  if (choice.Variable) {
-    const variable = choice.Variable;
-
-    if (choice.StringEquals !== undefined)
-      return `${variable} == "${choice.StringEquals}"`;
-    if (choice.StringLessThan !== undefined)
-      return `${variable} < "${choice.StringLessThan}"`;
-    if (choice.StringGreaterThan !== undefined)
-      return `${variable} > "${choice.StringGreaterThan}"`;
-    if (choice.NumericEquals !== undefined)
-      return `${variable} == ${choice.NumericEquals}`;
-    if (choice.NumericLessThan !== undefined)
-      return `${variable} < ${choice.NumericLessThan}`;
-    if (choice.NumericGreaterThan !== undefined)
-      return `${variable} > ${choice.NumericGreaterThan}`;
-    if (choice.BooleanEquals !== undefined)
-      return `${variable} == ${choice.BooleanEquals}`;
-  }
-
-  return "condition";
 }

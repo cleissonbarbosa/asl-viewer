@@ -61,7 +61,7 @@ Verifique se seu `package.json` está configurado corretamente:
 {
   "name": "asl-workflow-viewer",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],

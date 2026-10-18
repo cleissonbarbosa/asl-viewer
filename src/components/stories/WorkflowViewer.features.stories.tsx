@@ -381,7 +381,7 @@ export const WithToolbar: Story = {
     definition: simpleWorkflow,
     height: 600,
     showToolbar: true,
-    showControls: true,
-    showMiniMap: true,
+    useControls: true,
+    useMiniMap: true,
   },
 };

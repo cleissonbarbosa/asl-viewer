@@ -48,22 +48,23 @@ export default [
         sourceMap: false,
       }),
     ],
+    // Runtime dependencies stay external; `reactflow/dist/style.css` is not
+    // matched, so it is bundled into dist/index.css.
     external: [
       "react",
       "react-dom",
       "react/jsx-runtime",
       "reactflow",
-      "@reactflow/core",
-      "@reactflow/controls",
-      "@reactflow/background",
-      "@reactflow/minimap",
       "@tabler/icons-react",
       "js-yaml",
     ],
   },
   {
     input: "dist/index.d.ts",
-    output: [{ file: "dist/index.d.ts", format: "esm" }],
+    output: [
+      { file: "dist/index.d.ts", format: "esm" },
+      { file: "dist/index.d.cts", format: "esm" },
+    ],
     plugins: [
       dts({
         respectExternal: true,
@@ -74,10 +75,6 @@ export default [
       "react",
       "react-dom",
       "reactflow",
-      "@reactflow/core",
-      "@reactflow/controls",
-      "@reactflow/background",
-      "@reactflow/minimap",
       "@tabler/icons-react",
       "js-yaml",
     ],

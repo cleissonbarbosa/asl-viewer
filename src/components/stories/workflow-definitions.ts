@@ -326,6 +326,145 @@ export const customThemeWorkflow: ASLDefinition = {
   },
 };
 
+// Modern ASL: JSONata, Distributed Map, SDK integrations, callbacks, polling
+export const modernWorkflowDefinition: ASLDefinition = {
+  Comment: "Nightly invoice reconciliation (JSONata + Distributed Map)",
+  QueryLanguage: "JSONata",
+  StartAt: "ListInvoiceFiles",
+  States: {
+    ListInvoiceFiles: {
+      Type: "Task",
+      Resource: "arn:aws:states:::aws-sdk:s3:listObjectsV2",
+      Arguments: {
+        Bucket: "{% $states.input.bucket %}",
+        Prefix: "invoices/",
+      },
+      Retry: [
+        {
+          ErrorEquals: ["S3.SdkClientException"],
+          IntervalSeconds: 2,
+          MaxAttempts: 3,
+          BackoffRate: 2,
+          JitterStrategy: "FULL",
+        },
+      ],
+      Next: "HasFiles",
+    },
+    HasFiles: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $count($states.input.Contents) > 0 %}",
+          Next: "ReconcileInvoices",
+        },
+      ],
+      Default: "NothingToDo",
+    },
+    NothingToDo: {
+      Type: "Succeed",
+      Comment: "No invoices were uploaded today",
+    },
+    ReconcileInvoices: {
+      Type: "Map",
+      Comment: "Processes every invoice file in parallel child executions",
+      ItemReader: {
+        Resource: "arn:aws:states:::s3:listObjectsV2",
+        Arguments: { Bucket: "{% $states.input.bucket %}" },
+      },
+      MaxConcurrency: 500,
+      ToleratedFailurePercentage: 5,
+      ItemProcessor: {
+        ProcessorConfig: { Mode: "DISTRIBUTED", ExecutionType: "EXPRESS" },
+        StartAt: "ParseInvoice",
+        States: {
+          ParseInvoice: {
+            Type: "Task",
+            Resource: "arn:aws:states:::lambda:invoke",
+            Arguments: {
+              FunctionName: "parse-invoice",
+              Payload: "{% $states.input %}",
+            },
+            Next: "MatchPayment",
+          },
+          MatchPayment: {
+            Type: "Task",
+            Resource: "arn:aws:states:::dynamodb:getItem",
+            Next: "StoreResult",
+          },
+          StoreResult: {
+            Type: "Task",
+            Resource: "arn:aws:states:::dynamodb:putItem",
+            End: true,
+          },
+        },
+      },
+      Catch: [{ ErrorEquals: ["States.ALL"], Next: "NotifyFailure" }],
+      Next: "StartAuditExport",
+    },
+    StartAuditExport: {
+      Type: "Task",
+      Resource: "arn:aws:states:::glue:startJobRun",
+      Arguments: { JobName: "audit-export" },
+      Next: "WaitForExport",
+    },
+    WaitForExport: {
+      Type: "Wait",
+      Seconds: 60,
+      Next: "GetExportStatus",
+    },
+    GetExportStatus: {
+      Type: "Task",
+      Resource: "arn:aws:states:::aws-sdk:glue:getJobRun",
+      Next: "ExportFinished",
+    },
+    ExportFinished: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $states.input.JobRun.JobRunState = 'RUNNING' %}",
+          Next: "WaitForExport",
+        },
+        {
+          Condition: "{% $states.input.JobRun.JobRunState = 'FAILED' %}",
+          Next: "NotifyFailure",
+        },
+      ],
+      Default: "RequestApproval",
+    },
+    RequestApproval: {
+      Type: "Task",
+      Comment: "A finance analyst approves the report from Slack",
+      Resource: "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      HeartbeatSeconds: 3600,
+      TimeoutSeconds: 86400,
+      Catch: [{ ErrorEquals: ["States.Timeout"], Next: "NotifyFailure" }],
+      Next: "PublishReport",
+    },
+    PublishReport: {
+      Type: "Task",
+      Resource: "arn:aws:states:::events:putEvents",
+      Next: "ArchiveRun",
+    },
+    ArchiveRun: {
+      Type: "Task",
+      Resource: "arn:aws:states:::states:startExecution.sync:2",
+      Comment: "Runs the archival state machine and waits for it",
+      Next: "Done",
+    },
+    Done: { Type: "Succeed" },
+    NotifyFailure: {
+      Type: "Task",
+      Resource: "arn:aws:states:::sns:publish",
+      Next: "ReconciliationFailed",
+    },
+    ReconciliationFailed: {
+      Type: "Fail",
+      Error: "ReconciliationFailed",
+      Cause: "One or more steps failed",
+    },
+  },
+};
+
 // YAML definition as string
 export const yamlDefinition = `# YAML ASL Definition
 Comment: "A Hello World example in YAML"

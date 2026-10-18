@@ -1,0 +1,1595 @@
+/*
+ * asl-viewer styles
+ *
+ * Every color is a CSS custom property. Defaults below match the light theme;
+ * components inject the active theme on `.asl-root` (see theme-vars.ts), so
+ * switching themes never re-renders the graph.
+ */
+
+/* Default tokens: zero specificity and declared only on the outermost root,
+   so nested roots inherit and consumer stylesheets can override them. */
+:where(.asl-root:not(.asl-root .asl-root)) {
+  --asl-bg: #f8f9fa;
+  --asl-surface: #ffffff;
+  --asl-overlay: rgba(255, 255, 255, 0.95);
+  --asl-text: #1e293b;
+  --asl-text-2: #64748b;
+  --asl-text-3: #94a3b8;
+  --asl-border: #e2e8f0;
+  --asl-border-hover: #cbd5e1;
+  --asl-edge: #94a3b8;
+  --asl-edge-hover: #475569;
+  --asl-edge-label: #64748b;
+  --asl-start: #22c55e;
+  --asl-end: #ef4444;
+  --asl-selected: #3b82f6;
+  --asl-shadow: rgba(0, 0, 0, 0.05);
+  --asl-error: #ef4444;
+  --asl-warning: #f59e0b;
+  --asl-info: #3b82f6;
+  --asl-success: #22c55e;
+  --asl-grid: #e2e8f0;
+  --asl-minimap-bg: #ffffff;
+  --asl-controls-bg: #ffffff;
+  --asl-tooltip-bg: #1e293b;
+  --asl-tooltip-text: #ffffff;
+
+  --asl-pass-bg: #ffffff;
+  --asl-pass-border: #e2e8f0;
+  --asl-pass-hover: #f8fafc;
+  --asl-task-bg: #ffffff;
+  --asl-task-border: #ed7100;
+  --asl-task-hover: #fff7ed;
+  --asl-stepfn-bg: #ffffff;
+  --asl-stepfn-border: #e7157b;
+  --asl-stepfn-hover: #fff0f6;
+  --asl-choice-bg: #ffffff;
+  --asl-choice-border: #f59e0b;
+  --asl-choice-hover: #fffbeb;
+  --asl-wait-bg: #ffffff;
+  --asl-wait-border: #8b5cf6;
+  --asl-wait-hover: #f5f3ff;
+  --asl-succeed-bg: #f0fdf4;
+  --asl-succeed-border: #22c55e;
+  --asl-succeed-hover: #dcfce7;
+  --asl-fail-bg: #fef2f2;
+  --asl-fail-border: #ef4444;
+  --asl-fail-hover: #fee2e2;
+  --asl-parallel-bg: #ffffff;
+  --asl-parallel-border: #06b6d4;
+  --asl-parallel-hover: #ecfeff;
+  --asl-map-bg: #ffffff;
+  --asl-map-border: #84cc16;
+  --asl-map-hover: #f7fee7;
+
+  --asl-font: var(
+    --asl-font-family,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif
+  );
+  --asl-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  --asl-radius: 10px;
+  --asl-radius-sm: 6px;
+  --asl-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --asl-focus-ring: 0 0 0 3px
+    color-mix(in srgb, var(--asl-selected) 35%, transparent);
+}
+
+.asl-root {
+  position: relative;
+  font-family: var(--asl-font);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--asl-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.asl-root *,
+.asl-root *::before,
+.asl-root *::after {
+  box-sizing: border-box;
+}
+
+.asl-root button {
+  font: inherit;
+}
+
+.asl-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Viewer shell                                                        */
+/* ------------------------------------------------------------------ */
+
+.asl-viewer {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--asl-bg);
+  border: 1px solid var(--asl-border);
+  border-radius: 12px;
+}
+
+.asl-viewer:focus-visible {
+  outline: none;
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+  background: var(--asl-surface);
+  border-bottom: 1px solid var(--asl-border);
+}
+
+.asl-header__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--asl-stepfn-border);
+  background: color-mix(in srgb, var(--asl-stepfn-border) 12%, transparent);
+}
+
+.asl-header__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.asl-header__name {
+  flex: none;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--asl-text);
+}
+
+.asl-header__comment {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--asl-text-2);
+}
+
+.asl-header__stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.asl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  color: var(--asl-text-2);
+  background: color-mix(in srgb, var(--asl-text) 6%, transparent);
+}
+
+.asl-pill--warning {
+  color: color-mix(in srgb, var(--asl-warning) 75%, var(--asl-text));
+  background: color-mix(in srgb, var(--asl-warning) 14%, transparent);
+}
+
+.asl-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+/* Keep overlays visible next to an open details panel on wide canvases */
+@container (min-width: 700px) {
+  .asl-stage.has-panel .asl-toolbar {
+    right: 392px;
+    max-width: calc(100% - 404px);
+  }
+  .asl-stage.has-panel .react-flow__minimap {
+    right: 380px;
+  }
+}
+
+.asl-canvas {
+  background: var(--asl-bg);
+}
+
+.asl-canvas .react-flow {
+  background: var(--asl-bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* State nodes                                                         */
+/* ------------------------------------------------------------------ */
+
+.asl-kind-pass {
+  --asl-accent: var(--asl-pass-border);
+  --asl-node-bg: var(--asl-pass-bg);
+  --asl-node-hover: var(--asl-pass-hover);
+  --asl-icon: var(--asl-info);
+}
+.asl-kind-task {
+  --asl-accent: var(--asl-task-border);
+  --asl-node-bg: var(--asl-task-bg);
+  --asl-node-hover: var(--asl-task-hover);
+}
+.asl-kind-stepFunction {
+  --asl-accent: var(--asl-stepfn-border);
+  --asl-node-bg: var(--asl-stepfn-bg);
+  --asl-node-hover: var(--asl-stepfn-hover);
+}
+.asl-kind-choice {
+  --asl-accent: var(--asl-choice-border);
+  --asl-node-bg: var(--asl-choice-bg);
+  --asl-node-hover: var(--asl-choice-hover);
+}
+.asl-kind-wait {
+  --asl-accent: var(--asl-wait-border);
+  --asl-node-bg: var(--asl-wait-bg);
+  --asl-node-hover: var(--asl-wait-hover);
+}
+.asl-kind-succeed {
+  --asl-accent: var(--asl-succeed-border);
+  --asl-node-bg: var(--asl-succeed-bg);
+  --asl-node-hover: var(--asl-succeed-hover);
+  --asl-icon: var(--asl-success);
+}
+.asl-kind-fail {
+  --asl-accent: var(--asl-fail-border);
+  --asl-node-bg: var(--asl-fail-bg);
+  --asl-node-hover: var(--asl-fail-hover);
+  --asl-icon: var(--asl-error);
+}
+.asl-kind-parallel {
+  --asl-accent: var(--asl-parallel-border);
+  --asl-node-bg: var(--asl-parallel-bg);
+  --asl-node-hover: var(--asl-parallel-hover);
+}
+.asl-kind-map {
+  --asl-accent: var(--asl-map-border);
+  --asl-node-bg: var(--asl-map-bg);
+  --asl-node-hover: var(--asl-map-hover);
+}
+
+.asl-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 0 12px 0 15px;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--asl-text);
+  background: var(--asl-node-bg, var(--asl-surface));
+  border: 1px solid var(--asl-border);
+  border-radius: var(--asl-radius);
+  box-shadow:
+    0 1px 2px var(--asl-shadow),
+    0 2px 6px var(--asl-shadow);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s var(--asl-ease),
+    opacity 0.2s ease;
+  outline: none;
+}
+
+.asl-node::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--asl-accent, var(--asl-border));
+}
+
+.asl-node:hover {
+  background: var(--asl-node-hover, var(--asl-node-bg));
+  border-color: var(--asl-border-hover);
+  box-shadow:
+    0 2px 4px var(--asl-shadow),
+    0 8px 20px var(--asl-shadow);
+  transform: translateY(-1px);
+}
+
+.asl-node:focus-visible {
+  border-color: var(--asl-selected);
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-node.is-selected,
+.asl-group.is-selected {
+  border-color: var(--asl-selected);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--asl-selected) 28%, transparent),
+    0 8px 20px var(--asl-shadow);
+}
+
+.asl-node.is-highlighted,
+.asl-group.is-highlighted {
+  border-color: var(--asl-warning);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--asl-warning) 30%, transparent),
+    0 4px 12px var(--asl-shadow);
+}
+
+.asl-node.is-active-match,
+.asl-group.is-active-match {
+  border-color: var(--asl-warning);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--asl-warning) 50%, transparent),
+    0 8px 24px var(--asl-shadow);
+}
+
+.is-dimmed {
+  opacity: 0.32;
+}
+
+.asl-node__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--asl-icon, var(--asl-accent));
+  background: rgba(127, 127, 127, 0.1);
+  background: color-mix(
+    in srgb,
+    var(--asl-icon, var(--asl-accent)) 14%,
+    transparent
+  );
+}
+
+.asl-node__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.asl-node__name,
+.asl-node__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asl-node__name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: -0.005em;
+}
+
+.asl-node__meta {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--asl-text-2);
+}
+
+.asl-node__badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex: none;
+}
+
+.asl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.asl-badge--retry {
+  color: color-mix(in srgb, var(--asl-warning) 80%, var(--asl-text));
+  background: color-mix(in srgb, var(--asl-warning) 15%, transparent);
+}
+
+.asl-badge--catch {
+  color: color-mix(in srgb, var(--asl-error) 80%, var(--asl-text));
+  background: color-mix(in srgb, var(--asl-error) 13%, transparent);
+}
+
+/* React Flow handles are only edge anchors */
+.asl-root .react-flow__handle.asl-handle {
+  width: 6px;
+  height: 6px;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+.asl-root .react-flow__handle.asl-handle.react-flow__handle-top {
+  top: -1px;
+}
+.asl-root .react-flow__handle.asl-handle.react-flow__handle-bottom {
+  bottom: -1px;
+}
+.asl-root .react-flow__handle.asl-handle.react-flow__handle-left {
+  left: -1px;
+}
+.asl-root .react-flow__handle.asl-handle.react-flow__handle-right {
+  right: -1px;
+}
+
+/* START / END */
+
+.asl-terminal {
+  --asl-term: var(--asl-start);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--asl-term);
+  background: var(--asl-surface);
+  background: color-mix(in srgb, var(--asl-term) 10%, var(--asl-surface));
+  border: 1.5px solid var(--asl-term);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--asl-term) 22%, transparent);
+  transition: opacity 0.2s ease;
+}
+
+.asl-terminal--end {
+  --asl-term: var(--asl-end);
+}
+
+/* ------------------------------------------------------------------ */
+/* Groups (Parallel / Map)                                             */
+/* ------------------------------------------------------------------ */
+
+.asl-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--asl-node-bg, var(--asl-surface));
+  border: 1px solid var(--asl-border);
+  border-radius: var(--asl-radius);
+  box-shadow:
+    0 1px 2px var(--asl-shadow),
+    0 2px 6px var(--asl-shadow);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.18s ease,
+    opacity 0.2s ease;
+}
+
+.asl-group.is-collapsed {
+  overflow: visible;
+  box-shadow:
+    0 1px 2px var(--asl-shadow),
+    4px 4px 0 -1px var(--asl-surface),
+    4px 4px 0 0 var(--asl-border),
+    8px 8px 0 -2px var(--asl-surface),
+    8px 8px 0 -1px var(--asl-border);
+}
+
+.asl-group.is-expanded {
+  border-color: color-mix(in srgb, var(--asl-accent) 55%, var(--asl-border));
+}
+
+.asl-group .asl-group__header {
+  flex: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  transform: none;
+}
+
+.asl-group.is-collapsed .asl-group__header {
+  border-radius: var(--asl-radius);
+}
+
+.asl-group .asl-group__header:hover {
+  background: var(--asl-node-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.asl-group .asl-group__header:focus-visible {
+  box-shadow: inset var(--asl-focus-ring);
+}
+
+.asl-group.is-expanded .asl-group__header {
+  border-bottom: 1px solid var(--asl-border);
+}
+
+.asl-group__toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--asl-text-2);
+  background: var(--asl-surface);
+  border: 1px solid var(--asl-border);
+  border-radius: 7px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.asl-group__toggle:hover {
+  color: var(--asl-text);
+  border-color: var(--asl-border-hover);
+  background: color-mix(in srgb, var(--asl-text) 6%, var(--asl-surface));
+}
+
+.asl-group__toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-group__body {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: center;
+  background: color-mix(in srgb, var(--asl-accent) 5%, var(--asl-bg));
+  cursor: default;
+}
+
+.asl-group__column {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+.asl-group__label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--asl-text-3);
+}
+
+.asl-group__connector {
+  position: relative;
+  width: 1.5px;
+  margin: 0 auto;
+  background: var(--asl-edge);
+}
+
+.asl-group__connector::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 3.5px solid transparent;
+  border-top: 5px solid var(--asl-edge);
+  border-bottom: 0;
+}
+
+.asl-group__empty {
+  margin: auto;
+  font-size: 12px;
+  color: var(--asl-text-3);
+}
+
+.asl-child {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--asl-node-bg, var(--asl-surface));
+  border: 1px solid var(--asl-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--asl-shadow);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  outline: none;
+}
+
+.asl-child::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--asl-accent);
+}
+
+.asl-child:hover {
+  background: var(--asl-node-hover, var(--asl-node-bg));
+  border-color: var(--asl-border-hover);
+  box-shadow: 0 4px 10px var(--asl-shadow);
+}
+
+.asl-child:focus-visible {
+  border-color: var(--asl-selected);
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-child.is-selected {
+  border-color: var(--asl-selected);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--asl-selected) 30%, transparent);
+}
+
+.asl-child.is-highlighted {
+  border-color: var(--asl-warning);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--asl-warning) 40%, transparent);
+}
+
+.asl-child__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--asl-icon, var(--asl-accent));
+  background: color-mix(
+    in srgb,
+    var(--asl-icon, var(--asl-accent)) 14%,
+    transparent
+  );
+}
+
+.asl-child__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.asl-child__name,
+.asl-child__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asl-child__name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: var(--asl-text);
+}
+
+.asl-child__meta {
+  font-size: 10.5px;
+  line-height: 14px;
+  color: var(--asl-text-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Edges                                                               */
+/* ------------------------------------------------------------------ */
+
+.asl-edge {
+  --asl-edge-color: var(--asl-edge);
+  transition: opacity 0.2s ease;
+}
+.asl-edge--choice {
+  --asl-edge-color: var(--asl-info);
+}
+.asl-edge--default {
+  --asl-edge-color: var(--asl-text-3);
+}
+.asl-edge--error {
+  --asl-edge-color: var(--asl-error);
+}
+.asl-edge--retry {
+  --asl-edge-color: var(--asl-warning);
+}
+
+.asl-edge__path {
+  fill: none;
+  stroke: var(--asl-edge-color);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke 0.15s ease,
+    stroke-width 0.15s ease;
+}
+
+.asl-edge--default .asl-edge__path {
+  stroke-dasharray: 5 4;
+}
+
+.asl-edge--error .asl-edge__path,
+.asl-edge--retry .asl-edge__path {
+  stroke-dasharray: 6 4;
+}
+
+.asl-edge__arrow {
+  fill: var(--asl-edge-color);
+  stroke: none;
+}
+
+.asl-edge--next .asl-edge__path,
+.asl-edge--next .asl-edge__arrow {
+  --asl-edge-color: var(--asl-edge);
+}
+
+.react-flow__edge:hover .asl-edge__path,
+.asl-edge.is-active .asl-edge__path {
+  stroke-width: 2.4;
+}
+
+.react-flow__edge:hover .asl-edge--next,
+.asl-edge--next.is-active {
+  --asl-edge-color: var(--asl-edge-hover);
+}
+
+.asl-edge-label {
+  --asl-edge-color: var(--asl-edge);
+  position: absolute;
+  max-width: 220px;
+  padding: 3px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--asl-font);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  color: var(--asl-edge-label);
+  background: var(--asl-surface);
+  border: 1px solid var(--asl-border);
+  border: 1px solid
+    color-mix(in srgb, var(--asl-edge-color) 40%, var(--asl-border));
+  border-radius: 999px;
+  box-shadow: 0 1px 3px var(--asl-shadow);
+  pointer-events: all;
+  cursor: default;
+  transition: opacity 0.2s ease;
+}
+
+.asl-edge-label--choice {
+  --asl-edge-color: var(--asl-info);
+  color: color-mix(in srgb, var(--asl-info) 80%, var(--asl-text));
+}
+
+.asl-edge-label--default {
+  --asl-edge-color: var(--asl-text-3);
+  color: var(--asl-text-2);
+}
+
+.asl-edge-label--error {
+  --asl-edge-color: var(--asl-error);
+  font-family: var(--asl-mono);
+  font-size: 10.5px;
+  color: color-mix(in srgb, var(--asl-error) 80%, var(--asl-text));
+}
+
+.asl-edge-label.is-active {
+  border-color: var(--asl-edge-color);
+}
+
+/* ------------------------------------------------------------------ */
+/* React Flow chrome                                                   */
+/* ------------------------------------------------------------------ */
+
+.asl-root .react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--asl-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px var(--asl-shadow);
+}
+
+.asl-root .react-flow__controls-button {
+  width: 30px;
+  height: 30px;
+  padding: 7px;
+  color: var(--asl-text-2);
+  background: var(--asl-controls-bg);
+  border-bottom: 1px solid var(--asl-border);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.asl-root .react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.asl-root .react-flow__controls-button:hover {
+  color: var(--asl-text);
+  background: color-mix(in srgb, var(--asl-text) 7%, var(--asl-controls-bg));
+}
+
+.asl-root .react-flow__controls-button svg {
+  max-width: 13px;
+  max-height: 13px;
+  fill: currentColor;
+}
+
+.asl-root .react-flow__minimap {
+  overflow: hidden;
+  background: var(--asl-minimap-bg);
+  border: 1px solid var(--asl-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px var(--asl-shadow);
+}
+
+.asl-root .react-flow__node {
+  font-family: var(--asl-font);
+}
+
+.asl-root .react-flow__edgelabel-renderer {
+  font-family: var(--asl-font);
+}
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                             */
+/* ------------------------------------------------------------------ */
+
+.asl-toolbar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: calc(100% - 24px);
+  padding: 5px;
+  background: var(--asl-overlay);
+  border: 1px solid var(--asl-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px var(--asl-shadow);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.asl-toolbar__divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  background: var(--asl-border);
+}
+
+.asl-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--asl-text-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.asl-icon-btn:hover:not(:disabled) {
+  color: var(--asl-text);
+  background: color-mix(in srgb, var(--asl-text) 7%, transparent);
+}
+
+.asl-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-icon-btn[aria-pressed="true"] {
+  color: var(--asl-selected);
+  background: color-mix(in srgb, var(--asl-selected) 13%, transparent);
+}
+
+.asl-icon-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.asl-icon-btn--sm {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.asl-search {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 4px 0 9px;
+  color: var(--asl-text-3);
+  background: var(--asl-surface);
+  border: 1px solid var(--asl-border);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.asl-search:focus-within {
+  border-color: var(--asl-selected);
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-search input {
+  width: 150px;
+  min-width: 0;
+  padding: 0 2px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--asl-text);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.asl-search input::placeholder {
+  color: var(--asl-text-3);
+}
+
+.asl-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.asl-search__count {
+  min-width: 34px;
+  font-family: var(--asl-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--asl-text-3);
+}
+
+.asl-search__count.is-empty {
+  color: var(--asl-error);
+}
+
+/* ------------------------------------------------------------------ */
+/* Detail panel                                                        */
+/* ------------------------------------------------------------------ */
+
+@keyframes asl-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes asl-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes asl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.asl-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  width: min(380px, 100%);
+  background: var(--asl-surface);
+  border-left: 1px solid var(--asl-border);
+  box-shadow: -12px 0 32px var(--asl-shadow);
+  animation: asl-slide-in 0.22s var(--asl-ease);
+}
+
+.asl-panel__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 12px 12px 16px;
+  border-bottom: 1px solid var(--asl-border);
+}
+
+.asl-panel__header .asl-node__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.asl-panel__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.asl-panel__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 20px;
+  word-break: break-word;
+  color: var(--asl-text);
+}
+
+.asl-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.asl-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(
+    in srgb,
+    var(--asl-tag, var(--asl-text-2)) 85%,
+    var(--asl-text)
+  );
+  background: color-mix(
+    in srgb,
+    var(--asl-tag, var(--asl-text-2)) 14%,
+    transparent
+  );
+}
+
+.asl-panel__actions {
+  display: flex;
+  gap: 2px;
+}
+
+.asl-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.asl-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--asl-border);
+}
+
+.asl-section:last-child {
+  border-bottom: 0;
+}
+
+.asl-section__title {
+  margin: 0 0 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--asl-text-3);
+}
+
+.asl-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--asl-text-2);
+}
+
+.asl-kv {
+  display: grid;
+  grid-template-columns: minmax(84px, max-content) 1fr;
+  gap: 7px 14px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.asl-kv dt {
+  color: var(--asl-text-2);
+}
+
+.asl-kv dd {
+  min-width: 0;
+  margin: 0;
+  word-break: break-word;
+  color: var(--asl-text);
+}
+
+.asl-mono {
+  font-family: var(--asl-mono);
+  font-size: 11.5px;
+}
+
+.asl-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 20px;
+  margin: 0 4px 4px 0;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 5px;
+  font-family: var(--asl-mono);
+  font-size: 11px;
+  color: var(--asl-text);
+  background: color-mix(in srgb, var(--asl-text) 7%, transparent);
+}
+
+.asl-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+  color: var(--asl-selected);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.asl-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.asl-link:focus-visible {
+  outline: none;
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-link:disabled {
+  cursor: default;
+  color: var(--asl-text);
+}
+
+.asl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asl-list__item {
+  padding: 9px 10px;
+  border: 1px solid var(--asl-border);
+  border-radius: 8px;
+  background: var(--asl-bg);
+}
+
+.asl-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--asl-text-3);
+}
+
+.asl-list__condition {
+  font-family: var(--asl-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  color: var(--asl-text);
+}
+
+.asl-list__meta {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--asl-text-2);
+}
+
+.asl-field + .asl-field {
+  margin-top: 10px;
+}
+
+.asl-field__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  color: var(--asl-text-2);
+}
+
+.asl-json {
+  max-height: 340px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-family: var(--asl-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre;
+  tab-size: 2;
+  color: var(--asl-text);
+  background: var(--asl-bg);
+  border: 1px solid var(--asl-border);
+  border-radius: 8px;
+}
+
+.asl-json__key {
+  color: color-mix(in srgb, var(--asl-info) 75%, var(--asl-text));
+}
+.asl-json__string {
+  color: color-mix(in srgb, var(--asl-success) 65%, var(--asl-text));
+}
+.asl-json__number {
+  color: color-mix(in srgb, var(--asl-warning) 70%, var(--asl-text));
+}
+.asl-json__literal {
+  color: color-mix(in srgb, var(--asl-stepfn-border) 70%, var(--asl-text));
+}
+.asl-json__punct {
+  color: var(--asl-text-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Loading / errors                                                    */
+/* ------------------------------------------------------------------ */
+
+.asl-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--asl-text-2);
+  background: var(--asl-bg);
+  border: 1px solid var(--asl-border);
+  border-radius: 12px;
+}
+
+.asl-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid color-mix(in srgb, var(--asl-text) 12%, transparent);
+  border-top-color: var(--asl-selected);
+  border-radius: 50%;
+  animation: asl-spin 0.8s linear infinite;
+}
+
+.asl-loading__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--asl-text);
+}
+
+.asl-loading__detail {
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.asl-empty__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 2px;
+  border-radius: 12px;
+  color: var(--asl-text-3);
+  background: color-mix(in srgb, var(--asl-text) 6%, transparent);
+}
+
+.asl-empty .asl-loading__detail {
+  white-space: normal;
+}
+
+.asl-errors {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--asl-text);
+  background: var(--asl-bg);
+  border: 1px solid var(--asl-border);
+  border-radius: 12px;
+  animation: asl-fade-in 0.3s var(--asl-ease);
+}
+
+.asl-errors__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--asl-surface);
+  border-bottom: 1px solid var(--asl-border);
+}
+
+.asl-errors__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--asl-error);
+  background: color-mix(in srgb, var(--asl-error) 12%, transparent);
+}
+
+.asl-errors__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.asl-errors__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--asl-text-2);
+}
+
+.asl-errors__counts {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.asl-pill--error {
+  color: color-mix(in srgb, var(--asl-error) 80%, var(--asl-text));
+  background: color-mix(in srgb, var(--asl-error) 13%, transparent);
+}
+
+.asl-errors__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  margin: 0;
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.asl-issue {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--asl-surface);
+  border: 1px solid var(--asl-border);
+  border-left: 3px solid var(--asl-issue-color, var(--asl-error));
+  border-radius: 8px;
+}
+
+.asl-issue--warning {
+  --asl-issue-color: var(--asl-warning);
+}
+
+.asl-issue__icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--asl-issue-color, var(--asl-error));
+}
+
+.asl-issue__message {
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.asl-issue__path {
+  margin-top: 5px;
+}
+
+.asl-issue__path .asl-chip {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* File / URL inputs                                                   */
+/* ------------------------------------------------------------------ */
+
+.asl-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 24px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--asl-text);
+  background: var(--asl-bg);
+  border: 1.5px dashed var(--asl-border-hover, var(--asl-border));
+  border-radius: 12px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s var(--asl-ease);
+}
+
+.asl-dropzone:hover,
+.asl-dropzone:focus-visible {
+  border-color: var(--asl-info);
+  background: color-mix(in srgb, var(--asl-info) 4%, var(--asl-bg));
+}
+
+.asl-dropzone:focus-visible {
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-dropzone.is-dragging {
+  border-color: var(--asl-info);
+  border-style: solid;
+  background: color-mix(in srgb, var(--asl-info) 8%, var(--asl-bg));
+  transform: scale(1.01);
+}
+
+.asl-dropzone.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.asl-dropzone__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  color: var(--asl-info);
+  background: color-mix(in srgb, var(--asl-info) 12%, transparent);
+}
+
+.asl-dropzone__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.asl-dropzone__hint {
+  font-size: 12.5px;
+  color: var(--asl-text-2);
+}
+
+.asl-url-form {
+  display: flex;
+  gap: 8px;
+}
+
+.asl-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--asl-text);
+  background: var(--asl-surface);
+  border: 1px solid var(--asl-border);
+  border-radius: 8px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.asl-input::placeholder {
+  color: var(--asl-text-3);
+}
+
+.asl-input:focus {
+  border-color: var(--asl-selected);
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--asl-selected);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--asl-shadow);
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.asl-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px var(--asl-shadow);
+}
+
+.asl-button:focus-visible {
+  outline: none;
+  box-shadow: var(--asl-focus-ring);
+}
+
+.asl-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asl-root *,
+  .asl-root *::before,
+  .asl-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

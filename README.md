@@ -23,17 +23,19 @@ Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see 
 
 ## Features
 
-- 🎨 **Visual Workflow Rendering** - Display ASL workflows as interactive graphs
-- 🌓 **Theme Support** - Light and dark themes built-in
-- 📐 **Layout Options** - Support for Top-to-Bottom and Left-to-Right layouts
-- ✅ **ASL Validation** - Comprehensive validation for ASL syntax and semantics
-- 🔄 **Auto Layout** - Automatic graph layout with reactive updates
-- 📱 **Responsive** - Works on different screen sizes
-- 🖱️ **Interactive** - Click handlers for states and connections
-- 🔍 **Detailed Inspection** - Rich state details panel with JSON viewing
-- 🌐 **Multiple Input Sources** - Load from definition objects, URLs, or files
-- 📄 **YAML Support** - Support for both JSON and YAML formats
-- 🔧 **Extensible** - Easy to customize and extend
+- 🎨 **Visual Workflow Rendering** - Clean, professional diagrams with service-aware icons (Lambda, DynamoDB, SQS, SNS, S3, EventBridge, Glue, Bedrock…)
+- 🧭 **Smart Layout** - Layered layout with crossing reduction and orthogonal edge routing: loops are routed around the graph, long edges get their own lanes and END is always last
+- 🧩 **Modern ASL** - `ItemProcessor` / Distributed Map, JSONata (`QueryLanguage`, `Condition`, `Arguments`, `Output`, `Assign`), retries with jitter, nested executions
+- 🔀 **Expandable groups** - Parallel and Map states expand inline, with animated re-layout
+- 🔍 **Search** - Finds states (including nested ones), highlights matches and navigates between them
+- 🗂️ **Details panel** - Choice rules, retry / catch policies, data flow and syntax-highlighted JSON, with clickable transitions
+- 🌓 **Themes** - Light, dark, high contrast and soft themes, or your own; themes are applied through CSS variables, so switching never re-renders the graph
+- 📐 **Layout Options** - Top-to-Bottom and Left-to-Right layouts
+- ✅ **ASL Validation** - Validates syntax and semantics, including nested branches
+- 📱 **Responsive** - `width` / `height` accept any CSS length, e.g. `"100%"`
+- ⌨️ **Accessible** - Keyboard navigation, focus styles, ARIA labels and reduced-motion support
+- 🌐 **Multiple Input Sources** - Definition objects, JSON / YAML strings, URLs, files and CloudFormation / SAM templates
+- ⚡ **Fast** - Lays out hundreds of states in milliseconds; memoized nodes and edges keep interactions smooth
 - 📚 **TypeScript** - Full TypeScript support with comprehensive types
 
 ## Installation
@@ -56,6 +58,8 @@ yarn add asl-viewer
 
 ```js
 import "asl-viewer/dist/index.css";
+// or the shorter alias
+import "asl-viewer/style.css";
 ```
 
 ### CommonJS
@@ -182,7 +186,6 @@ States:
     End: true
 `;
 
-function App() {
 function App() {
   return (
     <WorkflowViewer
@@ -319,35 +322,47 @@ States:
 
 ### WorkflowViewer Props
 
-| Prop                | Type                               | Default   | Description                                 |
-| ------------------- | ---------------------------------- | --------- | ------------------------------------------- |
-| `definition`        | `ASLDefinition \| string`          | -         | The ASL workflow definition (JSON or YAML)  |
-| `url`               | `string`                           | -         | URL to load the ASL definition from         |
-| `file`              | `File`                             | -         | File object containing the ASL definition   |
-| `theme`             | `'light' \| 'dark'`                | `'light'` | Visual theme                                |
-| `layoutDirection`   | `'TB' \| 'LR'`                     | `'TB'`    | Layout direction (Top-Bottom or Left-Right) |
-| `width`             | `number`                           | `800`     | Viewer width in pixels                      |
-| `height`            | `number`                           | `600`     | Viewer height in pixels                     |
-| `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only             |
-| `isConnectable`     | `boolean`                          | `true`    | Whether nodes can be connected              |
-| `isDraggable`       | `boolean`                          | `false`   | Whether nodes can be dragged                |
-| `isSelectable`      | `boolean`                          | `true`    | Whether nodes can be selected               |
-| `isMultiSelect`     | `boolean`                          | `false`   | Whether multiple nodes can be selected      |
-| `useMiniMap`        | `boolean`                          | `false`   | Whether to show navigation minimap          |
-| `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls           |
-| `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                  |
-| `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes  |
-| `showToolbar`       | `boolean`                          | `false`   | Whether to show the toolbar                 |
-| `hideComment`       | `boolean`                          | `false`   | Whether to hide the workflow comment        |
-| `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked            |
-| `onValidationError` | `(error: ValidationError) => void` | -         | Callback for validation errors              |
-| `onLoadStart`       | `() => void`                       | -         | Callback when loading starts                |
-| `onLoadEnd`         | `() => void`                       | -         | Callback when loading completes             |
-| `onLoadError`       | `(error: Error) => void`           | -         | Callback when loading fails                 |
-| `className`         | `string`                           | -         | Additional CSS class names                  |
-| `style`             | `React.CSSProperties`              | -         | Inline styles for the root container        |
+| Prop                | Type                               | Default   | Description                                                       |
+| ------------------- | ---------------------------------- | --------- | ----------------------------------------------------------------- |
+| `definition`        | `ASLDefinition \| string`          | -         | The ASL workflow definition (JSON or YAML)                        |
+| `url`               | `string`                           | -         | URL to load the ASL definition from                               |
+| `file`              | `File`                             | -         | File object containing the ASL definition                         |
+| `theme`             | `ThemeName \| ViewerTheme`         | `'light'` | `'light'`, `'dark'`, `'highContrast'`, `'soft'` or a custom theme |
+| `layoutDirection`   | `'TB' \| 'LR'`                     | `'TB'`    | Layout direction (Top-Bottom or Left-Right)                       |
+| `width`             | `number \| string`                 | `800`     | Width in pixels or any CSS length                                 |
+| `height`            | `number \| string`                 | `600`     | Height in pixels or any CSS length                                |
+| `readonly`          | `boolean`                          | `true`    | Whether the viewer is read-only                                   |
+| `isConnectable`     | `boolean`                          | `true`    | Whether nodes can be connected (ignored when `readonly`)          |
+| `isDraggable`       | `boolean`                          | `false`   | Whether nodes can be dragged                                      |
+| `isSelectable`      | `boolean`                          | `true`    | Whether nodes can be selected                                     |
+| `isMultiSelect`     | `boolean`                          | `false`   | Whether multiple nodes can be selected                            |
+| `useMiniMap`        | `boolean`                          | `false`   | Whether to show navigation minimap                                |
+| `useControls`       | `boolean`                          | `true`    | Whether to show zoom/pan controls                                 |
+| `useZoom`           | `boolean`                          | `true`    | Whether zooming is enabled                                        |
+| `useFitView`        | `boolean`                          | `true`    | Whether to auto-fit view to show all nodes                        |
+| `showToolbar`       | `boolean`                          | `false`   | Whether to show the toolbar                                       |
+| `showDetailPanel`   | `boolean`                          | `true`    | Whether clicking a state opens the details panel                  |
+| `hideComment`       | `boolean`                          | `false`   | Whether to hide the workflow comment                              |
+| `onStateClick`      | `(state: StateNode) => void`       | -         | Callback when a state is clicked                                  |
+| `onValidationError` | `(error: ValidationError) => void` | -         | Called once per validation issue (errors and warnings)            |
+| `onLoadStart`       | `() => void`                       | -         | Callback when loading starts                                      |
+| `onLoadEnd`         | `() => void`                       | -         | Callback when loading completes                                   |
+| `onLoadError`       | `(error: Error) => void`           | -         | Callback when loading fails                                       |
+| `className`         | `string`                           | -         | Additional CSS class names                                        |
+| `style`             | `React.CSSProperties`              | -         | Inline styles for the root container                              |
 
 **Note:** You must provide exactly one of `definition`, `url`, or `file`.
+
+Callbacks can be passed inline: the viewer keeps the latest version internally, so a new function on every render does not reload the definition. Equal definitions passed as new object literals do not trigger a new layout either.
+
+### Keyboard shortcuts
+
+| Key                 | Action                                  |
+| ------------------- | --------------------------------------- |
+| `Tab` / `Shift+Tab` | Move between states                     |
+| `Enter` / `Space`   | Open the focused state                  |
+| `Esc`               | Close the details panel / clear search  |
+| `Enter` in search   | Next match (`Shift+Enter` for previous) |
 
 ## Usage Modes
 
@@ -430,25 +445,25 @@ Compact view for embedding in dashboards or smaller spaces:
 
 ### FileUploader Props
 
-| Prop           | Type                   | Default              | Description                      |
-| -------------- | ---------------------- | -------------------- | -------------------------------- |
-| `onFileSelect` | `(file: File) => void` | **required**         | Callback when a file is selected |
-| `theme`        | `ViewerTheme`          | **required**         | Theme object for styling         |
-| `accept`       | `string`               | `".json,.yaml,.yml"` | File types to accept             |
-| `disabled`     | `boolean`              | `false`              | Whether the uploader is disabled |
-| `className`    | `string`               | -                    | Additional CSS class names       |
-| `style`        | `React.CSSProperties`  | -                    | Inline styles                    |
+| Prop           | Type                   | Default              | Description                          |
+| -------------- | ---------------------- | -------------------- | ------------------------------------ |
+| `onFileSelect` | `(file: File) => void` | **required**         | Callback when a file is selected     |
+| `theme`        | `Partial<ViewerTheme>` | **required**         | Theme (or partial theme) for styling |
+| `accept`       | `string`               | `".json,.yaml,.yml"` | File types to accept                 |
+| `disabled`     | `boolean`              | `false`              | Whether the uploader is disabled     |
+| `className`    | `string`               | -                    | Additional CSS class names           |
+| `style`        | `React.CSSProperties`  | -                    | Inline styles                        |
 
 ### URLInput Props
 
-| Prop          | Type                    | Default                            | Description                    |
-| ------------- | ----------------------- | ---------------------------------- | ------------------------------ |
-| `onUrlSubmit` | `(url: string) => void` | **required**                       | Callback when URL is submitted |
-| `theme`       | `ViewerTheme`           | **required**                       | Theme object for styling       |
-| `disabled`    | `boolean`               | `false`                            | Whether the input is disabled  |
-| `placeholder` | `string`                | `"Enter URL to ASL definition..."` | Placeholder text               |
-| `className`   | `string`                | -                                  | Additional CSS class names     |
-| `style`       | `React.CSSProperties`   | -                                  | Inline styles                  |
+| Prop          | Type                    | Default                            | Description                          |
+| ------------- | ----------------------- | ---------------------------------- | ------------------------------------ |
+| `onUrlSubmit` | `(url: string) => void` | **required**                       | Callback when URL is submitted       |
+| `theme`       | `Partial<ViewerTheme>`  | **required**                       | Theme (or partial theme) for styling |
+| `disabled`    | `boolean`               | `false`                            | Whether the input is disabled        |
+| `placeholder` | `string`                | `"Enter URL to ASL definition..."` | Placeholder text                     |
+| `className`   | `string`                | -                                  | Additional CSS class names           |
+| `style`       | `React.CSSProperties`   | -                                  | Inline styles                        |
 
 ### Types
 
@@ -471,6 +486,8 @@ import {
   validateASLDefinition,
   parseASLDefinition,
   createGraphLayout,
+  describeResource,
+  formatChoiceCondition,
   loadFromURL,
   loadFromFile,
   parseDefinitionString,
@@ -491,21 +508,32 @@ const workflowFromString = parseDefinitionString(yamlOrJsonString);
 // Parse and get structured data
 const parsed = parseASLDefinition(workflow);
 
-// Create custom layout
-const layout = createGraphLayout(parsed.nodes, parsed.connections);
+// Compute the layout yourself (nodes with positions, edges with bend points)
+const layout = createGraphLayout(parsed, "TB", { expandedGroups: ["MyMap"] });
+
+// Human readable helpers
+describeResource("arn:aws:states:::sqs:sendMessage.waitForTaskToken");
+// → { service: "SQS", action: "SendMessage", pattern: "Wait for callback", ... }
+formatChoiceCondition({
+  Variable: "$.total",
+  NumericGreaterThan: 100,
+  Next: "Big",
+});
+// → "$.total > 100"
 ```
 
 ## Supported ASL Features
 
-- ✅ **Task States** - Lambda functions, activities, and other tasks
-- ✅ **Choice States** - Conditional branching with choice rules
+- ✅ **Task States** - Lambda, activities, optimized and AWS SDK integrations (`.sync`, `.waitForTaskToken`), nested executions
+- ✅ **Choice States** - Every comparison operator, `And` / `Or` / `Not`, type tests and JSONata `Condition`
 - ✅ **Pass States** - Data transformation and flow control
-- ✅ **Wait States** - Delays and timeouts
+- ✅ **Wait States** - Seconds, timestamps and their `Path` variants
 - ✅ **Succeed/Fail States** - Terminal states
-- ✅ **Parallel States** - Concurrent execution branches
-- ✅ **Map States** - Iteration over arrays (basic support)
-- ✅ **Retry/Catch** - Error handling configuration
-- ✅ **Input/Output Processing** - Path expressions and filters
+- ✅ **Parallel States** - Concurrent branches, expandable inline
+- ✅ **Map States** - `ItemProcessor` (inline and distributed) and legacy `Iterator`
+- ✅ **Retry/Catch** - Error handling, including `MaxDelaySeconds` and `JitterStrategy`
+- ✅ **Input/Output Processing** - JSONPath (`InputPath`, `Parameters`, `ResultSelector`, …) and JSONata (`Arguments`, `Output`, `Assign`)
+- ✅ **CloudFormation / SAM** - `Definition` and `DefinitionString` (plain, `!Sub` and `Fn::Join`)
 
 ## Feature Configuration
 
@@ -590,9 +618,8 @@ Handle user interactions and loading events:
 
 ## Examples
 
-Check out the `/examples` directory for complete usage examples:
+Check out the `/examples` directory for sample definitions:
 
-- [Simple React App](./examples/react-app-example.tsx)
 - [Complex Workflows](./examples/complex-workflow.json)
 - [Parallel Execution](./examples/parallel-workflow.json)
 
@@ -626,7 +653,7 @@ Build Storybook for production:
 yarn build-storybook
 ```
 
-The Storybook is automatically deployed to GitHub Pages at [https://cleissonb.github.io/asl-viewer/](https://cleissonb.github.io/asl-viewer/) when changes are pushed to the main branch.
+The Storybook is automatically deployed to GitHub Pages at [https://cleissonbarbosa.github.io/asl-viewer/](https://cleissonbarbosa.github.io/asl-viewer/) when changes are pushed to the main branch.
 
 ### Testing
 
@@ -646,10 +673,10 @@ import "asl-viewer/dist/index.css"; // Don't forget the CSS import
 
 const customTheme = {
   ...getTheme("light"),
-  nodeColors: {
-    ...getTheme("light").nodeColors,
-    taskState: "#ff6b6b",
-    choiceState: "#4ecdc4",
+  nodeBorderColors: {
+    ...getTheme("light").nodeBorderColors,
+    task: "#ff6b6b",
+    choice: "#4ecdc4",
   },
 };
 
@@ -683,6 +710,21 @@ const customPurple = createCustomTheme("dark", {
 });
 
 <WorkflowViewer definition={workflow} theme={customPurple} />;
+```
+
+#### Styling with CSS
+
+Colors come from the `theme` prop (use `createCustomTheme` to change them). Typography and shape tokens are plain CSS custom properties that you can override from your own stylesheet:
+
+```css
+.my-viewer {
+  --asl-font-family: "Inter", sans-serif;
+  --asl-radius: 6px;
+}
+```
+
+```tsx
+<WorkflowViewer definition={workflow} className="my-viewer" />
 ```
 
 ## Contributing

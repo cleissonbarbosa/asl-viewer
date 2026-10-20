@@ -10,3 +10,5 @@ yarn-error.log
 *.tar.gz
 *.tar
 *.gz
+# Promo video renders
+promo/out

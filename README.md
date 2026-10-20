@@ -8,18 +8,17 @@
 
 A React library for visualizing AWS Step Functions workflows (Amazon States Language) in the browser. Built with TypeScript and based on the AWS Toolkit for VS Code.
 
+<p align="center">
+  <a href="./assets/asl-viewer-promo.mp4">
+    <img src="./assets/asl-viewer-demo.gif" alt="ASL Viewer demo: a Step Functions workflow rendered by WorkflowViewer, then zooming through it, expanding Parallel and Map groups, searching nested states, opening the details panel, switching themes and switching to a left-to-right layout" width="100%" />
+  </a>
+</p>
+
+<p align="center"><sub>Full-quality video: <a href="./assets/asl-viewer-promo.mp4">asl-viewer-promo.mp4</a></sub></p>
+
 ## 📖 Live Examples
 
 Check out our [Storybook](https://cleissonbarbosa.github.io/asl-viewer/) to see interactive examples and explore all available components and features.
-
-<details>
-<summary>GIF Examples</summary>
-
-<!-- ![ASL Viewer Demo](./assets/screenshot-complex-workflow.gif) -->
-
-![ASL Viewer Demo 2](./assets/screenshot-with-toolbar.gif)
-
-</details>
 
 ## Features
 
@@ -659,6 +658,14 @@ The Storybook is automatically deployed to GitHub Pages at [https://cleissonbarb
 
 ```bash
 yarn test
+```
+
+### Demo video
+
+The demo at the top of this README is rendered from the library source by the composition in [`promo/`](./promo). Re-render it after visual changes (requires Chrome and ffmpeg):
+
+```bash
+cd promo && npm install && npm run record
 ```
 
 ## Customization

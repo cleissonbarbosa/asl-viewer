@@ -1,0 +1,15 @@
+{
+  "name": "asl-viewer-promo",
+  "private": true,
+  "type": "module",
+  "description": "Promotional video for asl-viewer, rendered from the library source",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "record": "node record.mjs"
+  },
+  "devDependencies": {
+    "gifsicle": "^7.0.1",
+    "puppeteer-core": "^24.0.0"
+  }
+}
